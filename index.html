@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="사고 싶은 집 가격과 내 연봉·현금만 넣으면 살 수 있는지, 모자란 금액, 필요한 연봉을 바로 계산합니다. 스트레스 DSR·LTV·수도권 주담대 한도 반영.">
+<meta property="og:title" content="이 집, 내 연봉으로 살 수 있을까 — 내 연봉 집 계산기">
+<meta property="og:description" content="집 가격·연봉·현금만 넣으면 대출 한도와 필요한 현금, 필요한 연봉을 계산합니다.">
+<meta property="og:type" content="website">
+<title>내 연봉 집 계산기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Gothic+A1:wght@800;900&display=swap">
+<style>
+/* 레이아웃: 폰 기준 한 줄 흐름 — ① 사고 싶은 집 → ② 내 돈 → 답 한 문장 → 접힌 상세 */
+:root {
+  --bg: #f3f5f2;
+  --paper: #ffffff;
+  --ink: #17251f;
+  --muted: #5d6b64;
+  --line: #d6ddd8;
+  --accent: #1f6b4f;
+  --accent-soft: #e2efe8;
+  --warn: #9a5b00;
+  --warn-soft: #fbefdc;
+  --bad: #a3312a;
+  --bad-soft: #f8e3e1;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-display: "Gothic A1", "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101814; --paper: #17221d; --ink: #e4ece7; --muted: #9aaba2; --line: #2c3a33;
+    --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15;
+    --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101814; --paper: #17221d; --ink: #e4ece7; --muted: #9aaba2; --line: #2c3a33;
+  --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15;
+  --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 600px; margin: 0 auto; display: grid; gap: 16px; }
+header h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(24px, 6vw, 32px); margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.step { display: flex; align-items: baseline; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; }
+.step .no { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 1px 9px; letter-spacing: 0.04em; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+label.f { display: grid; gap: 4px; font-size: 13.5px; font-weight: 500; color: var(--muted); min-width: 0; }
+.inrow { display: flex; align-items: center; gap: 8px; }
+.inrow input { flex: 1; min-width: 0; }
+.unit { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.echo { font-size: 12.5px; color: var(--accent); font-weight: 500; min-height: 1.2em; font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 12.5px; font-weight: 400; }
+input[type=number], input[type=text], select {
+  font: inherit; font-size: 17px; font-variant-numeric: tabular-nums; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); color: var(--ink); width: 100%;
+}
+input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.check input { margin-top: 4px; accent-color: var(--accent); width: 18px; height: 18px; }
+.example { font-size: 12.5px; color: var(--muted); }
+
+.answer { border-radius: 12px; padding: 20px; display: grid; gap: 6px; border: 1px solid var(--line); background: var(--paper); }
+.answer.ok { background: var(--accent-soft); border-color: transparent; }
+.answer.short { background: var(--bad-soft); border-color: transparent; }
+.answer .house { font-size: 14px; color: var(--muted); font-weight: 500; overflow-wrap: anywhere; }
+.answer .yes { font-family: var(--font-display); font-weight: 900; font-size: clamp(26px, 7vw, 34px); letter-spacing: -0.02em; line-height: 1.25; }
+.answer.ok .yes { color: var(--accent); }
+.answer.short .yes { color: var(--bad); }
+.answer .sub { font-size: 15px; font-variant-numeric: tabular-nums; }
+.facts { display: grid; gap: 0; }
+.fact { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.fact:last-child { border-bottom: 0; }
+.fact .k { color: var(--muted); font-size: 14px; }
+.fact .v { font-weight: 700; text-align: right; }
+.fact .v small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+
+details.more { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+details.more summary { cursor: pointer; font-size: 14.5px; font-weight: 500; color: var(--accent); }
+details.more .inner { display: grid; gap: 12px; margin-top: 14px; }
+.tablebox { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.n { text-align: right; white-space: nowrap; }
+tr.bind td { font-weight: 700; }
+.pill { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 99px; background: var(--warn-soft); color: var(--warn); font-weight: 700; margin-left: 6px; white-space: nowrap; }
+tr.total td { font-weight: 700; border-top: 2px solid var(--ink); }
+h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04em; }
+.flag { font-size: 14px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+.flag b { color: var(--accent); }
+.foot { font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <h1>이 집, 내 연봉으로 살 수 있을까</h1>
+    <p>사고 싶은 집과 내 돈만 넣으면 됩니다. 입력값은 이 화면에서만 계산하고 저장하지 않아요.</p>
+  </header>
+
+  <form id="form" autocomplete="off" style="display:grid; gap:16px;">
+    <section class="card">
+      <h2 class="step"><span class="no">1</span>사고 싶은 집</h2>
+      <label class="f" for="name">집 이름 (선택)
+        <input type="text" id="name" maxlength="40" placeholder="예: 정릉풍림아이원 59㎡">
+      </label>
+      <div class="row2">
+        <label class="f" for="price">집 가격 (최근 실거래가)
+          <span class="inrow"><input type="number" id="price" min="0" step="500" inputmode="numeric"><span class="unit">만원</span></span>
+          <span class="echo" id="priceEcho"></span>
+        </label>
+        <label class="f" for="region">어디에 있나요
+          <select id="region">
+            <option value="reg">서울·경기 규제지역</option>
+            <option value="capital">그 밖의 수도권</option>
+            <option value="local">지방</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="step"><span class="no">2</span>내 돈</h2>
+      <div class="row2">
+        <label class="f" for="salary">연봉 (세전, 부부 합산 가능)
+          <span class="inrow"><input type="number" id="salary" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
+          <span class="echo" id="salaryEcho"></span>
+        </label>
+        <label class="f" for="cash">집에 넣을 현금
+          <span class="inrow"><input type="number" id="cash" min="0" step="500" inputmode="numeric"><span class="unit">만원</span></span>
+          <span class="echo" id="cashEcho"></span>
+        </label>
+      </div>
+      <label class="check" for="first"><input type="checkbox" id="first"> <span>생애 첫 집이에요</span></label>
+      <span class="example" id="exampleNote">예시 값이 들어 있어요. 내 숫자로 바꿔 보세요.</span>
+    </section>
+
+    <section class="answer" id="answer" aria-live="polite">
+      <span class="house" id="aHouse"></span>
+      <span class="yes" id="aYes"></span>
+      <span class="sub" id="aSub"></span>
+    </section>
+
+    <section class="card facts" aria-label="핵심 숫자">
+      <div class="fact"><span class="k">이 집 사려면 연봉</span><span class="v" id="fSalary"></span></div>
+      <div class="fact"><span class="k">대출 받을 수 있는 돈</span><span class="v" id="fLoan"></span></div>
+      <div class="fact"><span class="k">매달 갚을 돈</span><span class="v" id="fMonthly"></span></div>
+      <div class="fact"><span class="k">내 돈으로 살 수 있는 최대 가격</span><span class="v" id="fMax"></span></div>
+    </section>
+
+    <details class="more">
+      <summary>더 정확하게 계산하기 (금리·만기·기존 대출·출산)</summary>
+      <div class="inner">
+        <div class="row2">
+          <label class="f" for="rate">주담대 금리
+            <span class="inrow"><input type="number" id="rate" min="0" max="15" step="0.05"><span class="unit">%</span></span>
+          </label>
+          <label class="f" for="years">만기
+            <span class="inrow"><input type="number" id="years" min="5" max="50" step="5"><span class="unit">년</span></span>
+          </label>
+        </div>
+        <label class="f" for="debt">기존 대출 1년 원리금 (신용대출·차 할부 등)
+          <span class="inrow"><input type="number" id="debt" min="0" step="50"><span class="unit">만원/년</span></span>
+        </label>
+        <label class="check" for="baby"><input type="checkbox" id="baby"> <span>최근 2년 안에 아이를 낳았어요</span></label>
+        <div class="row2">
+          <label class="f" for="stress">스트레스 금리
+            <span class="inrow"><input type="number" id="stress" min="0" max="5" step="0.05"><span class="unit">%p</span></span>
+          </label>
+          <label class="f" for="ltv">LTV
+            <span class="inrow"><input type="number" id="ltv" min="0" max="100" step="5"><span class="unit">%</span></span>
+          </label>
+        </div>
+        <span class="hint">스트레스 금리와 LTV는 지역·생애최초에 맞춰 자동으로 들어갑니다. 수도권·규제지역 스트레스 금리 하한 3%p(금융위). 생애최초 LTV는 출처마다 달라 은행 확인이 필요해요.</span>
+      </div>
+    </details>
+
+    <details class="more">
+      <summary>어떻게 계산했나요</summary>
+      <div class="inner">
+        <h3>대출 한도 — 셋 중 가장 낮은 값</h3>
+        <div class="tablebox"><table><tbody id="limitRows"></tbody></table></div>
+        <h3>필요한 현금</h3>
+        <div class="tablebox"><table><tbody id="cashRows"></tbody></table></div>
+        <h3>정책대출 확인해 볼 것</h3>
+        <div style="display:grid; gap:8px;" id="flags"></div>
+      </div>
+    </details>
+  </form>
+
+  <p class="foot">만든 곳: <a href="https://blog.naver.com/jsbars" style="color:var(--accent)">jsbars 블로그 — 뉴스 속 집·돈 이야기를 내 연봉으로 계산합니다</a></p>
+  <p class="foot">참고용 추정치입니다. 실제 한도와 금리는 은행 심사로 정해집니다. 반영 기준: 수도권·규제지역 주담대 한도(시가 15억 이하 6억 · 15억~25억 4억 · 25억 초과 2억), DSR 40%, 취득세 1주택 기본세율+지방교육세(생애최초 12억 이하 최대 200만원 감면), 중개보수 법정 상한.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var DEFAULTS = { salary: 6000, cash: 25000, price: 52000, region: "reg", first: true, rate: 4.2, years: 30, debt: 0 };
+  var LTV_TABLE = { reg: [40, 70], capital: [70, 80], local: [70, 80] };   // [일반 무주택, 생애최초]
+  var STRESS = { reg: 3.0, capital: 3.0, local: 0.75 };
+
+  function won(man) {
+    man = Math.round(man);
+    var neg = man < 0; man = Math.abs(man);
+    var eok = Math.floor(man / 10000), rest = man % 10000, s;
+    if (eok && rest) s = eok + "억 " + rest.toLocaleString("ko-KR") + "만원";
+    else if (eok) s = eok + "억원";
+    else s = rest.toLocaleString("ko-KR") + "만원";
+    return (neg ? "-" : "") + s;
+  }
+  function pct(x) { return (Math.round(x * 100) / 100) + "%"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---- 계산 (단위: 만원) ----
+  function annuityFactor(ratePct, years) {
+    var i = ratePct / 100 / 12, n = years * 12;
+    if (i === 0) return 12 / n;
+    return 12 * i / (1 - Math.pow(1 + i, -n));
+  }
+  function capLimit(region, price) {
+    if (region === "local") return Infinity;
+    if (price <= 150000) return 60000;
+    if (price <= 250000) return 40000;
+    return 20000;
+  }
+  function acqTax(price, first) {
+    var eok = price / 10000, r;
+    if (eok <= 6) r = 1; else if (eok <= 9) r = eok * 2 / 3 - 3; else r = 3;
+    var tax = price * r / 100, edu = tax * 0.1;
+    var relief = (first && eok <= 12) ? Math.min(tax, 200) : 0;
+    return { rate: r, tax: tax, edu: edu, relief: relief, total: tax + edu - relief };
+  }
+  function brokerFee(price) {
+    var r, cap = Infinity;
+    if (price < 5000) { r = 0.6; cap = 25; }
+    else if (price < 20000) { r = 0.5; cap = 80; }
+    else if (price < 90000) r = 0.4;
+    else if (price < 120000) r = 0.5;
+    else if (price < 150000) r = 0.6;
+    else r = 0.7;
+    return { rate: r, fee: Math.min(price * r / 100, cap) };
+  }
+  function evaluate(p) {
+    var ltvAmt = p.price * p.ltv / 100;
+    var cap = capLimit(p.region, p.price);
+    var room = Math.max(0, p.salary * 0.4 - p.debt);
+    var dsrAmt = room / annuityFactor(p.rate + p.stress, p.years);
+    var loan = Math.max(0, Math.min(ltvAmt, cap, dsrAmt, p.price));
+    var bind = loan === ltvAmt ? "ltv" : (loan === cap ? "cap" : "dsr");
+    var tax = acqTax(p.price, p.first), fee = brokerFee(p.price);
+    var need = p.price - loan + tax.total + fee.fee;
+    var monthly = loan * annuityFactor(p.rate, p.years) / 12;
+    return { ltvAmt: ltvAmt, cap: cap, room: room, dsrAmt: dsrAmt, loan: loan, bind: bind, tax: tax, fee: fee, need: need, monthly: monthly };
+  }
+  function maxPrice(p) {                           // 이분 탐색 60회 고정
+    var lo = 0, hi = 500000;
+    for (var k = 0; k < 60; k++) {
+      var mid = (lo + hi) / 2;
+      if (evaluate(Object.assign({}, p, { price: mid })).need <= p.cash) lo = mid; else hi = mid;
+    }
+    return Math.floor(lo / 100) * 100;
+  }
+  function neededSalary(p) {                       // 이분 탐색 60회 고정, 연봉으로 안 풀리면 null
+    if (evaluate(Object.assign({}, p, { salary: 1e7 })).need > p.cash) return null;
+    var lo = 0, hi = 1e7;
+    for (var k = 0; k < 60; k++) {
+      var mid = (lo + hi) / 2;
+      if (evaluate(Object.assign({}, p, { salary: mid })).need <= p.cash) hi = mid; else lo = mid;
+    }
+    return Math.ceil(hi / 100) * 100;
+  }
+
+  var ltvTouched = false, stressTouched = false;
+  function read() {
+    var num = function (id) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : 0; };
+    return {
+      name: $("name").value.trim(), salary: num("salary"), cash: num("cash"), price: num("price"), region: $("region").value,
+      first: $("first").checked, baby: $("baby").checked, rate: num("rate"), years: Math.max(1, num("years")),
+      debt: num("debt"), stress: num("stress"), ltv: Math.min(100, num("ltv"))
+    };
+  }
+  function syncAuto() {
+    var r = $("region").value, f = $("first").checked;
+    if (!ltvTouched) $("ltv").value = LTV_TABLE[r][f ? 1 : 0];
+    if (!stressTouched) $("stress").value = STRESS[r];
+  }
+
+  function render() {
+    var p = read(), e = evaluate(p), gap = p.cash - e.need;
+    $("priceEcho").textContent = p.price ? "= " + won(p.price) : "";
+    $("salaryEcho").textContent = p.salary ? "= " + won(p.salary) : "";
+    $("cashEcho").textContent = p.cash ? "= " + won(p.cash) : "";
+
+    var a = $("answer"), house = (p.name || "이 집") + (p.price ? " · " + won(p.price) : "");
+    $("aHouse").textContent = house;
+    if (p.price <= 0) {
+      a.className = "answer"; $("aYes").textContent = "집 가격을 넣어 주세요"; $("aSub").textContent = "";
+    } else if (gap >= 0) {
+      a.className = "answer ok"; $("aYes").textContent = "살 수 있어요";
+      $("aSub").textContent = "대출 " + won(e.loan) + "에 내 현금 " + won(e.need) + "을 넣으면 됩니다. 현금 " + won(gap) + "이 남아요.";
+    } else {
+      a.className = "answer short"; $("aYes").textContent = won(-gap) + " 모자라요";
+      $("aSub").textContent = "대출 " + won(e.loan) + "을 받아도 현금이 " + won(e.need) + " 필요한데, 지금 " + won(p.cash) + "이 있어요.";
+    }
+
+    var ns = neededSalary(p);
+    if (p.price <= 0) $("fSalary").textContent = "—";
+    else if (ns === null) {
+      var floorNeed = evaluate(Object.assign({}, p, { salary: 1e7 })).need;
+      $("fSalary").innerHTML = "연봉으로는 안 돼요<small>" + (e.ltvAmt <= e.cap ? "LTV" : "지역 한도") + " 때문에 현금 " + won(floorNeed) + "이 꼭 필요해요</small>";
+    } else if (ns <= p.salary) {
+      $("fSalary").innerHTML = won(ns) + "<small>지금 연봉으로 충분해요</small>";
+    } else {
+      $("fSalary").innerHTML = won(ns) + "<small>지금보다 " + won(ns - p.salary) + " 더</small>";
+    }
+    var why = { ltv: "LTV에 걸려요", cap: "지역 한도에 걸려요", dsr: "연봉(DSR)에 걸려요" }[e.bind];
+    $("fLoan").innerHTML = won(e.loan) + "<small>" + why + "</small>";
+    $("fMonthly").innerHTML = won(e.monthly) + "<small>금리 " + pct(p.rate) + " · " + p.years + "년</small>";
+    $("fMax").textContent = won(maxPrice(p));
+
+    var capTxt = e.cap === Infinity ? "지방은 금액 상한 없음" : (p.price <= 150000 ? "시가 15억 이하" : p.price <= 250000 ? "시가 15억~25억" : "시가 25억 초과");
+    var rows = [
+      ["ltv", "LTV " + pct(p.ltv), won(p.price) + " × " + pct(p.ltv), e.ltvAmt],
+      ["dsr", "DSR 40%", "연 " + won(e.room) + "까지 상환, 심사 금리 " + pct(p.rate + p.stress), e.dsrAmt],
+      ["cap", "지역 한도", capTxt, e.cap]
+    ];
+    $("limitRows").innerHTML = rows.map(function (r) {
+      var b = r[0] === e.bind;
+      return "<tr" + (b ? ' class="bind"' : "") + "><td>" + r[1] + (b ? '<span class="pill">내 한도</span>' : "") + "</td><td>" + r[2] + '</td><td class="n">' + (r[3] === Infinity ? "없음" : won(r[3])) + "</td></tr>";
+    }).join("");
+
+    var c = [["집 가격", won(p.price)], ["대출", "− " + won(e.loan)], ["취득세 " + pct(e.tax.rate) + " + 지방교육세", won(e.tax.tax + e.tax.edu)]];
+    if (e.tax.relief > 0) c.push(["생애최초 취득세 감면", "− " + won(e.tax.relief)]);
+    c.push(["중개보수 상한 " + pct(e.fee.rate), won(e.fee.fee)]);
+    $("cashRows").innerHTML = c.map(function (r) { return "<tr><td>" + r[0] + '</td><td class="n">' + r[1] + "</td></tr>"; }).join("")
+      + '<tr class="total"><td>필요한 현금</td><td class="n">' + won(e.need) + "</td></tr>";
+
+    var f = [], didLimit = p.first ? 7000 : 6000;
+    if (p.salary <= didLimit && p.price <= 60000) f.push("<b>디딤돌대출</b> 대상일 수 있어요 (연소득 " + won(didLimit) + " 이하, 주택가격 상한 확인 필요). 시중 주담대보다 금리가 낮아요.");
+    if (p.baby && p.salary <= 13000 && p.price <= 90000) f.push("<b>신생아 특례 디딤돌</b> 대상일 수 있어요 (부부 합산 연소득 1.3억 이하 · 9억 이하 · 85㎡ 이하). 특례 기간 5년 고정금리예요.");
+    if (!f.length) f.push("입력한 조건은 디딤돌·신생아 특례 기본 요건(소득·주택가격) 밖이라 시중 주담대로 계산했어요.");
+    f.push("정책대출 한도·금리는 자주 바뀝니다. 신청 전에 주택도시기금(기금e든든, 1566-9009)에서 확인하세요.");
+    $("flags").innerHTML = f.map(function (t) { return '<div class="flag">' + t + "</div>"; }).join("");
+  }
+
+  // ---- 시작: ?name=&price=&region=&salary=&cash=&first= 가 있으면 그 값으로 연다 (블로그 글 링크용) ----
+  var q = {};
+  try { new URLSearchParams(location.search).forEach(function (v, k) { q[k] = v; }); } catch (err) { q = {}; }
+  var fromLink = ["salary", "cash", "price"].some(function (k) { return q[k] && isFinite(parseFloat(q[k])); });
+  ["salary", "cash", "price", "rate", "years", "debt"].forEach(function (k) {
+    var v = parseFloat(q[k]); $(k).value = isFinite(v) && v >= 0 ? v : DEFAULTS[k];
+  });
+  $("name").value = q.name ? q.name.slice(0, 40) : (fromLink ? "" : "예시: 서울 59㎡ 아파트");
+  $("region").value = LTV_TABLE[q.region] ? q.region : DEFAULTS.region;
+  $("first").checked = q.first ? q.first === "1" : DEFAULTS.first;
+  $("baby").checked = q.baby === "1";
+  if (fromLink) $("exampleNote").textContent = "블로그 글의 예시 조건으로 열었어요. 내 숫자로 바꿔 보세요.";
+  syncAuto();
+
+  $("ltv").addEventListener("input", function () { ltvTouched = true; });
+  $("stress").addEventListener("input", function () { stressTouched = true; });
+  $("region").addEventListener("change", function () { ltvTouched = false; stressTouched = false; syncAuto(); render(); });
+  $("first").addEventListener("change", function () { ltvTouched = false; syncAuto(); render(); });
+  $("form").addEventListener("input", render);
+  $("form").addEventListener("submit", function (ev) { ev.preventDefault(); });
+  render();
+})();
+</script>
+
+</body>
+</html>
