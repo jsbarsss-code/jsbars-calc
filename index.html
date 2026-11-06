@@ -8,8 +8,8 @@
 <meta property="og:description" content="찜한 집, 내 연봉이랑 모은 돈으로 열쇠까지 얼마 남았는지 계산해요. 수도권 실거래·분양가 자동 검색.">
 <meta property="og:type" content="website">
 <title>우리집 열쇠가 내 손에</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Gothic+A1:wght@800;900&display=swap">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 /* 레이아웃: 폰 기준 한 줄 흐름 — ① 사고 싶은 집 → ② 내 돈 → 답 한 문장 → 접힌 상세 */
 :root {
@@ -24,8 +24,8 @@
   --warn-soft: #fbefdc;
   --bad: #a3312a;
   --bad-soft: #f8e3e1;
-  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  --font-display: "Gothic A1", "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-display: var(--font-body);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -40,15 +40,17 @@
   --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 body { margin: 0; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.65;
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.7;
+  word-break: keep-all; overflow-wrap: break-word; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 24px 48px;
 }
 .wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
-header h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(30px, 8vw, 40px); margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+header h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 40px); margin: 0; letter-spacing: -0.01em; line-height: 1.3; text-wrap: balance; }
 header p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
 .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
 .step { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 19px; font-weight: 700; }
@@ -62,7 +64,7 @@ label.f { display: grid; gap: 6px; font-size: 15.5px; font-weight: 500; color: v
 .echo { font-size: 14.5px; color: var(--accent); font-weight: 500; min-height: 1.2em; font-variant-numeric: tabular-nums; }
 .hint { color: var(--muted); font-size: 14.5px; font-weight: 400; }
 input[type=number], input[type=text], select {
-  font: inherit; font-size: 18px; font-variant-numeric: tabular-nums; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
+  font: inherit; word-break: keep-all; font-size: 18px; font-variant-numeric: tabular-nums; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--bg); color: var(--ink); width: 100%;
 }
 input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -74,7 +76,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
 .answer.ok { background: var(--accent-soft); border-color: transparent; }
 .answer.short { background: var(--bad-soft); border-color: transparent; }
 .answer .house { font-size: 16px; color: var(--muted); font-weight: 500; overflow-wrap: anywhere; }
-.answer .yes { font-family: var(--font-display); font-weight: 900; font-size: clamp(30px, 8vw, 40px); letter-spacing: -0.02em; line-height: 1.25; }
+.answer .yes { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 40px); letter-spacing: -0.01em; line-height: 1.3; }
 .answer.ok .yes { color: var(--accent); }
 .answer.short .yes { color: var(--bad); }
 .answer .sub { font-size: 17px; font-variant-numeric: tabular-nums; }
@@ -101,7 +103,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .foot { font-size: 14.5px; color: var(--muted); }
 .results, .picked { display: grid; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { font: inherit; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+.chip { font: inherit; word-break: keep-all; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
   border-radius: 8px; padding: 11px 14px; display: grid; gap: 3px; font-size: 16.5px; min-width: 0; max-width: 100%; }
 .chip:hover { border-color: var(--accent); }
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -116,6 +118,9 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .tag.st2 { background: var(--accent-soft); color: var(--accent); }
 .tag.st3 { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
 .near { margin: 0; }
+.linkbtn { font: inherit; word-break: keep-all; font-size: 15.5px; font-weight: 500; color: var(--accent); background: none; border: 1px dashed var(--accent);
+  border-radius: 8px; padding: 9px 12px; cursor: pointer; text-align: left; }
+.linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
@@ -143,6 +148,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
         <input type="search" id="q" maxlength="40" placeholder="단지명 또는 역 이름 (예: 운정중앙역, 헬리오시티)" autocomplete="off">
       </label>
       <div id="results" class="results" hidden></div>
+      <button type="button" id="again" class="linkbtn" hidden></button>
       <div id="picked" class="picked" hidden></div>
       <span class="hint" id="dataMeta">단지를 고르면 최근 실거래가나 분양가가 자동으로 채워져요. 마음에 둔 집이 없으면 아래에 직접 넣으세요.</span>
       <label class="f" for="name">우리집 후보 별명 (선택)
@@ -443,6 +449,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     $("region").value = region; ltvTouched = false; stressTouched = false; syncAuto();
     $("exampleNote").textContent = note;
     $("form").dispatchEvent(new Event("input", { bubbles: true }));
+    scrollToAnswer();
   }
   function search(text) {
     var box = $("results"), toks = text.trim().split(/\s+/).map(norm).filter(Boolean);
@@ -458,12 +465,25 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
       box.appendChild(chip('<span class="tag">실거래</span>' + esc(x[1]) + "<small>" + esc(x[3]) + " " + esc(x[2]) + (x[5] ? " · " + esc(x[5]) + "년" : "") + "</small>", function () { pickApt(x); }));
     });
     if (!ps.length && !as.length) box.innerHTML = '<p class="hint">최근 12개월 거래나 3년 안 분양 공고에서 찾지 못했어요. 가격을 직접 넣어 주세요.</p>';
+    lastList = "검색 후보 " + (ps.length + as.length) + "곳";
+    $("again").hidden = true;
     box.hidden = false;
   }
+  var lastList = "";   // 접힌 후보 목록 이름(예: "운정중앙역 후보 26곳")
   function showPicked(title, sub, chips) {
     var pk = $("picked"); pk.innerHTML = '<p class="pk-title">' + title + "</p>" + (sub ? '<p class="hint">' + sub + "</p>" : "");
     var row = document.createElement("div"); row.className = "chips"; chips.forEach(function (c) { row.appendChild(c); });
-    pk.appendChild(row); pk.hidden = false; $("results").hidden = true;
+    pk.appendChild(row); pk.hidden = false;
+    collapseResults();
+  }
+  function collapseResults() {
+    var box = $("results"), again = $("again");
+    box.hidden = true;
+    if (box.children.length && lastList) { again.textContent = lastList + " 다시 보기"; again.hidden = false; }
+  }
+  function scrollToAnswer() {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    try { $("answer").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); } catch (err) {}
   }
   function pickApt(x, st) {
     track("pick-apt");
@@ -632,7 +652,10 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
       var rows = Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) { return a.d - b.d; });
       box.innerHTML = '<p class="hint"><b>' + esc(stn.place_name) + "</b>에서 가까운 순 · 직선거리 · " + (SHOW_M / 1000) + "km 안 " + rows.length + "곳</p>";
       if (!rows.length) { box.innerHTML += '<p class="hint">가까운 아파트를 찾지 못했어요.</p>'; return; }
-      rows.slice(0, 30).forEach(function (r) {
+      lastList = stn.place_name.split(" ")[0] + " 후보 " + rows.length + "곳";
+      $("again").hidden = true;
+      var moreBtn = null;
+      rows.slice(0, 30).forEach(function (r, i) {
         var nm = r.m ? (r.m.apt ? r.m.apt[1] : r.m.ps.n) : r.p.place_name.replace(/\s*\d+동\s*$/, "");
         var tag = r.m && r.m.ps ? '<span class="tag new">분양</span>' : "";
         var sub = "직선 " + meters(r.d) + " · " + (r.m && r.m.apt ? esc(r.m.apt[3] + " " + r.m.apt[2]) + (r.m.apt[5] ? " · " + esc(r.m.apt[5]) + "년" : "")
@@ -641,9 +664,16 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
           var st = { name: stn.place_name, d: r.d };
           if (r.m && r.m.apt) pickApt(r.m.apt, st);
           else if (r.m && r.m.ps) pickPresale(r.m.ps, st);
-          else { $("name").value = nm.slice(0, 40); box.hidden = true; $("exampleNote").textContent = "이 단지는 최근 거래·분양 정보가 없어요. 가격을 직접 넣어 주세요."; }
+          else { $("name").value = nm.slice(0, 40); collapseResults(); $("exampleNote").textContent = "이 단지는 최근 거래·분양 정보가 없어요. 가격을 직접 넣어 주세요."; $("price").focus(); }
         }));
+        if (i >= 10) box.lastChild.hidden = true;
       });
+      if (rows.length > 10) {
+        moreBtn = document.createElement("button"); moreBtn.type = "button"; moreBtn.className = "linkbtn";
+        moreBtn.textContent = "더 보기 (" + (Math.min(rows.length, 30) - 10) + "곳)";
+        moreBtn.addEventListener("click", function () { Array.prototype.forEach.call(box.querySelectorAll(".chip[hidden]"), function (c) { c.hidden = false; }); moreBtn.remove(); });
+        box.appendChild(moreBtn);
+      }
     });
   }
   function nearestStations(x, el) {   // 단지 → 가까운 역 (단지 이름으로 골랐을 때)
@@ -661,6 +691,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     });
   }
   var timer = null;
+  $("again").addEventListener("click", function () { $("results").hidden = false; this.hidden = true; });
   $("q").addEventListener("focus", loadData);
   $("q").addEventListener("input", function (ev) {
     ev.stopPropagation();
