@@ -100,6 +100,14 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .flag b { color: var(--accent); }
 .foot { font-size: 12.5px; color: var(--muted); }
 </style>
+<script>
+  // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
+  window.goatcounter = { path: function () {
+    var linked = /[?&](salary|cash|price)=/.test(location.search);
+    return location.pathname + (linked ? "#from-blog-link" : "");
+  } };
+</script>
+<script data-goatcounter="https://jsbars.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
 
@@ -374,7 +382,14 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
   $("stress").addEventListener("input", function () { stressTouched = true; });
   $("region").addEventListener("change", function () { ltvTouched = false; stressTouched = false; syncAuto(); render(); });
   $("first").addEventListener("change", function () { ltvTouched = false; syncAuto(); render(); });
-  $("form").addEventListener("input", render);
+  var usedSent = false;
+  $("form").addEventListener("input", function () {
+    render();
+    if (!usedSent && window.goatcounter && window.goatcounter.count) {   // 입력을 처음 바꾼 순간 1회만 "계산해 봄" 이벤트
+      usedSent = true;
+      try { window.goatcounter.count({ path: "calc-used" + (fromLink ? "-from-blog" : ""), title: "계산해 봄", event: true }); } catch (err) {}
+    }
+  });
   $("form").addEventListener("submit", function (ev) { ev.preventDefault(); });
   render();
 })();
