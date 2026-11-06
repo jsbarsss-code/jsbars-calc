@@ -121,6 +121,12 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .linkbtn { font: inherit; word-break: keep-all; font-size: 15.5px; font-weight: 500; color: var(--accent); background: none; border: 1px dashed var(--accent);
   border-radius: 8px; padding: 9px 12px; cursor: pointer; text-align: left; }
 .linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.budget { font-size: 16px; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); }
+.budget b { color: var(--accent); font-variant-numeric: tabular-nums; }
+.bud { display: inline-block; margin-top: 4px; font-size: 13.5px; font-weight: 700; padding: 1px 8px; border-radius: 99px; font-variant-numeric: tabular-nums; }
+.bud.ok { background: var(--accent-soft); color: var(--accent); }
+.bud.no { background: var(--bad-soft); color: var(--bad); }
+.check.small { font-size: 15px; }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
@@ -143,8 +149,25 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 
   <form id="form" autocomplete="off" style="display:grid; gap:16px;">
     <section class="card">
-      <h2 class="step"><span class="no">1</span>우리집 후보 검색하기</h2>
-      <label class="f" for="q">어느 단지가 눈에 밟히나요? 역 이름으로 찾으면 역세권 순으로 보여 드려요
+      <h2 class="step"><span class="no">1</span>내 집 마련 군자금</h2>
+      <div class="row2">
+        <label class="f" for="salary">연봉 (세전, 부부 합산 가능)
+          <span class="inrow"><input type="number" id="salary" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
+          <span class="echo" id="salaryEcho"></span>
+        </label>
+        <label class="f" for="cash">통장에서 꺼낼 수 있는 현금
+          <span class="inrow"><input type="number" id="cash" min="0" step="500" inputmode="numeric"><span class="unit">만원</span></span>
+          <span class="echo" id="cashEcho"></span>
+        </label>
+      </div>
+      <label class="check" for="first"><input type="checkbox" id="first"> <span>생애 첫 집이에요 (첫 열쇠라 혜택이 있어요)</span></label>
+      <div class="budget" id="budgetLine" aria-live="polite"></div>
+      <span class="example" id="exampleNote">예시 값이 들어 있어요. 내 숫자로 바꾸는 순간 우리집 전략이 됩니다.</span>
+    </section>
+
+    <section class="card">
+      <h2 class="step"><span class="no">2</span>우리집 후보 검색하기</h2>
+      <label class="f" for="q">살고 싶은 동네의 역이나 단지 이름을 넣어 보세요. 역으로 찾으면 역세권 순, 내 예산 안 단지만 골라 보여 드려요
         <input type="search" id="q" maxlength="40" placeholder="단지명 또는 역 이름 (예: 운정중앙역, 헬리오시티)" autocomplete="off">
       </label>
       <div id="results" class="results" hidden></div>
@@ -167,22 +190,6 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
           </select>
         </label>
       </div>
-    </section>
-
-    <section class="card">
-      <h2 class="step"><span class="no">2</span>내 집 마련 군자금</h2>
-      <div class="row2">
-        <label class="f" for="salary">연봉 (세전, 부부 합산 가능)
-          <span class="inrow"><input type="number" id="salary" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
-          <span class="echo" id="salaryEcho"></span>
-        </label>
-        <label class="f" for="cash">통장에서 꺼낼 수 있는 현금
-          <span class="inrow"><input type="number" id="cash" min="0" step="500" inputmode="numeric"><span class="unit">만원</span></span>
-          <span class="echo" id="cashEcho"></span>
-        </label>
-      </div>
-      <label class="check" for="first"><input type="checkbox" id="first"> <span>생애 첫 집이에요 (첫 열쇠라 혜택이 있어요)</span></label>
-      <span class="example" id="exampleNote">예시 값이 들어 있어요. 내 숫자로 바꾸는 순간 우리집 전략이 됩니다.</span>
     </section>
 
     <section class="answer" id="answer" aria-live="polite">
@@ -238,6 +245,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     </details>
   </form>
 
+  <p class="foot">© 2026 jsbars · 우리집 열쇠. 화면 구성·문구·코드는 저작권법으로 보호되며 무단 복제·재배포를 금지합니다. <a href="terms.html" style="color:var(--accent)">이용약관·개인정보 안내</a></p>
   <p class="foot">만든 곳: <a href="https://blog.naver.com/jsbars" style="color:var(--accent)">jsbars 블로그 — 뉴스 속 집·돈 이야기를 내 연봉으로 계산합니다</a></p>
   <p class="foot">데이터 출처: 국토교통부 아파트 매매 실거래가(공공데이터포털), 한국부동산원 청약홈 분양정보. 매주 자동 갱신하며 신고가 늦은 거래는 빠질 수 있어요. 분양가는 주택형별 최고가입니다.</p>
   <p class="foot">참고용 추정치입니다. 실제 한도와 금리는 은행 심사로 정해집니다. 반영 기준: 수도권·규제지역 주담대 한도(시가 15억 이하 6억 · 15억~25억 4억 · 25억 초과 2억), DSR 40%, 취득세 1주택 기본세율+지방교육세(생애최초 12억 이하 최대 200만원 감면), 중개보수 법정 상한.</p>
@@ -337,6 +345,15 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     if (!stressTouched) $("stress").value = STRESS[r];
   }
 
+  function regionOverride(base, region) {   // 후보마다 그 지역의 LTV·스트레스 금리로 계산(직접 바꾼 값은 존중)
+    return Object.assign({}, base, {
+      region: region,
+      ltv: ltvTouched ? base.ltv : LTV_TABLE[region][base.first ? 1 : 0],
+      stress: stressTouched ? base.stress : STRESS[region]
+    });
+  }
+  function budgetGap(price, region) { var b = read(); return b.cash - evaluate(Object.assign(regionOverride(b, region), { price: price })).need; }
+  function maxFor(region) { return maxPrice(regionOverride(read(), region)); }
   function render() {
     var p = read(), e = evaluate(p), gap = p.cash - e.need;
     $("priceEcho").textContent = p.price ? "= " + won(p.price) : "";
@@ -369,6 +386,10 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     $("fLoan").innerHTML = won(e.loan) + "<small>" + why + "</small>";
     $("fMonthly").innerHTML = won(e.monthly) + "<small>금리 " + pct(p.rate) + " · " + p.years + "년</small>";
     $("fMax").textContent = won(maxPrice(p));
+    $("budgetLine").innerHTML = (p.cash > 0 || p.salary > 0)
+      ? "이 군자금이면 <b>규제지역 " + won(maxFor("reg")) + "</b> · <b>그 밖 수도권 " + won(maxFor("capital")) + "</b>까지 열쇠를 노려볼 수 있어요"
+      : "연봉과 현금을 넣으면 어디까지 노려볼 수 있는지 바로 알려 드려요";
+    if (lastRows && !$("results").hidden) renderCandidates();
 
     var capTxt = e.cap === Infinity ? "지방은 금액 상한 없음" : (p.price <= 150000 ? "시가 15억 이하" : p.price <= 250000 ? "시가 15억~25억" : "시가 25억 초과");
     var rows = [
@@ -451,23 +472,84 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     $("form").dispatchEvent(new Event("input", { bubbles: true }));
     scrollToAnswer();
   }
-  function search(text) {
-    var box = $("results"), toks = text.trim().split(/\s+/).map(norm).filter(Boolean);
-    box.innerHTML = "";
-    if (!toks.length || toks.join("").length < 2) { box.hidden = true; return; }
-    var hit = function (hay) { hay = norm(hay); return toks.every(function (t) { return hay.indexOf(t) >= 0; }); };
-    var ps = presale.filter(function (p) { return hit(p.n + p.addr); }).slice(0, 4);
-    var as = idx.filter(function (x) { return hit(x[1] + x[2] + x[3]); }).slice(0, 8);
-    ps.forEach(function (p) {
-      box.appendChild(chip('<span class="tag new">분양</span>' + esc(p.n) + '<small>' + esc(p.area) + " · 입주 예정 " + fmtYM(p.mvn) + "</small>", function () { pickPresale(p); }));
+  function tyName(t) { return String(t || "").replace(/^0*(\d+)\.\d+/, "$1"); }   // "084.9702B" → "84B"
+  function getSgg(code) {
+    return sggCache[code] ? Promise.resolve(sggCache[code]) : getJSON("data/apt/" + code + ".json").then(function (d) { sggCache[code] = d || {}; return sggCache[code]; });
+  }
+  function fitOf(r) {   // 후보 r의 예산 판정: 들어가는 가장 넓은 면적, 없으면 가장 싼 면적과 부족액
+    var opts = [];
+    if (r.m && r.m.apt) {
+      var cx = (sggCache[r.m.apt[4]] || {})[r.m.apt[0]];
+      if (!cx) return null;
+      var reg = regionForSgg(r.m.apt[4]);
+      opts = cx.a.map(function (a) { return { label: "전용 " + a[0] + "㎡", area: a[0], price: a[1], gap: budgetGap(a[1], reg) }; });
+    } else if (r.m && r.m.ps) {
+      var ps = r.m.ps, preg = (ps.spec || ps.adj || ps.area === "서울") ? "reg" : (ps.area ? "capital" : "local");
+      opts = (ps.t || []).map(function (t) { return { label: tyName(t[0]), area: t[1], price: t[2], gap: budgetGap(t[2], preg) }; });
+    }
+    if (!opts.length) return null;
+    var ok = opts.filter(function (o) { return o.gap >= 0; }).sort(function (a, b) { return b.area - a.area; });
+    if (ok.length) return { ok: true, o: ok[0] };
+    return { ok: false, o: opts.sort(function (a, b) { return a.price - b.price; })[0] };
+  }
+  function fitBadge(f) {
+    if (!f) return "";
+    return f.ok ? '<span class="bud ok">예산 안 · ' + esc(f.o.label) + " " + won(f.o.price) + "</span>"
+                : '<span class="bud no">' + won(-f.o.gap) + " 부족 · " + esc(f.o.label) + " " + won(f.o.price) + "</span>";
+  }
+  var lastRows = null, lastHead = "", lastStation = null, fitOnly = true;
+  function showCandidates(rows, head, station) {
+    lastRows = rows; lastHead = head; lastStation = station || null;
+    var codes = {};
+    rows.forEach(function (r) { if (r.m && r.m.apt) codes[r.m.apt[4]] = 1; });
+    Promise.all(Object.keys(codes).map(getSgg)).then(renderCandidates);
+    renderCandidates();
+  }
+  function renderCandidates() {
+    var box = $("results"), rows = lastRows || [];
+    rows.forEach(function (r) { r.f = fitOf(r); });
+    var fits = rows.filter(function (r) { return r.f && r.f.ok; });
+    var useFilter = fitOnly && fits.length > 0;
+    var list = useFilter ? fits : rows;
+    box.innerHTML = '<p class="hint">' + lastHead + " · 내 예산 안 <b>" + fits.length + "곳</b></p>";
+    var tg = document.createElement("label"); tg.className = "check small"; tg.htmlFor = "fitOnly";
+    tg.innerHTML = '<input type="checkbox" id="fitOnly"' + (fitOnly ? " checked" : "") + "> <span>내 예산 안 단지만 보기</span>";
+    box.appendChild(tg);
+    tg.querySelector("input").addEventListener("change", function (ev) { ev.stopPropagation(); fitOnly = this.checked; renderCandidates(); });
+    tg.querySelector("input").addEventListener("input", function (ev) { ev.stopPropagation(); });
+    if (fitOnly && !fits.length && rows.length) box.insertAdjacentHTML("beforeend", '<p class="hint">지금 군자금으로 닿는 곳이 없어 전체를 보여 드려요. 아래 "열쇠에 필요한 연봉"으로 전략을 짜 보세요.</p>');
+    if (!rows.length) { box.insertAdjacentHTML("beforeend", '<p class="hint">찾은 단지가 없어요. 가격을 직접 넣어 주세요.</p>'); }
+    lastList = (lastStation ? lastStation.split(" ")[0] : "검색") + " 후보 " + rows.length + "곳";
+    list.slice(0, 30).forEach(function (r, i) {
+      var nm = r.m ? (r.m.apt ? r.m.apt[1] : r.m.ps.n) : r.p.place_name.replace(/\s*\d+동\s*$/, "");
+      var tag = r.m && r.m.ps ? '<span class="tag new">분양</span>' : (lastStation ? "" : '<span class="tag">실거래</span>');
+      var where = r.m && r.m.apt ? esc(r.m.apt[3] + " " + r.m.apt[2]) + (r.m.apt[5] ? " · " + esc(r.m.apt[5]) + "년" : "")
+        : r.m && r.m.ps ? esc(r.m.ps.area || "") + " · 입주 예정 " + fmtYM(r.m.ps.mvn) : "최근 거래·분양 정보 없음, 가격은 직접 입력";
+      var sub = (r.d != null ? "직선 " + meters(r.d) + " · " : "") + where;
+      box.appendChild(chip((r.d != null ? stationGrade(r.d) : "") + tag + esc(nm) + "<small>" + sub + "</small>" + fitBadge(r.f), function () {
+        var st = r.d != null && lastStation ? { name: lastStation, d: r.d } : null;
+        if (r.m && r.m.apt) pickApt(r.m.apt, st);
+        else if (r.m && r.m.ps) pickPresale(r.m.ps, st);
+        else { $("name").value = nm.slice(0, 40); collapseResults(); $("exampleNote").textContent = "이 단지는 최근 거래·분양 정보가 없어요. 가격을 직접 넣어 주세요."; $("price").focus(); }
+      }));
+      if (i >= 10) box.lastChild.hidden = true;
     });
-    as.forEach(function (x) {
-      box.appendChild(chip('<span class="tag">실거래</span>' + esc(x[1]) + "<small>" + esc(x[3]) + " " + esc(x[2]) + (x[5] ? " · " + esc(x[5]) + "년" : "") + "</small>", function () { pickApt(x); }));
-    });
-    if (!ps.length && !as.length) box.innerHTML = '<p class="hint">최근 12개월 거래나 3년 안 분양 공고에서 찾지 못했어요. 가격을 직접 넣어 주세요.</p>';
-    lastList = "검색 후보 " + (ps.length + as.length) + "곳";
+    if (list.length > 10) {
+      var more = document.createElement("button"); more.type = "button"; more.className = "linkbtn";
+      more.textContent = "더 보기 (" + (Math.min(list.length, 30) - 10) + "곳)";
+      more.addEventListener("click", function () { Array.prototype.forEach.call(box.querySelectorAll(".chip[hidden]"), function (c) { c.hidden = false; }); more.remove(); });
+      box.appendChild(more);
+    }
     $("again").hidden = true;
     box.hidden = false;
+  }
+  function search(text) {
+    var box = $("results"), toks = text.trim().split(/\s+/).map(norm).filter(Boolean);
+    if (!toks.length || toks.join("").length < 2) { box.hidden = true; box.innerHTML = ""; lastRows = null; return; }
+    var hit = function (hay) { hay = norm(hay); return toks.every(function (t) { return hay.indexOf(t) >= 0; }); };
+    var rows = presale.filter(function (p) { return hit(p.n + p.addr); }).slice(0, 4).map(function (p) { return { m: { ps: p } }; })
+      .concat(idx.filter(function (x) { return hit(x[1] + x[2] + x[3]); }).slice(0, 12).map(function (x) { return { m: { apt: x } }; }));
+    showCandidates(rows, "‘" + esc(text.trim()) + "’ 검색 결과 " + rows.length + "곳", null);
   }
   var lastList = "";   // 접힌 후보 목록 이름(예: "운정중앙역 후보 26곳")
   function showPicked(title, sub, chips) {
@@ -488,7 +570,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
   function pickApt(x, st) {
     track("pick-apt");
     var code = x[4];
-    (sggCache[code] ? Promise.resolve(sggCache[code]) : getJSON("data/apt/" + code + ".json").then(function (d) { sggCache[code] = d; return d; })).then(function (d) {
+    getSgg(code).then(function (d) {
       var cx = d && d[x[0]];
       if (!cx) { showPicked(esc(x[1]), "거래 정보를 불러오지 못했어요.", []); return; }
       var chips = cx.a.map(function (a) {   // [전용㎡, 최근가, 최근일, 층, 건수, 최근5건 중간값, 12개월 최고]
@@ -506,8 +588,8 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     track("pick-presale");
     var region = (p.spec || p.adj || p.area === "서울") ? "reg" : (p.area ? "capital" : "local");
     var chips = (p.t || []).map(function (t) {   // [주택형, 전용㎡, 분양가 최고가, 공급세대]
-      return chip(esc(t[0]) + " <b>" + won(t[2]) + "</b><small>분양가(최고가) · " + t[3] + "세대</small>", function () {
-        fill(p.n + " " + t[0], t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.");
+      return chip(esc(tyName(t[0])) + " <b>" + won(t[2]) + "</b><small>분양가(최고가) · " + t[3] + "세대</small>", function () {
+        fill(p.n + " " + tyName(t[0]), t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.");
       });
     });
     var sub = (st ? stationGrade(st.d) + esc(st.name) + " 직선 " + meters(st.d) + " · " : "") + "입주 예정 " + fmtYM(p.mvn) + (p.cntrct && p.cntrct[0] ? " · 계약 " + esc(p.cntrct[0]) : "") + (p.cap ? " · 분양가상한제" : "")
@@ -650,30 +732,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
         });
       });
       var rows = Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) { return a.d - b.d; });
-      box.innerHTML = '<p class="hint"><b>' + esc(stn.place_name) + "</b>에서 가까운 순 · 직선거리 · " + (SHOW_M / 1000) + "km 안 " + rows.length + "곳</p>";
-      if (!rows.length) { box.innerHTML += '<p class="hint">가까운 아파트를 찾지 못했어요.</p>'; return; }
-      lastList = stn.place_name.split(" ")[0] + " 후보 " + rows.length + "곳";
-      $("again").hidden = true;
-      var moreBtn = null;
-      rows.slice(0, 30).forEach(function (r, i) {
-        var nm = r.m ? (r.m.apt ? r.m.apt[1] : r.m.ps.n) : r.p.place_name.replace(/\s*\d+동\s*$/, "");
-        var tag = r.m && r.m.ps ? '<span class="tag new">분양</span>' : "";
-        var sub = "직선 " + meters(r.d) + " · " + (r.m && r.m.apt ? esc(r.m.apt[3] + " " + r.m.apt[2]) + (r.m.apt[5] ? " · " + esc(r.m.apt[5]) + "년" : "")
-          : r.m && r.m.ps ? "입주 예정 " + fmtYM(r.m.ps.mvn) + " · 분양가로 계산" : "최근 거래·분양 정보 없음, 가격은 직접 입력");
-        box.appendChild(chip(stationGrade(r.d) + tag + esc(nm) + "<small>" + sub + "</small>", function () {
-          var st = { name: stn.place_name, d: r.d };
-          if (r.m && r.m.apt) pickApt(r.m.apt, st);
-          else if (r.m && r.m.ps) pickPresale(r.m.ps, st);
-          else { $("name").value = nm.slice(0, 40); collapseResults(); $("exampleNote").textContent = "이 단지는 최근 거래·분양 정보가 없어요. 가격을 직접 넣어 주세요."; $("price").focus(); }
-        }));
-        if (i >= 10) box.lastChild.hidden = true;
-      });
-      if (rows.length > 10) {
-        moreBtn = document.createElement("button"); moreBtn.type = "button"; moreBtn.className = "linkbtn";
-        moreBtn.textContent = "더 보기 (" + (Math.min(rows.length, 30) - 10) + "곳)";
-        moreBtn.addEventListener("click", function () { Array.prototype.forEach.call(box.querySelectorAll(".chip[hidden]"), function (c) { c.hidden = false; }); moreBtn.remove(); });
-        box.appendChild(moreBtn);
-      }
+      showCandidates(rows, "<b>" + esc(stn.place_name) + "</b>에서 가까운 순 · 직선 " + (SHOW_M / 1000) + "km 안 " + rows.length + "곳", stn.place_name);
     });
   }
   function nearestStations(x, el) {   // 단지 → 가까운 역 (단지 이름으로 골랐을 때)
