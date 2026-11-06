@@ -99,6 +99,18 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .flag { font-size: 14px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
 .flag b { color: var(--accent); }
 .foot { font-size: 12.5px; color: var(--muted); }
+.results, .picked { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: inherit; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  border-radius: 8px; padding: 9px 12px; display: grid; gap: 2px; min-width: 0; max-width: 100%; }
+.chip:hover { border-color: var(--accent); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip small { color: var(--muted); font-size: 12px; }
+.chip b { color: var(--accent); font-variant-numeric: tabular-nums; }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 7px; border-radius: 99px; margin-right: 6px; background: var(--accent-soft); color: var(--accent); }
+.tag.new { background: var(--warn-soft); color: var(--warn); }
+.pk-title { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.picked .hint { margin: 0; }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
@@ -121,6 +133,12 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
   <form id="form" autocomplete="off" style="display:grid; gap:16px;">
     <section class="card">
       <h2 class="step"><span class="no">1</span>사고 싶은 집</h2>
+      <label class="f" for="q">단지 검색 (수도권 실거래·분양)
+        <input type="search" id="q" maxlength="40" placeholder="예: 운정 제일풍경채, 헬리오시티" autocomplete="off">
+      </label>
+      <div id="results" class="results" hidden></div>
+      <div id="picked" class="picked" hidden></div>
+      <span class="hint" id="dataMeta">단지를 고르면 최근 실거래가나 분양가가 자동으로 채워져요. 없으면 아래에 직접 넣으세요.</span>
       <label class="f" for="name">집 이름 (선택)
         <input type="text" id="name" maxlength="40" placeholder="예: 정릉풍림아이원 59㎡">
       </label>
@@ -209,6 +227,7 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
   </form>
 
   <p class="foot">만든 곳: <a href="https://blog.naver.com/jsbars" style="color:var(--accent)">jsbars 블로그 — 뉴스 속 집·돈 이야기를 내 연봉으로 계산합니다</a></p>
+  <p class="foot">데이터 출처: 국토교통부 아파트 매매 실거래가(공공데이터포털), 한국부동산원 청약홈 분양정보. 매주 자동 갱신하며 신고가 늦은 거래는 빠질 수 있어요. 분양가는 주택형별 최고가입니다.</p>
   <p class="foot">참고용 추정치입니다. 실제 한도와 금리는 은행 심사로 정해집니다. 반영 기준: 수도권·규제지역 주담대 한도(시가 15억 이하 6억 · 15억~25억 4억 · 25억 초과 2억), DSR 40%, 취득세 1주택 기본세율+지방교육세(생애최초 12억 이하 최대 200만원 감면), 중개보수 법정 상한.</p>
 </div>
 
@@ -391,6 +410,90 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     }
   });
   $("form").addEventListener("submit", function (ev) { ev.preventDefault(); });
+
+  // ---- 단지 검색: GitHub Actions가 주 1회 만든 정적 JSON만 읽는다 (API 키는 브라우저에 없음) ----
+  var REG_SGG = { "41290": 1, "41210": 1, "41131": 1, "41133": 1, "41135": 1, "41111": 1, "41115": 1, "41117": 1, "41173": 1, "41465": 1, "41430": 1, "41450": 1 };
+  function regionForSgg(code) { return /^11/.test(code) || REG_SGG[code] ? "reg" : "capital"; }
+  function norm(s) { return String(s || "").replace(/[\s()·\-]/g, "").toLowerCase(); }
+  function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (err) {} }
+  var idx = [], presale = [], loading = null, sggCache = {};
+  function getJSON(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  function loadData() {
+    if (loading) return loading;
+    loading = Promise.all([getJSON("data/apt-index.json"), getJSON("data/presale.json"), getJSON("data/meta.json")]).then(function (a) {
+      idx = a[0] || []; presale = a[1] || [];
+      if (a[2]) $("dataMeta").textContent = "실거래 " + a[2].complexes.toLocaleString("ko-KR") + "개 단지 · 분양 공고 " + a[2].presale + "건 · " + a[2].built + " 갱신";
+      else $("dataMeta").textContent = "단지 데이터를 불러오지 못했어요. 집 가격을 직접 넣어 주세요.";
+    });
+    return loading;
+  }
+  function fmtYM(ym) { ym = String(ym || ""); return ym.length >= 6 ? ym.slice(0, 4) + "년 " + parseInt(ym.slice(4, 6), 10) + "월" : "-"; }
+  function chip(html, onClick) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.innerHTML = html;
+    b.addEventListener("click", onClick); return b;
+  }
+  function fill(name, price, region, note) {
+    $("name").value = name.slice(0, 40); $("price").value = price;
+    $("region").value = region; ltvTouched = false; stressTouched = false; syncAuto();
+    $("exampleNote").textContent = note;
+    $("form").dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function search(text) {
+    var box = $("results"), toks = text.trim().split(/\s+/).map(norm).filter(Boolean);
+    box.innerHTML = "";
+    if (!toks.length || toks.join("").length < 2) { box.hidden = true; return; }
+    var hit = function (hay) { hay = norm(hay); return toks.every(function (t) { return hay.indexOf(t) >= 0; }); };
+    var ps = presale.filter(function (p) { return hit(p.n + p.addr); }).slice(0, 4);
+    var as = idx.filter(function (x) { return hit(x[1] + x[2] + x[3]); }).slice(0, 8);
+    ps.forEach(function (p) {
+      box.appendChild(chip('<span class="tag new">분양</span>' + esc(p.n) + '<small>' + esc(p.area) + " · 입주 예정 " + fmtYM(p.mvn) + "</small>", function () { pickPresale(p); }));
+    });
+    as.forEach(function (x) {
+      box.appendChild(chip('<span class="tag">실거래</span>' + esc(x[1]) + "<small>" + esc(x[3]) + " " + esc(x[2]) + (x[5] ? " · " + esc(x[5]) + "년" : "") + "</small>", function () { pickApt(x); }));
+    });
+    if (!ps.length && !as.length) box.innerHTML = '<p class="hint">최근 12개월 거래나 3년 안 분양 공고에서 찾지 못했어요. 가격을 직접 넣어 주세요.</p>';
+    box.hidden = false;
+  }
+  function showPicked(title, sub, chips) {
+    var pk = $("picked"); pk.innerHTML = '<p class="pk-title">' + title + "</p>" + (sub ? '<p class="hint">' + sub + "</p>" : "");
+    var row = document.createElement("div"); row.className = "chips"; chips.forEach(function (c) { row.appendChild(c); });
+    pk.appendChild(row); pk.hidden = false; $("results").hidden = true;
+  }
+  function pickApt(x) {
+    track("pick-apt");
+    var code = x[4];
+    (sggCache[code] ? Promise.resolve(sggCache[code]) : getJSON("data/apt/" + code + ".json").then(function (d) { sggCache[code] = d; return d; })).then(function (d) {
+      var cx = d && d[x[0]];
+      if (!cx) { showPicked(esc(x[1]), "거래 정보를 불러오지 못했어요.", []); return; }
+      var chips = cx.a.map(function (a) {   // [전용㎡, 최근가, 최근일, 층, 건수, 최근5건 중간값, 12개월 최고]
+        return chip("전용 " + a[0] + "㎡ <b>" + won(a[1]) + "</b><small>" + a[2] + " · " + esc(a[3]) + "층 · 최근 12개월 " + a[4] + "건</small>", function () {
+          fill(cx.n + " " + a[0] + "㎡", a[1], regionForSgg(code),
+            "최근 거래가(" + a[2] + ")로 채웠어요. 최근 5건 중간값 " + won(a[5]) + " · 12개월 최고 " + won(a[6]) + ". 규제지역 여부는 직접 확인해 주세요.");
+        });
+      });
+      showPicked(esc(cx.n), esc(x[3] + " " + cx.u) + (cx.y ? " · " + esc(cx.y) + "년 준공" : "") + " · 면적을 고르면 가격이 채워져요", chips);
+    });
+  }
+  function pickPresale(p) {
+    track("pick-presale");
+    var region = (p.spec || p.adj || p.area === "서울") ? "reg" : (p.area ? "capital" : "local");
+    var chips = (p.t || []).map(function (t) {   // [주택형, 전용㎡, 분양가 최고가, 공급세대]
+      return chip(esc(t[0]) + " <b>" + won(t[2]) + "</b><small>분양가(최고가) · " + t[3] + "세대</small>", function () {
+        fill(p.n + " " + t[0], t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.");
+      });
+    });
+    var sub = "입주 예정 " + fmtYM(p.mvn) + (p.cntrct && p.cntrct[0] ? " · 계약 " + esc(p.cntrct[0]) : "") + (p.cap ? " · 분양가상한제" : "")
+      + (p.url ? ' · <a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="color:var(--accent)">청약홈 공고</a>' : "");
+    showPicked(esc(p.n), sub, chips.length ? chips : []);
+  }
+  var timer = null;
+  $("q").addEventListener("focus", loadData);
+  $("q").addEventListener("input", function (ev) {
+    ev.stopPropagation();
+    var v = this.value; clearTimeout(timer);
+    timer = setTimeout(function () { loadData().then(function () { search(v); }); }, 150);
+  });
+
   render();
 })();
 </script>
