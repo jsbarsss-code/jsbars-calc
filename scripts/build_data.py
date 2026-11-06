@@ -1,7 +1,7 @@
 """
 계산기용 정적 데이터 생성 — GitHub Actions가 주 1회 실행한다(서버 없음).
 
-  site/data/apt-index.json      수도권 아파트 단지 검색 목록 [id, 단지명, 법정동, 시군구명, 시군구코드, 준공년]
+  site/data/apt-index.json      수도권 아파트 단지 검색 목록 [id, 단지명, 법정동, 시군구명, 시군구코드, 준공년, 지번]
   site/data/apt/{시군구코드}.json  단지별 전용면적별 최근 12개월 실거래 요약
   site/data/presale.json        청약홈 수도권 APT 분양 공고(최근 3년 — 입주 예정 단지 포함) + 주택형별 분양가
   site/data/meta.json           생성 시각·출처·건수
@@ -143,7 +143,7 @@ def build_trades(key: str, codes: list, months: int, out: Path) -> tuple:
                 recent = sorted(p for _, p, _ in deals[:5])
                 areas.append([area, last[1], last[0], last[2], len(deals), recent[len(recent) // 2], max(p for _, p, _ in deals)])
             sgg_out[cid] = {"n": name, "u": umd, "j": jibun, "y": cx["y"], "a": areas}
-            index.append([cid, name, umd, LAWD[code], code, cx["y"]])
+            index.append([cid, name, umd, LAWD[code], code, cx["y"], jibun])  # 지번: 카카오 역 주변 검색 결과와 맞추는 키
         (out / "apt" / f"{code}.json").write_text(json.dumps(sgg_out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (out / "apt-index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return len(index), n_trades, errors

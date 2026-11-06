@@ -112,6 +112,10 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .pk-title { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .picked .hint { margin: 0; }
 .kicker { margin: 4px 0 0 !important; font-size: 17px; font-weight: 700; color: var(--accent) !important; letter-spacing: 0.04em; }
+.tag.st1 { background: var(--accent); color: var(--paper); }
+.tag.st2 { background: var(--accent-soft); color: var(--accent); }
+.tag.st3 { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.near { margin: 0; }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
@@ -135,8 +139,8 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
   <form id="form" autocomplete="off" style="display:grid; gap:16px;">
     <section class="card">
       <h2 class="step"><span class="no">1</span>우리집 후보 검색하기</h2>
-      <label class="f" for="q">어느 단지가 눈에 밟히나요? (수도권 실거래·분양)
-        <input type="search" id="q" maxlength="40" placeholder="예: 운정 제일풍경채, 헬리오시티" autocomplete="off">
+      <label class="f" for="q">어느 단지가 눈에 밟히나요? 역 이름으로 찾으면 역세권 순으로 보여 드려요
+        <input type="search" id="q" maxlength="40" placeholder="단지명 또는 역 이름 (예: 운정중앙역, 헬리오시티)" autocomplete="off">
       </label>
       <div id="results" class="results" hidden></div>
       <div id="picked" class="picked" hidden></div>
@@ -461,7 +465,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     var row = document.createElement("div"); row.className = "chips"; chips.forEach(function (c) { row.appendChild(c); });
     pk.appendChild(row); pk.hidden = false; $("results").hidden = true;
   }
-  function pickApt(x) {
+  function pickApt(x, st) {
     track("pick-apt");
     var code = x[4];
     (sggCache[code] ? Promise.resolve(sggCache[code]) : getJSON("data/apt/" + code + ".json").then(function (d) { sggCache[code] = d; return d; })).then(function (d) {
@@ -473,7 +477,9 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
             "최근 거래가(" + a[2] + ")로 채웠어요. 최근 5건 중간값 " + won(a[5]) + " · 12개월 최고 " + won(a[6]) + ". 규제지역 여부는 직접 확인해 주세요.");
         });
       });
-      showPicked(esc(cx.n), esc(x[3] + " " + cx.u) + (cx.y ? " · " + esc(cx.y) + "년 준공" : "") + " · 면적을 고르면 가격이 채워져요", chips);
+      var stTxt = st ? stationGrade(st.d) + esc(st.name) + " 직선 " + meters(st.d) + " · " : "";
+      showPicked(esc(cx.n), stTxt + esc(x[3] + " " + cx.u) + (cx.y ? " · " + esc(cx.y) + "년 준공" : "") + " · 면적을 고르면 가격이 채워져요", chips);
+      if (!st && x[6]) { var near = document.createElement("p"); near.className = "hint near"; $("picked").insertBefore(near, $("picked").children[1] || null); nearestStations(x, near); }
     });
   }
   function pickPresale(p) {
@@ -488,12 +494,117 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
       + (p.url ? ' · <a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="color:var(--accent)">청약홈 공고</a>' : "");
     showPicked(esc(p.n), sub, chips.length ? chips : []);
   }
+
+  // ---- 역세권 검색 (카카오 지도 JavaScript 키 — 등록 도메인에서만 동작하는 공개용 키, 결과는 저장하지 않고 화면에서만 쓴다) ----
+  var KAKAO_JS_KEY = "";
+  var kakaoReady = null;
+  function loadKakao() {
+    if (!KAKAO_JS_KEY) return Promise.resolve(false);
+    if (kakaoReady) return kakaoReady;
+    kakaoReady = new Promise(function (resolve) {
+      var sc = document.createElement("script");
+      sc.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" + encodeURIComponent(KAKAO_JS_KEY) + "&libraries=services&autoload=false";
+      sc.onload = function () { try { kakao.maps.load(function () { resolve(true); }); } catch (err) { resolve(false); } };
+      sc.onerror = function () { resolve(false); };
+      document.head.appendChild(sc);
+    });
+    return kakaoReady;
+  }
+  function stationGrade(m) {
+    if (m <= 300) return '<span class="tag st1">초역세권</span>';
+    if (m <= 500) return '<span class="tag st2">역세권</span>';
+    if (m <= 1000) return '<span class="tag st3">도보권</span>';
+    return "";
+  }
+  function meters(m) { m = Math.round(m); return m >= 1000 ? (Math.round(m / 100) / 10) + "km" : m + "m"; }
+  function placesSearch(query, opts, maxPages) {   // 페이지 상한(카카오 최대 3페이지 × 15건)
+    return new Promise(function (resolve) {
+      var ps = new kakao.maps.services.Places(), all = [], pages = 0;
+      ps.keywordSearch(query, function (data, status, pg) {
+        pages++;
+        if (status === kakao.maps.services.Status.OK) all = all.concat(data);
+        if (status === kakao.maps.services.Status.OK && pg && pg.hasNextPage && pages < maxPages) pg.nextPage();
+        else resolve(all);
+      }, opts);
+    });
+  }
+  var byJibun = null;
+  function jibunMap() {
+    if (byJibun) return byJibun;
+    byJibun = {};
+    idx.forEach(function (x) { if (x[6]) { var k = x[2] + "|" + x[6]; (byJibun[k] = byJibun[k] || []).push(x); } });
+    return byJibun;
+  }
+  function matchPlace(pl) {   // 카카오 지번 주소 "경기 파주시 와동동 1475" → 우리 단지 [법정동|지번]
+    var t = String(pl.address_name || "").trim().split(/\s+/);
+    if (t.length < 2) return null;
+    var c = jibunMap()[t[t.length - 2] + "|" + t[t.length - 1]];
+    if (!c) return null;
+    if (c.length === 1) return c[0];
+    var addr = norm(pl.address_name);
+    return c.find(function (x) { return x[3].split(" ").every(function (w) { return addr.indexOf(norm(w.replace(/시$/, ""))) >= 0; }); }) || c[0];
+  }
+  function stationMode(text) {
+    var box = $("results");
+    box.innerHTML = '<p class="hint">역을 찾는 중…</p>'; box.hidden = false;
+    loadKakao().then(function (ok) {
+      if (!ok) { box.innerHTML = '<p class="hint">역 주변 검색은 준비 중이에요. 지금은 단지 이름으로 검색해 주세요.</p>'; return; }
+      placesSearch(text, { category_group_code: "SW8" }, 1).then(function (st) {
+        var seen = {}, list = st.filter(function (x) { if (seen[x.place_name]) return false; seen[x.place_name] = 1; return true; }).slice(0, 6);
+        if (!list.length) { box.innerHTML = '<p class="hint">"' + esc(text) + '"이라는 역을 찾지 못했어요.</p>'; return; }
+        if (list.length === 1) { nearStation(list[0]); return; }
+        box.innerHTML = '<p class="hint">어느 역인가요?</p>';
+        list.forEach(function (x) { box.appendChild(chip('<span class="tag">역</span>' + esc(x.place_name) + "<small>" + esc(x.address_name) + "</small>", function () { nearStation(x); })); });
+      });
+    });
+  }
+  function nearStation(stn) {
+    track("pick-station");
+    var box = $("results");
+    box.innerHTML = '<p class="hint">' + esc(stn.place_name) + " 주변 단지를 찾는 중…</p>"; box.hidden = false;
+    var loc = new kakao.maps.LatLng(stn.y, stn.x);
+    placesSearch("아파트", { location: loc, radius: 1500, sort: kakao.maps.services.SortBy.DISTANCE }, 3).then(function (pl) {
+      var seen = {}, rows = [];
+      pl.forEach(function (p) {
+        if (!/아파트/.test(p.category_name || "")) return;
+        var x = matchPlace(p), key = x ? x[0] : p.address_name;
+        if (seen[key]) return;
+        seen[key] = 1;
+        rows.push({ p: p, x: x, d: +p.distance || 0 });
+      });
+      rows.sort(function (a, b) { return a.d - b.d; });
+      box.innerHTML = '<p class="hint"><b>' + esc(stn.place_name) + "</b>에서 가까운 순 · 직선거리 · 1.5km 안</p>";
+      if (!rows.length) { box.innerHTML += '<p class="hint">1.5km 안에서 아파트를 찾지 못했어요.</p>'; return; }
+      rows.slice(0, 20).forEach(function (r) {
+        var label = stationGrade(r.d) + esc(r.x ? r.x[1] : r.p.place_name);
+        var sub = "직선 " + meters(r.d) + " · " + (r.x ? esc(r.x[3] + " " + r.x[2]) + (r.x[5] ? " · " + esc(r.x[5]) + "년" : "") : "최근 12개월 거래 없음, 가격은 직접 입력");
+        box.appendChild(chip(label + "<small>" + sub + "</small>", function () {
+          if (r.x) pickApt(r.x, { name: stn.place_name, d: r.d });
+          else { $("name").value = r.p.place_name.slice(0, 40); box.hidden = true; $("exampleNote").textContent = "이 단지는 최근 거래가 없어요. 가격을 직접 넣어 주세요."; }
+        }));
+      });
+    });
+  }
+  function nearestStations(x, el) {   // 단지 → 가까운 역 (단지 이름으로 골랐을 때)
+    loadKakao().then(function (ok) {
+      if (!ok) return;
+      new kakao.maps.services.Geocoder().addressSearch(x[3] + " " + x[2] + " " + x[6], function (res, status) {
+        if (status !== kakao.maps.services.Status.OK || !res.length) return;
+        new kakao.maps.services.Places().categorySearch("SW8", function (st, s2) {
+          if (s2 !== kakao.maps.services.Status.OK || !st.length) { el.textContent = "가까운 역: 1.5km 안에 없음"; return; }
+          var seen = {}, out = [];
+          st.forEach(function (t) { var nm = t.place_name.split(" ")[0]; if (!seen[nm] && out.length < 2) { seen[nm] = 1; out.push(stationGrade(+t.distance) + esc(t.place_name) + " 직선 " + meters(+t.distance)); } });
+          el.innerHTML = "가까운 역: " + out.join(" · ");
+        }, { location: new kakao.maps.LatLng(res[0].y, res[0].x), radius: 1500, sort: kakao.maps.services.SortBy.DISTANCE });
+      });
+    });
+  }
   var timer = null;
   $("q").addEventListener("focus", loadData);
   $("q").addEventListener("input", function (ev) {
     ev.stopPropagation();
     var v = this.value; clearTimeout(timer);
-    timer = setTimeout(function () { loadData().then(function () { search(v); }); }, 150);
+    timer = setTimeout(function () { loadData().then(function () { var t = v.trim(); if (/역$/.test(t) && t.length >= 2) stationMode(t); else search(v); }); }, 250);
   });
 
   render();
