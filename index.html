@@ -63,7 +63,8 @@ label.f { display: grid; gap: 6px; font-size: 15.5px; font-weight: 500; color: v
 .unit { color: var(--muted); font-size: 15px; white-space: nowrap; }
 .echo { font-size: 14.5px; color: var(--accent); font-weight: 500; min-height: 1.2em; font-variant-numeric: tabular-nums; }
 .hint { color: var(--muted); font-size: 14.5px; font-weight: 400; }
-input[type=number], input[type=text], select {
+input[type=number], input[type=text], input[type=search], select {
+  -webkit-appearance: none; appearance: none;
   font: inherit; word-break: keep-all; font-size: 18px; font-variant-numeric: tabular-nums; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--bg); color: var(--ink); width: 100%;
 }
@@ -127,6 +128,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .bud.ok { background: var(--accent-soft); color: var(--accent); }
 .bud.no { background: var(--bad-soft); color: var(--bad); }
 .check.small { font-size: 15px; }
+select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
