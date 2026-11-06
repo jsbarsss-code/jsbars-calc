@@ -447,7 +447,8 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
   $("form").addEventListener("submit", function (ev) { ev.preventDefault(); });
 
   // ---- 단지 검색: GitHub Actions가 주 1회 만든 정적 JSON만 읽는다 (API 키는 브라우저에 없음) ----
-  var REG_SGG = { "41290": 1, "41210": 1, "41131": 1, "41133": 1, "41135": 1, "41111": 1, "41115": 1, "41117": 1, "41173": 1, "41465": 1, "41430": 1, "41450": 1 };
+  // 경기 규제지역 15곳: 10·15 대책 12곳 + 2026-07-01 지정 화성 동탄구·용인 기흥구·구리시
+  var REG_SGG = { "41290": 1, "41210": 1, "41131": 1, "41133": 1, "41135": 1, "41111": 1, "41115": 1, "41117": 1, "41173": 1, "41465": 1, "41430": 1, "41450": 1, "41597": 1, "41463": 1, "41310": 1 };
   function regionForSgg(code) { return /^11/.test(code) || REG_SGG[code] ? "reg" : "capital"; }
   function norm(s) { return String(s || "").replace(/[\s()·\-]/g, "").toLowerCase(); }
   function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (err) {} }
