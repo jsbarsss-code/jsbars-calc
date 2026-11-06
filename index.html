@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="사고 싶은 집 가격과 내 연봉·현금만 넣으면 살 수 있는지, 모자란 금액, 필요한 연봉을 바로 계산합니다. 스트레스 DSR·LTV·수도권 주담대 한도 반영.">
-<meta property="og:title" content="이 집, 내 연봉으로 살 수 있을까 — 내 연봉 집 계산기">
-<meta property="og:description" content="집 가격·연봉·현금만 넣으면 대출 한도와 필요한 현금, 필요한 연봉을 계산합니다.">
+<meta property="og:title" content="우리집 열쇠가 내 손에 — 집 매매 전략 짜기">
+<meta property="og:description" content="찜한 집, 내 연봉이랑 모은 돈으로 열쇠까지 얼마 남았는지 계산해요. 수도권 실거래·분양가 자동 검색.">
 <meta property="og:type" content="website">
-<title>내 연봉 집 계산기</title>
+<title>우리집 열쇠가 내 손에</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Gothic+A1:wght@800;900&display=swap">
 <style>
@@ -16,7 +16,7 @@
   --bg: #f3f5f2;
   --paper: #ffffff;
   --ink: #17251f;
-  --muted: #5d6b64;
+  --muted: #4a5751;
   --line: #d6ddd8;
   --accent: #1f6b4f;
   --accent-soft: #e2efe8;
@@ -29,13 +29,13 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101814; --paper: #17221d; --ink: #e4ece7; --muted: #9aaba2; --line: #2c3a33;
+    --bg: #101814; --paper: #17221d; --ink: #eef4f0; --muted: #b3c2ba; --line: #2c3a33;
     --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15;
     --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #101814; --paper: #17221d; --ink: #e4ece7; --muted: #9aaba2; --line: #2c3a33;
+  --bg: #101814; --paper: #17221d; --ink: #eef4f0; --muted: #b3c2ba; --line: #2c3a33;
   --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15;
   --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
 }
@@ -43,74 +43,75 @@
 html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 body { margin: 0; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.65;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 24px 48px;
 }
-.wrap { max-width: 600px; margin: 0 auto; display: grid; gap: 16px; }
-header h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(24px, 6vw, 32px); margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
-header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
+header h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(30px, 8vw, 40px); margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
 .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
-.step { display: flex; align-items: baseline; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; }
-.step .no { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 1px 9px; letter-spacing: 0.04em; }
+.step { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 19px; font-weight: 700; }
+.step .no { font-size: 14px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 1px 9px; letter-spacing: 0.04em; }
 .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 @media (max-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
-label.f { display: grid; gap: 4px; font-size: 13.5px; font-weight: 500; color: var(--muted); min-width: 0; }
+label.f { display: grid; gap: 6px; font-size: 15.5px; font-weight: 500; color: var(--muted); min-width: 0; }
 .inrow { display: flex; align-items: center; gap: 8px; }
 .inrow input { flex: 1; min-width: 0; }
-.unit { color: var(--muted); font-size: 13px; white-space: nowrap; }
-.echo { font-size: 12.5px; color: var(--accent); font-weight: 500; min-height: 1.2em; font-variant-numeric: tabular-nums; }
-.hint { color: var(--muted); font-size: 12.5px; font-weight: 400; }
+.unit { color: var(--muted); font-size: 15px; white-space: nowrap; }
+.echo { font-size: 14.5px; color: var(--accent); font-weight: 500; min-height: 1.2em; font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 14.5px; font-weight: 400; }
 input[type=number], input[type=text], select {
-  font: inherit; font-size: 17px; font-variant-numeric: tabular-nums; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  font: inherit; font-size: 18px; font-variant-numeric: tabular-nums; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--bg); color: var(--ink); width: 100%;
 }
 input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
-.check input { margin-top: 4px; accent-color: var(--accent); width: 18px; height: 18px; }
-.example { font-size: 12.5px; color: var(--muted); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; }
+.check input { margin-top: 5px; accent-color: var(--accent); width: 20px; height: 20px; }
+.example { font-size: 14.5px; color: var(--muted); }
 
 .answer { border-radius: 12px; padding: 20px; display: grid; gap: 6px; border: 1px solid var(--line); background: var(--paper); }
 .answer.ok { background: var(--accent-soft); border-color: transparent; }
 .answer.short { background: var(--bad-soft); border-color: transparent; }
-.answer .house { font-size: 14px; color: var(--muted); font-weight: 500; overflow-wrap: anywhere; }
-.answer .yes { font-family: var(--font-display); font-weight: 900; font-size: clamp(26px, 7vw, 34px); letter-spacing: -0.02em; line-height: 1.25; }
+.answer .house { font-size: 16px; color: var(--muted); font-weight: 500; overflow-wrap: anywhere; }
+.answer .yes { font-family: var(--font-display); font-weight: 900; font-size: clamp(30px, 8vw, 40px); letter-spacing: -0.02em; line-height: 1.25; }
 .answer.ok .yes { color: var(--accent); }
 .answer.short .yes { color: var(--bad); }
-.answer .sub { font-size: 15px; font-variant-numeric: tabular-nums; }
+.answer .sub { font-size: 17px; font-variant-numeric: tabular-nums; }
 .facts { display: grid; gap: 0; }
 .fact { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .fact:last-child { border-bottom: 0; }
-.fact .k { color: var(--muted); font-size: 14px; }
-.fact .v { font-weight: 700; text-align: right; }
-.fact .v small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.fact .k { color: var(--muted); font-size: 16px; }
+.fact .v { font-weight: 700; text-align: right; font-size: 18px; }
+.fact .v small { display: block; font-weight: 400; font-size: 14px; color: var(--muted); }
 
 details.more { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
-details.more summary { cursor: pointer; font-size: 14.5px; font-weight: 500; color: var(--accent); }
+details.more summary { cursor: pointer; font-size: 16.5px; font-weight: 500; color: var(--accent); }
 details.more .inner { display: grid; gap: 12px; margin-top: 14px; }
 .tablebox { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 15.5px; }
 th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
 td.n { text-align: right; white-space: nowrap; }
 tr.bind td { font-weight: 700; }
-.pill { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 99px; background: var(--warn-soft); color: var(--warn); font-weight: 700; margin-left: 6px; white-space: nowrap; }
+.pill { display: inline-block; font-size: 13px; padding: 1px 8px; border-radius: 99px; background: var(--warn-soft); color: var(--warn); font-weight: 700; margin-left: 6px; white-space: nowrap; }
 tr.total td { font-weight: 700; border-top: 2px solid var(--ink); }
-h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04em; }
-.flag { font-size: 14px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04em; }
+.flag { font-size: 16px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
 .flag b { color: var(--accent); }
-.foot { font-size: 12.5px; color: var(--muted); }
+.foot { font-size: 14.5px; color: var(--muted); }
 .results, .picked { display: grid; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { font: inherit; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
-  border-radius: 8px; padding: 9px 12px; display: grid; gap: 2px; min-width: 0; max-width: 100%; }
+  border-radius: 8px; padding: 11px 14px; display: grid; gap: 3px; font-size: 16.5px; min-width: 0; max-width: 100%; }
 .chip:hover { border-color: var(--accent); }
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.chip small { color: var(--muted); font-size: 12px; }
+.chip small { color: var(--muted); font-size: 14px; }
 .chip b { color: var(--accent); font-variant-numeric: tabular-nums; }
-.tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 7px; border-radius: 99px; margin-right: 6px; background: var(--accent-soft); color: var(--accent); }
+.tag { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 0 7px; border-radius: 99px; margin-right: 6px; background: var(--accent-soft); color: var(--accent); }
 .tag.new { background: var(--warn-soft); color: var(--warn); }
 .pk-title { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .picked .hint { margin: 0; }
+.kicker { margin: 4px 0 0 !important; font-size: 17px; font-weight: 700; color: var(--accent) !important; letter-spacing: 0.04em; }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
@@ -126,21 +127,22 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 
 <div class="wrap">
   <header>
-    <h1>이 집, 내 연봉으로 살 수 있을까</h1>
-    <p>사고 싶은 집과 내 돈만 넣으면 됩니다. 입력값은 이 화면에서만 계산하고 저장하지 않아요.</p>
+    <h1>우리집 열쇠가 내 손에</h1>
+    <p class="kicker">집 매매 전략 짜기</p>
+    <p>찜해 둔 집과 내 돈만 넣으면, 열쇠까지 얼마 남았는지 바로 보여 드려요. 입력한 숫자는 이 화면에서만 계산하고 어디에도 저장하지 않아요.</p>
   </header>
 
   <form id="form" autocomplete="off" style="display:grid; gap:16px;">
     <section class="card">
-      <h2 class="step"><span class="no">1</span>사고 싶은 집</h2>
-      <label class="f" for="q">단지 검색 (수도권 실거래·분양)
+      <h2 class="step"><span class="no">1</span>우리집 후보 검색하기</h2>
+      <label class="f" for="q">어느 단지가 눈에 밟히나요? (수도권 실거래·분양)
         <input type="search" id="q" maxlength="40" placeholder="예: 운정 제일풍경채, 헬리오시티" autocomplete="off">
       </label>
       <div id="results" class="results" hidden></div>
       <div id="picked" class="picked" hidden></div>
-      <span class="hint" id="dataMeta">단지를 고르면 최근 실거래가나 분양가가 자동으로 채워져요. 없으면 아래에 직접 넣으세요.</span>
-      <label class="f" for="name">집 이름 (선택)
-        <input type="text" id="name" maxlength="40" placeholder="예: 정릉풍림아이원 59㎡">
+      <span class="hint" id="dataMeta">단지를 고르면 최근 실거래가나 분양가가 자동으로 채워져요. 마음에 둔 집이 없으면 아래에 직접 넣으세요.</span>
+      <label class="f" for="name">우리집 후보 별명 (선택)
+        <input type="text" id="name" maxlength="40" placeholder="예: 정릉풍림아이원 59㎡, 우리 첫 집">
       </label>
       <div class="row2">
         <label class="f" for="price">집 가격 (최근 실거래가)
@@ -158,19 +160,19 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     </section>
 
     <section class="card">
-      <h2 class="step"><span class="no">2</span>내 돈</h2>
+      <h2 class="step"><span class="no">2</span>내 집 마련 군자금</h2>
       <div class="row2">
         <label class="f" for="salary">연봉 (세전, 부부 합산 가능)
           <span class="inrow"><input type="number" id="salary" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
           <span class="echo" id="salaryEcho"></span>
         </label>
-        <label class="f" for="cash">집에 넣을 현금
+        <label class="f" for="cash">통장에서 꺼낼 수 있는 현금
           <span class="inrow"><input type="number" id="cash" min="0" step="500" inputmode="numeric"><span class="unit">만원</span></span>
           <span class="echo" id="cashEcho"></span>
         </label>
       </div>
-      <label class="check" for="first"><input type="checkbox" id="first"> <span>생애 첫 집이에요</span></label>
-      <span class="example" id="exampleNote">예시 값이 들어 있어요. 내 숫자로 바꿔 보세요.</span>
+      <label class="check" for="first"><input type="checkbox" id="first"> <span>생애 첫 집이에요 (첫 열쇠라 혜택이 있어요)</span></label>
+      <span class="example" id="exampleNote">예시 값이 들어 있어요. 내 숫자로 바꾸는 순간 우리집 전략이 됩니다.</span>
     </section>
 
     <section class="answer" id="answer" aria-live="polite">
@@ -180,14 +182,14 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     </section>
 
     <section class="card facts" aria-label="핵심 숫자">
-      <div class="fact"><span class="k">이 집 사려면 연봉</span><span class="v" id="fSalary"></span></div>
-      <div class="fact"><span class="k">대출 받을 수 있는 돈</span><span class="v" id="fLoan"></span></div>
-      <div class="fact"><span class="k">매달 갚을 돈</span><span class="v" id="fMonthly"></span></div>
-      <div class="fact"><span class="k">내 돈으로 살 수 있는 최대 가격</span><span class="v" id="fMax"></span></div>
+      <div class="fact"><span class="k">이 집 열쇠에 필요한 연봉</span><span class="v" id="fSalary"></span></div>
+      <div class="fact"><span class="k">은행이 보태 줄 수 있는 돈</span><span class="v" id="fLoan"></span></div>
+      <div class="fact"><span class="k">매달 은행에 보낼 돈</span><span class="v" id="fMonthly"></span></div>
+      <div class="fact"><span class="k">지금 내 돈으로 닿는 최고가</span><span class="v" id="fMax"></span></div>
     </section>
 
     <details class="more">
-      <summary>더 정확하게 계산하기 (금리·만기·기존 대출·출산)</summary>
+      <summary>전략 다듬기 (금리·만기·기존 대출·출산)</summary>
       <div class="inner">
         <div class="row2">
           <label class="f" for="rate">주담대 금리
@@ -214,7 +216,7 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     </details>
 
     <details class="more">
-      <summary>어떻게 계산했나요</summary>
+      <summary>계산 뒤편 들여다보기</summary>
       <div class="inner">
         <h3>대출 한도 — 셋 중 가장 낮은 값</h3>
         <div class="tablebox"><table><tbody id="limitRows"></tbody></table></div>
@@ -334,24 +336,24 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     var a = $("answer"), house = (p.name || "이 집") + (p.price ? " · " + won(p.price) : "");
     $("aHouse").textContent = house;
     if (p.price <= 0) {
-      a.className = "answer"; $("aYes").textContent = "집 가격을 넣어 주세요"; $("aSub").textContent = "";
+      a.className = "answer"; $("aYes").textContent = "우리집 후보부터 골라 주세요"; $("aSub").textContent = "단지를 검색하거나 집 가격을 넣으면 바로 계산해요.";
     } else if (gap >= 0) {
-      a.className = "answer ok"; $("aYes").textContent = "살 수 있어요";
-      $("aSub").textContent = "대출 " + won(e.loan) + "에 내 현금 " + won(e.need) + "을 넣으면 됩니다. 현금 " + won(gap) + "이 남아요.";
+      a.className = "answer ok"; $("aYes").textContent = "열쇠, 받을 수 있어요";
+      $("aSub").textContent = "대출 " + won(e.loan) + "에 내 현금 " + won(e.need) + "을 넣으면 됩니다. 남는 " + won(gap) + "은 이사·입주 준비 몫으로 두세요.";
     } else {
-      a.className = "answer short"; $("aYes").textContent = won(-gap) + " 모자라요";
-      $("aSub").textContent = "대출 " + won(e.loan) + "을 받아도 현금이 " + won(e.need) + " 필요한데, 지금 " + won(p.cash) + "이 있어요.";
+      a.className = "answer short"; $("aYes").textContent = "열쇠까지 " + won(-gap) + " 남았어요";
+      $("aSub").textContent = "대출 " + won(e.loan) + "을 받아도 현금이 " + won(e.need) + " 필요한데, 지금 " + won(p.cash) + "이 있어요. 아래 '열쇠에 필요한 연봉'과 '닿는 최고가'로 전략을 짜 보세요.";
     }
 
     var ns = neededSalary(p);
     if (p.price <= 0) $("fSalary").textContent = "—";
     else if (ns === null) {
       var floorNeed = evaluate(Object.assign({}, p, { salary: 1e7 })).need;
-      $("fSalary").innerHTML = "연봉으로는 안 돼요<small>" + (e.ltvAmt <= e.cap ? "LTV" : "지역 한도") + " 때문에 현금 " + won(floorNeed) + "이 꼭 필요해요</small>";
+      $("fSalary").innerHTML = "연봉으로는 못 열어요<small>" + (e.ltvAmt <= e.cap ? "LTV" : "지역 한도") + " 때문에 현금 " + won(floorNeed) + "이 꼭 필요해요</small>";
     } else if (ns <= p.salary) {
-      $("fSalary").innerHTML = won(ns) + "<small>지금 연봉으로 충분해요</small>";
+      $("fSalary").innerHTML = won(ns) + "<small>지금 연봉으로 충분해요. 남은 건 현금 준비뿐</small>";
     } else {
-      $("fSalary").innerHTML = won(ns) + "<small>지금보다 " + won(ns - p.salary) + " 더</small>";
+      $("fSalary").innerHTML = won(ns) + "<small>지금보다 " + won(ns - p.salary) + " 더 — 맞벌이 합산도 넣어 보세요</small>";
     }
     var why = { ltv: "LTV에 걸려요", cap: "지역 한도에 걸려요", dsr: "연봉(DSR)에 걸려요" }[e.bind];
     $("fLoan").innerHTML = won(e.loan) + "<small>" + why + "</small>";
@@ -394,7 +396,7 @@ h3 { font-size: 13px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
   $("region").value = LTV_TABLE[q.region] ? q.region : DEFAULTS.region;
   $("first").checked = q.first ? q.first === "1" : DEFAULTS.first;
   $("baby").checked = q.baby === "1";
-  if (fromLink) $("exampleNote").textContent = "블로그 글의 예시 조건으로 열었어요. 내 숫자로 바꿔 보세요.";
+  if (fromLink) $("exampleNote").textContent = "블로그 글의 예시 조건으로 열었어요. 이제 내 숫자로 바꿔 보세요.";
   syncAuto();
 
   $("ltv").addEventListener("input", function () { ltvTouched = true; });
