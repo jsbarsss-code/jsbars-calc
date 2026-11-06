@@ -129,6 +129,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .bud.no { background: var(--bad-soft); color: var(--bad); }
 .check.small { font-size: 15px; }
 select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
+.hint.note { font-size: 13.5px; margin: -4px 0 0; }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
@@ -475,6 +476,24 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
     $("form").dispatchEvent(new Event("input", { bubbles: true }));
     scrollToAnswer();
   }
+  // 평형: 분양은 공고 공급면적(정확), 실거래는 전용면적으로 추정. 방 수: 공공데이터에 없어 면적·준공연도로 본 보통 구성(추정).
+  function letterOf(ty) { var m = String(ty || "").match(/[A-Za-z]+\s*$/); return m ? m[0].trim().toUpperCase() : ""; }
+  function pyeong(excl, supply, ty) {
+    if (supply > 0) return Math.round(supply / 3.3058) + letterOf(ty) + "평형";
+    var r = excl < 70 ? 1.40 : (excl <= 100 ? 1.33 : 1.30);
+    return "약 " + Math.round(excl * r / 3.3058) + "평형";
+  }
+  function rooms(excl, year) {
+    var y = parseInt(year, 10) || 2015;
+    if (excl < 30) return "방1·욕1";
+    if (excl < 50) return "방2·욕1";
+    if (excl < 66) return y >= 2000 ? "방3·욕2" : "방2~3·욕1";
+    if (excl < 76) return "방3·욕2";
+    if (excl < 96) return y >= 2000 ? "방3·욕2" : "방3·욕1~2";
+    if (excl < 121) return "방4·욕2";
+    return "방4+·욕2+";
+  }
+  function unitLabel(excl, supply, ty, year) { return pyeong(excl, supply, ty) + " (전용 " + excl + "㎡) " + rooms(excl, year); }
   function tyName(t) { return String(t || "").replace(/^0*(\d+)\.\d+/, "$1"); }   // "084.9702B" → "84B"
   function getSgg(code) {
     return sggCache[code] ? Promise.resolve(sggCache[code]) : getJSON("data/apt/" + code + ".json").then(function (d) { sggCache[code] = d || {}; return sggCache[code]; });
@@ -485,10 +504,10 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
       var cx = (sggCache[r.m.apt[4]] || {})[r.m.apt[0]];
       if (!cx) return null;
       var reg = regionForSgg(r.m.apt[4]);
-      opts = cx.a.map(function (a) { return { label: "전용 " + a[0] + "㎡", area: a[0], price: a[1], gap: budgetGap(a[1], reg) }; });
+      opts = cx.a.map(function (a) { return { label: unitLabel(a[0], 0, "", cx.y), area: a[0], price: a[1], gap: budgetGap(a[1], reg) }; });
     } else if (r.m && r.m.ps) {
       var ps = r.m.ps, preg = (ps.spec || ps.adj || ps.area === "서울") ? "reg" : (ps.area ? "capital" : "local");
-      opts = (ps.t || []).map(function (t) { return { label: tyName(t[0]), area: t[1], price: t[2], gap: budgetGap(t[2], preg) }; });
+      opts = (ps.t || []).map(function (t) { return { label: unitLabel(t[1], t[4] || 0, t[0], String(ps.mvn || "").slice(0, 4)), area: t[1], price: t[2], gap: budgetGap(t[2], preg) }; });
     }
     if (!opts.length) return null;
     var ok = opts.filter(function (o) { return o.gap >= 0; }).sort(function (a, b) { return b.area - a.area; });
@@ -514,7 +533,8 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
     var fits = rows.filter(function (r) { return r.f && r.f.ok; });
     var useFilter = fitOnly && fits.length > 0;
     var list = useFilter ? fits : rows;
-    box.innerHTML = '<p class="hint">' + lastHead + " · 내 예산 안 <b>" + fits.length + "곳</b></p>";
+    box.innerHTML = '<p class="hint">' + lastHead + " · 내 예산 안 <b>" + fits.length + "곳</b></p>"
+      + '<p class="hint note">평형은 분양 단지는 공고 공급면적, 매매 단지는 전용면적으로 본 추정이에요. 방·욕실 수는 같은 면적대의 보통 구성(추정)이라 실제와 다를 수 있어요.</p>';
     var tg = document.createElement("label"); tg.className = "check small"; tg.htmlFor = "fitOnly";
     tg.innerHTML = '<input type="checkbox" id="fitOnly"' + (fitOnly ? " checked" : "") + "> <span>내 예산 안 단지만 보기</span>";
     box.appendChild(tg);
@@ -577,8 +597,8 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
       var cx = d && d[x[0]];
       if (!cx) { showPicked(esc(x[1]), "거래 정보를 불러오지 못했어요.", []); return; }
       var chips = cx.a.map(function (a) {   // [전용㎡, 최근가, 최근일, 층, 건수, 최근5건 중간값, 12개월 최고]
-        return chip("전용 " + a[0] + "㎡ <b>" + won(a[1]) + "</b><small>" + a[2] + " · " + esc(a[3]) + "층 · 최근 12개월 " + a[4] + "건</small>", function () {
-          fill(cx.n + " " + a[0] + "㎡", a[1], regionForSgg(code),
+        return chip(esc(pyeong(a[0], 0, "")) + " · 전용 " + a[0] + "㎡ · " + rooms(a[0], cx.y) + " <b>" + won(a[1]) + "</b><small>" + a[2] + " · " + esc(a[3]) + "층 · 최근 12개월 " + a[4] + "건</small>", function () {
+          fill(cx.n + " " + pyeong(a[0], 0, "").replace("약 ", "") + "(" + a[0] + "㎡)", a[1], regionForSgg(code),
             "최근 거래가(" + a[2] + ")로 채웠어요. 최근 5건 중간값 " + won(a[5]) + " · 12개월 최고 " + won(a[6]) + ". 규제지역 여부는 직접 확인해 주세요.");
         });
       });
@@ -591,8 +611,8 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
     track("pick-presale");
     var region = (p.spec || p.adj || p.area === "서울") ? "reg" : (p.area ? "capital" : "local");
     var chips = (p.t || []).map(function (t) {   // [주택형, 전용㎡, 분양가 최고가, 공급세대]
-      return chip(esc(tyName(t[0])) + " <b>" + won(t[2]) + "</b><small>분양가(최고가) · " + t[3] + "세대</small>", function () {
-        fill(p.n + " " + tyName(t[0]), t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.");
+      return chip(esc(pyeong(t[1], t[4] || 0, t[0])) + " · 전용 " + t[1] + "㎡ · " + rooms(t[1], String(p.mvn || "").slice(0, 4)) + " <b>" + won(t[2]) + "</b><small>" + esc(tyName(t[0])) + "타입 분양가(최고가) · " + t[3] + "세대</small>", function () {
+        fill(p.n + " " + pyeong(t[1], t[4] || 0, t[0]), t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.");
       });
     });
     var sub = (st ? stationGrade(st.d) + esc(st.name) + " 직선 " + meters(st.d) + " · " : "") + "입주 예정 " + fmtYM(p.mvn) + (p.cntrct && p.cntrct[0] ? " · 계약 " + esc(p.cntrct[0]) : "") + (p.cap ? " · 분양가상한제" : "")
