@@ -482,7 +482,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
       if (!st && x[6]) { var near = document.createElement("p"); near.className = "hint near"; $("picked").insertBefore(near, $("picked").children[1] || null); nearestStations(x, near); }
     });
   }
-  function pickPresale(p) {
+  function pickPresale(p, st) {
     track("pick-presale");
     var region = (p.spec || p.adj || p.area === "서울") ? "reg" : (p.area ? "capital" : "local");
     var chips = (p.t || []).map(function (t) {   // [주택형, 전용㎡, 분양가 최고가, 공급세대]
@@ -490,7 +490,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
         fill(p.n + " " + t[0], t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.");
       });
     });
-    var sub = "입주 예정 " + fmtYM(p.mvn) + (p.cntrct && p.cntrct[0] ? " · 계약 " + esc(p.cntrct[0]) : "") + (p.cap ? " · 분양가상한제" : "")
+    var sub = (st ? stationGrade(st.d) + esc(st.name) + " 직선 " + meters(st.d) + " · " : "") + "입주 예정 " + fmtYM(p.mvn) + (p.cntrct && p.cntrct[0] ? " · 계약 " + esc(p.cntrct[0]) : "") + (p.cap ? " · 분양가상한제" : "")
       + (p.url ? ' · <a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="color:var(--accent)">청약홈 공고</a>' : "");
     showPicked(esc(p.n), sub, chips.length ? chips : []);
   }
@@ -535,15 +535,66 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     idx.forEach(function (x) { if (x[6]) { var k = x[2] + "|" + x[6]; (byJibun[k] = byJibun[k] || []).push(x); } });
     return byJibun;
   }
-  function matchPlace(pl) {   // 카카오 지번 주소 "경기 파주시 와동동 1475" → 우리 단지 [법정동|지번]
+  var GENERIC = /아파트|신도시|마을|단지|주상복합|블록|\d+동$|\(.*?\)|본청약|사전청약/g;
+  function core(name) {   // 역 이름 접두어(운정중앙역·동탄역)·GTX·일반어를 떼고 브랜드만 비교
+    return norm(String(name || "").replace(/\s*\d+동\s*$/, "").replace(GENERIC, "").replace(/gtx/ig, "").replace(/[가-힣]{2,}역(?=[가-힣A-Za-z0-9])/g, ""));
+  }
+  function lcs(a, b) {   // 가장 긴 공통 부분 문자열 길이 (이름 40자 이내라 가볍다)
+    var best = 0, prev = new Array(b.length + 1).fill(0);
+    for (var i = 1; i <= a.length; i++) {
+      var cur = new Array(b.length + 1).fill(0);
+      for (var j = 1; j <= b.length; j++) if (a[i - 1] === b[j - 1]) { cur[j] = prev[j - 1] + 1; if (cur[j] > best) best = cur[j]; }
+      prev = cur;
+    }
+    return best;
+  }
+  var byUmd = null, psByJibun = null;
+  function umdMap() {
+    if (byUmd) return byUmd;
+    byUmd = {};
+    idx.forEach(function (x) { (byUmd[x[2]] = byUmd[x[2]] || []).push(x); });
+    psByJibun = {};
+    presale.forEach(function (p) {   // 공고 주소 괄호 속 "동패동 400-7번지" → 동|번지
+      var re = /([가-힣0-9]+(?:동|읍|면|리|가))\s*(\d+(?:-\d+)?)/g, m;
+      while ((m = re.exec(p.addr || ""))) (psByJibun[m[1] + "|" + m[2]] = psByJibun[m[1] + "|" + m[2]] || []).push(p);
+    });
+    return byUmd;
+  }
+  function addrKey(pl) {
     var t = String(pl.address_name || "").trim().split(/\s+/);
     if (t.length < 2) return null;
-    var c = jibunMap()[t[t.length - 2] + "|" + t[t.length - 1]];
-    if (!c) return null;
-    if (c.length === 1) return c[0];
-    var addr = norm(pl.address_name);
-    return c.find(function (x) { return x[3].split(" ").every(function (w) { return addr.indexOf(norm(w.replace(/시$/, ""))) >= 0; }); }) || c[0];
+    return t[t.length - 2] === "산" ? null : { umd: t[t.length - 2], jib: t[t.length - 1], addr: pl.address_name };
   }
+  function bestByName(name, list, getName) {   // 같은 동 안에서 이름이 가장 비슷한 1곳 — 4글자 이상, 2등과 2글자 이상 차이
+    var c = core(name), sc = list.map(function (x) { return [lcs(c, core(getName(x))), x]; }).sort(function (a, b) { return b[0] - a[0]; });
+    if (!sc.length || sc[0][0] < 4 || (sc[1] && sc[0][0] - sc[1][0] < (sc[0][0] >= 6 ? 1 : 2))) return null;
+    return sc[0][1];
+  }
+  function matchPlace(pl) {   // → {apt: 실거래 단지} 또는 {ps: 분양 공고} 또는 null
+    var k = addrKey(pl); umdMap();
+    if (k) {
+      var c = jibunMap()[k.umd + "|" + k.jib];
+      if (c) {
+        if (c.length === 1) return { apt: c[0] };
+        var addr = norm(k.addr);
+        return { apt: c.find(function (x) { return x[3].split(" ").every(function (w) { return addr.indexOf(norm(w.replace(/시$/, ""))) >= 0; }); }) || c[0] };
+      }
+      var ps = psByJibun[k.umd + "|" + k.jib];
+      if (ps) return { ps: ps[0] };
+      var near = byUmd[k.umd] || [];
+      var a = bestByName(pl.place_name, near, function (x) { return x[1]; });
+      if (a) return { apt: a };
+      var pp = bestByName(pl.place_name, presale.filter(function (p) { return (p.addr || "").indexOf(k.umd) >= 0; }), function (p) { return p.n; });
+      if (pp) return { ps: pp };
+    }
+    return null;
+  }
+  function haversine(a, b) {
+    var R = 6371000, r = Math.PI / 180, dLat = (b.y - a.y) * r, dLng = (b.x - a.x) * r;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.y * r) * Math.cos(b.y * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  var RING_M = 600, RADIUS_M = 600, SHOW_M = 1200;
   function stationMode(text) {
     var box = $("results");
     box.innerHTML = '<p class="hint">역을 찾는 중…</p>'; box.hidden = false;
@@ -562,25 +613,35 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
     track("pick-station");
     var box = $("results");
     box.innerHTML = '<p class="hint">' + esc(stn.place_name) + " 주변 단지를 찾는 중…</p>"; box.hidden = false;
-    var loc = new kakao.maps.LatLng(stn.y, stn.x);
-    placesSearch("아파트", { location: loc, radius: 1500, sort: kakao.maps.services.SortBy.DISTANCE }, 3).then(function (pl) {
-      var seen = {}, rows = [];
-      pl.forEach(function (p) {
-        if (!/아파트/.test(p.category_name || "")) return;
-        var x = matchPlace(p), key = x ? x[0] : p.address_name;
-        if (seen[key]) return;
-        seen[key] = 1;
-        rows.push({ p: p, x: x, d: +p.distance || 0 });
+    var o = { x: +stn.x, y: +stn.y }, dLat = RING_M / 111320, dLng = RING_M / (111320 * Math.cos(o.y * Math.PI / 180));
+    var centers = [o];
+    for (var k = 0; k < 6; k++) { var ang = k * Math.PI / 3; centers.push({ x: o.x + dLng * Math.cos(ang), y: o.y + dLat * Math.sin(ang) }); }
+    Promise.all(centers.map(function (c) {
+      return placesSearch("아파트", { location: new kakao.maps.LatLng(c.y, c.x), radius: RADIUS_M, sort: kakao.maps.services.SortBy.DISTANCE }, 3);
+    })).then(function (lists) {
+      var groups = {};
+      lists.forEach(function (pl) {
+        pl.forEach(function (p) {
+          if (!/아파트/.test(p.category_name || "") || /상가|관리사무소|어린이집|경로당/.test(p.place_name)) return;
+          var d = haversine(o, { x: +p.x, y: +p.y });
+          if (d > SHOW_M) return;
+          var m = matchPlace(p), key = m ? (m.apt ? m.apt[0] : "ps" + m.ps.no) : core(p.place_name) || p.address_name;
+          if (!groups[key] || groups[key].d > d) groups[key] = { p: p, m: m, d: d };
+        });
       });
-      rows.sort(function (a, b) { return a.d - b.d; });
-      box.innerHTML = '<p class="hint"><b>' + esc(stn.place_name) + "</b>에서 가까운 순 · 직선거리 · 1.5km 안</p>";
-      if (!rows.length) { box.innerHTML += '<p class="hint">1.5km 안에서 아파트를 찾지 못했어요.</p>'; return; }
-      rows.slice(0, 20).forEach(function (r) {
-        var label = stationGrade(r.d) + esc(r.x ? r.x[1] : r.p.place_name);
-        var sub = "직선 " + meters(r.d) + " · " + (r.x ? esc(r.x[3] + " " + r.x[2]) + (r.x[5] ? " · " + esc(r.x[5]) + "년" : "") : "최근 12개월 거래 없음, 가격은 직접 입력");
-        box.appendChild(chip(label + "<small>" + sub + "</small>", function () {
-          if (r.x) pickApt(r.x, { name: stn.place_name, d: r.d });
-          else { $("name").value = r.p.place_name.slice(0, 40); box.hidden = true; $("exampleNote").textContent = "이 단지는 최근 거래가 없어요. 가격을 직접 넣어 주세요."; }
+      var rows = Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) { return a.d - b.d; });
+      box.innerHTML = '<p class="hint"><b>' + esc(stn.place_name) + "</b>에서 가까운 순 · 직선거리 · " + (SHOW_M / 1000) + "km 안 " + rows.length + "곳</p>";
+      if (!rows.length) { box.innerHTML += '<p class="hint">가까운 아파트를 찾지 못했어요.</p>'; return; }
+      rows.slice(0, 30).forEach(function (r) {
+        var nm = r.m ? (r.m.apt ? r.m.apt[1] : r.m.ps.n) : r.p.place_name.replace(/\s*\d+동\s*$/, "");
+        var tag = r.m && r.m.ps ? '<span class="tag new">분양</span>' : "";
+        var sub = "직선 " + meters(r.d) + " · " + (r.m && r.m.apt ? esc(r.m.apt[3] + " " + r.m.apt[2]) + (r.m.apt[5] ? " · " + esc(r.m.apt[5]) + "년" : "")
+          : r.m && r.m.ps ? "입주 예정 " + fmtYM(r.m.ps.mvn) + " · 분양가로 계산" : "최근 거래·분양 정보 없음, 가격은 직접 입력");
+        box.appendChild(chip(stationGrade(r.d) + tag + esc(nm) + "<small>" + sub + "</small>", function () {
+          var st = { name: stn.place_name, d: r.d };
+          if (r.m && r.m.apt) pickApt(r.m.apt, st);
+          else if (r.m && r.m.ps) pickPresale(r.m.ps, st);
+          else { $("name").value = nm.slice(0, 40); box.hidden = true; $("exampleNote").textContent = "이 단지는 최근 거래·분양 정보가 없어요. 가격을 직접 넣어 주세요."; }
         }));
       });
     });
