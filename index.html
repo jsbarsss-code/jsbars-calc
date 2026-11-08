@@ -322,7 +322,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
   window.goatcounter = { path: function () {
-    var linked = /[?&](salary|cash|price)=/.test(location.search), src = (location.search.match(/[?&]src=(apt|presale|ebook)/) || [])[1];
+    var linked = /[?&](salary|cash|price)=/.test(location.search), src = (location.search.match(/[?&]src=(apt|presale|ebook|threads)\b/) || [])[1];
     return location.pathname + (src ? "#from-" + src + "-page" : linked ? "#from-blog-link" : "");
   } };
 </script>
