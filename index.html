@@ -1887,6 +1887,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   // ---- 그리기 ----
   function render() {
     var sn = snap(), pl = plan(), done = 0, cur = -1;
+    if (!J.route && pl && pl.items.some(function (it) { return it.auto; }) && (pl.house.mode === "presale" || pl.house.mode === "sale")) {   // 일정표에 납입 일정을 이미 만들었으면 그 모드가 곧 고른 길
+      J.route = pl.house.mode; J.checks.c1a = true; save();
+    }
     if (sn && sn.touched) {   // 한 번 끝낸 0단계는 새로고침·다른 기기에서도 유지 (연봉·현금 원값은 저장하지 않고 결과 두 숫자만)
       var ch = false;
       if (!J.checks.c0a) { J.checks.c0a = true; ch = true; }
