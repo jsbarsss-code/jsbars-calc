@@ -406,6 +406,8 @@ details.past[open] summary { color: var(--accent); }
       </label>
     </div>
     <label class="check sl" for="hFirst" hidden><input type="checkbox" id="hFirst"> <span>생애 첫 집이에요 (취득세 최대 200만원 감면 반영)</span></label>
+    <label class="check sl" for="hLand" hidden><input type="checkbox" id="hLand"> <span>토지거래허가구역 안의 집이에요 (계약 전에 구청 허가가 필요해요)</span></label>
+    <p class="hint sl" hidden>2025년 10·15 대책 기준 서울 전역과 경기 12곳(분당·과천·광명 등)이 2026년 말까지 지정돼 있어요. 지정은 바뀔 수 있으니 <a href="https://www.eum.go.kr" target="_blank" rel="noopener" style="color:var(--accent)">토지이음</a>이나 구청에서 확인해 주세요.</p>
     <p class="hint sl" hidden>취득세·중개보수는 계산기와 같은 기준(1주택 기본세율+지방교육세, 법정 상한)으로 자동으로 채워져요. 직접 고치면 그 값을 써요.</p>
     <p class="hint" id="splitLine"></p>
     <div class="btns"><button type="button" class="btn" id="genPay">납입 일정 만들기</button><button type="button" class="btn ghost" id="loadExample">예시 일정 보기</button></div>
@@ -488,7 +490,7 @@ details.past[open] summary { color: var(--accent); }
     </details>
   </section>
 
-  <p class="foot">납입 일정 초안은 입력한 비율로 나눈 추정이에요. 실제 회차 날짜·금액은 분양 계약서와 공고문을 따라 주세요.</p>
+  <p class="foot">납입 일정 초안은 입력한 비율로 나눈 추정이에요. 실제 회차 날짜·금액은 분양 계약서와 공고문을 따라 주세요. 매매 기한 기준: 토지거래허가 처리 15일(부동산거래신고법 시행령 제8조), 허가 주택 2년 실거주(같은 법·지자체 안내), 전입신고 14일(주민등록법).</p>
   </div>
 
 
@@ -1098,7 +1100,7 @@ details.past[open] summary { color: var(--accent); }
 
   // ---- 상태 ----
   var DEF_HOUSE = { mode: "presale", name: "", price: 0, loan: 0, contract: "", movein: "", dep: 20, depN: 2, mid: 60, midN: 6, opt: 0, tax: 0, midLoan: true, midInt: 0,
-    midDate: "", fee: 0, etc: 0, first: false, taxAuto: true, feeAuto: true };
+    midDate: "", fee: 0, etc: 0, first: false, land: false, taxAuto: true, feeAuto: true };
   var MODE_DEF = { presale: { dep: 20, mid: 60 }, sale: { dep: 10, mid: 0 } };
   var state = { v: 1, house: Object.assign({}, DEF_HOUSE), items: [], seq: 1 };
   var readOnly = false, editing = null, canStore = true, pastOpen = false;
@@ -1117,13 +1119,13 @@ details.past[open] summary { color: var(--accent); }
   function houseToForm() {
     var h = state.house;
     Object.keys(HF).forEach(function (id) { var v = h[HF[id]]; $(id).value = (v === 0 && /Price|Loan|Opt|Tax|MidInt|Fee|Etc/.test(id)) ? "" : (v == null ? "" : v); });
-    $("hMidLoan").checked = !!h.midLoan; $("hFirst").checked = !!h.first; modeUI(); houseEcho();
+    $("hMidLoan").checked = !!h.midLoan; $("hFirst").checked = !!h.first; $("hLand").checked = !!h.land; modeUI(); houseEcho();
   }
   function formToHouse() {
     var h = state.house;
     h.name = $("hName").value.trim(); h.contract = $("hContract").value; h.movein = $("hMovein").value; h.midDate = $("hMidDate").value;
     ["price", "loan", "opt", "tax", "midInt", "fee", "etc"].forEach(function (k) { h[k] = num("h" + k.charAt(0).toUpperCase() + k.slice(1)); });
-    h.first = $("hFirst").checked;
+    h.first = $("hFirst").checked; h.land = $("hLand").checked;
     h.dep = Math.min(100, num("hDep")); h.depN = Math.max(1, Math.min(4, Math.round(num("hDepN")) || 1));
     h.mid = Math.min(100 - h.dep, num("hMid")); h.midN = Math.max(0, Math.min(10, Math.round(num("hMidN"))));
     h.midLoan = $("hMidLoan").checked;
@@ -1191,9 +1193,10 @@ details.past[open] summary { color: var(--accent); }
     var loanAmt = Math.min(h.loan || 0, Math.max(0, balAmt));
     var st = function (d) { return d && d < today() ? "done" : "todo"; };
     var pay = function (title, date, amt, who, est, note) { if (amt > 0) state.items.push({ id: newId(), kind: "pay", auto: true, title: title, date: date || "", amt: Math.round(amt), who: who, est: !!est, note: note || "", status: st(date), hist: [] }); };
-    var task = function (title, date, note, est) { state.items.push({ id: newId(), kind: "task", auto: true, title: title, date: date || "", note: note, est: !!est, status: st(date), hist: [] }); };
-    pay("계약금", C, depAmt, "cash", !C, "계약서 쓰는 날 매도인 계좌로");
-    task("거래 신고·자금조달계획서 기한", C ? addDays(C, 30) : "", "계약 후 30일 안. 거래 신고는 보통 중개사가 해요. 규제지역이거나 6억 이상이면 자금조달계획서도 함께 내요.", !C);
+    var task = function (title, date, note, est, key) { state.items.push({ id: newId(), kind: "task", auto: true, title: title, date: date || "", note: note, est: !!est, status: st(date), hist: [], key: key || "" }); };
+    if (h.land) task("토지거래허가 신청", C ? addDays(C, -21) : "", "계약서를 쓰기 전에 매도인·매수인이 함께 시·군·구청에 신청해요. 허가가 나야 계약할 수 있고, 허가 없이 쓴 계약은 효력이 없어요. 처리 기한은 신청일부터 15일 이내(구청에 따라 영업일 기준)예요.", true, "permit");
+    pay("계약금", C, depAmt, "cash", !C, h.land ? "토지거래허가를 받은 뒤 계약서를 쓰고 매도인 계좌로" : "계약서 쓰는 날 매도인 계좌로");
+    task("거래 신고·자금조달계획서 기한", C ? addDays(C, 30) : "", h.land ? "토지거래허가 신청 때 자금조달계획서를 이미 내요. 거래 신고 방법은 중개사·구청에 확인해 주세요." : "계약 후 30일 안. 거래 신고는 보통 중개사가 해요. 규제지역이거나 6억 이상이면 자금조달계획서도 함께 내요.", !C);
     if (midAmt > 0) pay("중도금", h.midDate || (C ? addDays(C, 30) : ""), midAmt, "cash", !h.midDate, "중도금을 내면 계약을 일방적으로 해제하기 어려워져요");
     task("주택담보대출 신청", M ? addDays(M, -30) : "", "심사·감정에 2~4주 걸려요. 잔금일에 실행되도록 미리 신청해요.", true);
     pay("잔금 (대출 실행)", M, loanAmt, "loan", !M, "은행이 매도인 계좌로 바로 보내요");
@@ -1203,6 +1206,7 @@ details.past[open] summary { color: var(--accent); }
     pay("등기·법무사 비용", M, h.etc, "cash", !M);
     task("소유권 이전 등기", M, "잔금과 같은 날 법무사가 접수하는 경우가 많아요", !M);
     task("전입신고 기한", M ? addDays(M, 14) : "", "이사한 날부터 14일 안에 주민센터나 정부24에서", true);
+    if (h.land) task("실거주 의무 시작 (2년)", M, "토지거래허가를 받은 집은 취득일부터 2년간 직접 살아야 해요. 어기면 이행강제금이 매년 부과돼요. 세입자가 있는 집은 예외 규정이 있었으니 구청에 확인해 주세요.", !M);
     save(); render(); track("plan-gen-sale"); toast("매매 일정 " + state.items.filter(function (it) { return it.auto; }).length + "건을 만들었어요");
   }
 
@@ -1267,6 +1271,8 @@ details.past[open] summary { color: var(--accent); }
     Object.keys(perDay).sort().forEach(function (d) { if (perDay[d].length >= 3) w.push(["<b>겹침</b> " + fmtD(d) + "에 업체 일정이 " + perDay[d].length + "건이에요. 집에 있을 사람과 동선을 확인해 주세요.", ""]); });
     var h = state.house;
     if (h.movein) its.forEach(function (it) { if (it.kind === "work" && it.date && it.date < h.movein && it.stage !== "measure" && diffDays(it.date, h.movein) > 60) w.push(["<b>날짜</b> " + esc(it.title) + "이 잔금일보다 두 달 넘게 앞서요. 입력 날짜를 확인해 주세요.", ""]); });
+    var permit = its.filter(function (it) { return it.key === "permit" && it.date && it.status !== "done"; })[0];
+    if (permit && h.contract && diffDays(permit.date, h.contract) < 15) w.push(["<b>허가</b> 토지거래허가 신청(" + shortD(permit.date) + ")이 계약일(" + shortD(h.contract) + ")과 " + diffDays(permit.date, h.contract) + "일 차이예요. 처리에 최대 15일(영업일 기준이면 더) 걸리니 계약일을 미루거나 신청을 당겨 주세요.", ""]); if (permit) flagged[permit.id] = flagged[permit.id] || (h.contract && diffDays(permit.date, h.contract) < 15 ? 1 : 0);
     var loanDays = {};
     its.forEach(function (it) { if (it.kind === "pay" && it.who === "loan" && it.date && isWeekend(it.date) && it.status !== "done") loanDays[it.date] = 1; });
     Object.keys(loanDays).forEach(function (d) { w.push(["<b>주말</b> " + fmtD(d) + "에 대출로 낼 잔금이 있어요. 은행 대출 실행과 등기 접수는 평일에만 돼요. 잔금일을 평일로 맞춰 주세요.", ""]); });
@@ -1428,7 +1434,7 @@ details.past[open] summary { color: var(--accent); }
   });
   function normalize(s) {
     var o = { v: 1, house: Object.assign({}, DEF_HOUSE, s.house || {}), items: (s.items || []).filter(function (it) { return it && it.id && it.title; }).slice(0, 300), seq: +s.seq || 1, created: s.created || Date.now().toString(36) };
-    o.items.forEach(function (it) { it.title = String(it.title).slice(0, 40); if (it.vendor) it.vendor = String(it.vendor).slice(0, 30); if (!/^\d{4}-\d{2}-\d{2}$/.test(it.date || "")) it.date = ""; if (!STATUS[it.status]) it.status = "todo"; if (!Array.isArray(it.hist)) it.hist = []; if (it.note) it.note = String(it.note).slice(0, 200); if (["pay", "work", "task"].indexOf(it.kind) < 0) it.kind = "work"; var n = parseInt(String(it.id).slice(1), 10); if (n >= o.seq) o.seq = n + 1; });
+    o.items.forEach(function (it) { it.title = String(it.title).slice(0, 40); if (it.vendor) it.vendor = String(it.vendor).slice(0, 30); if (!/^\d{4}-\d{2}-\d{2}$/.test(it.date || "")) it.date = ""; if (!STATUS[it.status]) it.status = "todo"; if (!Array.isArray(it.hist)) it.hist = []; if (it.note) it.note = String(it.note).slice(0, 200); if (["pay", "work", "task"].indexOf(it.kind) < 0) it.kind = "work"; if (it.key && it.key !== "permit") delete it.key; var n = parseInt(String(it.id).slice(1), 10); if (n >= o.seq) o.seq = n + 1; });
     return o;
   }
 
@@ -1466,7 +1472,7 @@ details.past[open] summary { color: var(--accent); }
   $("fKind").addEventListener("change", kindUI); $("fStage").addEventListener("change", kindUI);
   $("saveItem").addEventListener("click", saveItem); $("cancelEdit").addEventListener("click", clearForm);
   $("genPay").addEventListener("click", genPay);
-  Object.keys(HF).concat(["hMidLoan", "hFirst"]).forEach(function (id) { $(id).addEventListener("input", function () {
+  Object.keys(HF).concat(["hMidLoan", "hFirst", "hLand"]).forEach(function (id) { $(id).addEventListener("input", function () {
     if (id === "hTax") state.house.taxAuto = !$("hTax").value; if (id === "hFee") state.house.feeAuto = !$("hFee").value;
     formToHouse(); if (/hPrice|hFirst/.test(id)) autoCosts(); houseEcho(); save(); renderSum();
   }); });
