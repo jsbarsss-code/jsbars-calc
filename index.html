@@ -337,8 +337,10 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     <button type="button" role="tab" id="tabPlan" aria-controls="viewPlan" aria-selected="false">입주까지 일정</button>
   </nav>
 
+  <div id="restoreBanner" class="banner warn" hidden></div>
+  <div id="inappBanner" class="banner warn" hidden></div>
+
   <div class="view" id="viewMap" role="tabpanel" aria-labelledby="tabMap">
-    <div id="restoreBanner" class="banner warn" hidden></div>
     <section class="card maphero" id="mapHead"></section>
     <div class="mapgrid" id="mapGrid"><div class="msteps" id="mapSteps"></div><div class="mdetail" id="mapDetail" hidden></div></div>
     <section class="card" id="saveCard">
@@ -348,7 +350,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         <button type="button" class="btn" id="saveKakao">카카오톡으로 보내기</button>
         <button type="button" class="btn ghost" id="saveImage">요약 이미지 저장</button>
       </div>
-      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면, 어느 기기에서든 메시지의 <b>이어서 하기</b>를 눌러 그대로 이어서 할 수 있어요. 일정·금액이 담기니 나와 가족에게만 보내 주세요.</p>
+      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면, 어느 기기에서든 메시지의 <b>이어서 하기</b>를 눌러 보낸 화면 그대로 이어서 할 수 있어요. 입력한 연봉·현금과 일정·금액이 담기니 나에게만 보내 주세요(가족에게는 입주까지 일정의 <b>보기 전용</b> 보내기를 써 주세요).</p>
       <details class="more"><summary>파일로 백업·불러오기</summary><div class="inner"><div class="btns">
         <button type="button" class="btn small ghost" id="saveFile">백업 파일 저장</button>
         <label class="btn small ghost" for="loadFile" style="display:inline-block">백업 불러오기</label>
@@ -423,6 +425,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <span class="yes" id="aYes"></span>
       <span class="sub" id="aSub"></span>
       <button type="button" class="linkbtn toplan" id="toPlan" hidden>이 집으로 납입·입주 일정 짜기 →</button>
+      <button type="button" class="txtbtn" id="toMap" style="justify-self:start">열쇠까지 지도에서 다음 단계 보기 →</button>
     </section>
 
     <section class="card facts" aria-label="핵심 숫자">
@@ -473,7 +476,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </form>
     <section class="card">
       <h2 class="step">다음에 이어서 하려면</h2>
-      <p class="hint" style="margin:0">이 계산 결과(닿는 최고가)와 지도·일정을 카톡 <b>나와의 채팅</b>에 보내 두면, 다른 휴대폰·PC에서도 그대로 이어서 할 수 있어요. 연봉·현금 원래 값은 담지 않아요.</p>
+      <p class="hint" style="margin:0">지금 입력과 지도·일정을 카톡 <b>나와의 채팅</b>에 보내 두면, 다른 휴대폰·PC에서 <b>이 화면 그대로</b> 이어서 할 수 있어요. 링크에 연봉·현금도 담기니 나에게만 보내 주세요.</p>
       <div class="btns savebar"><button type="button" class="btn" data-save="Kakao" data-from="calc">카카오톡으로 보내기</button><button type="button" class="btn ghost" data-save="Image" data-from="calc">요약 이미지 저장</button></div>
     </section>
   </div>
@@ -842,6 +845,22 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   $("region").addEventListener("change", function () { ltvTouched = false; stressTouched = false; syncAuto(); render(); });
   $("first").addEventListener("change", function () { ltvTouched = false; syncAuto(); render(); });
   var usedSent = false, calcTouched = fromLink;
+  var CALC_KEYS = ["salary", "cash", "price", "rate", "years", "debt"];
+  window.ujkCalcExport = function () {   // 이어하기 링크에만 담는다 (이 기기 저장소·서버에는 저장하지 않음)
+    if (!calcTouched) return null;
+    var o = { name: $("name").value, region: $("region").value, first: $("first").checked, baby: $("baby").checked, ps: pickedPs || null };
+    CALC_KEYS.forEach(function (k) { o[k] = $(k).value; }); return o;
+  };
+  window.ujkCalcRestore = function (o) {
+    if (!o) return;
+    CALC_KEYS.forEach(function (k) { if (o[k] != null && o[k] !== "") $(k).value = o[k]; });
+    if (o.name != null) $("name").value = String(o.name).slice(0, 40);
+    if (LTV_TABLE[o.region]) $("region").value = o.region;
+    $("first").checked = !!o.first; $("baby").checked = !!o.baby; pickedPs = o.ps || null;
+    ltvTouched = false; stressTouched = false; syncAuto(); calcTouched = true;
+    $("exampleNote").textContent = "이어하기 링크로 지난번 입력을 불러왔어요.";
+    render();
+  };
   window.ujkCalcSnapshot = function () {   // 열쇠까지 지도가 읽는 값 (이 화면 안에서만, 저장·전송 없음)
     var p = read();
     return { touched: calcTouched, salary: p.salary, cash: p.cash, price: p.price, name: p.name, first: p.first, maxReg: maxFor("reg"), maxCap: maxFor("capital"),
@@ -867,6 +886,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (err) {} }
   var idx = [], presale = [], loading = null, sggCache = {}, pickedPs = null;
   setTimeout(function () { getJSON("data/meta.json").then(function (m) { if (m && !loading) showMeta(m); }); }, 0);
+  $("toMap").addEventListener("click", function () { track("calc-to-map"); if (window.ujkShowTab) window.ujkShowTab("map", true); });
   $("toPlan").addEventListener("click", function () {   // 같은 페이지의 입주까지 일정 탭으로: 집 이름·가격(+분양 공고번호)만 넘긴다
     track("go-plan"); var p = read(), e = evaluate(p);   // 연봉·현금은 넘기지 않는다. 가격·대출 예상액·생애최초만
     if (window.ujkPlanFromCalc) window.ujkPlanFromCalc(p.name, p.price, pickedPs, Math.round(e.loan), p.first);
@@ -1219,8 +1239,10 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     if (name === "map" && window.ujkJourneyRender) window.ujkJourneyRender();
   }
   function show(name, scroll) {
+    var was = NAMES.filter(function (k) { return !views[k].hidden; })[0];
     set(name);
-    if (!/^#v=/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + (name === "plan" ? "#plan" : name === "calc" ? "#calc" : ""));
+    var url = location.pathname + location.search + (name === "plan" ? "#plan" : name === "calc" ? "#calc" : "");
+    if (!/^#[vr]=/.test(location.hash)) { if (was && was !== name) history.pushState({ tab: name }, "", url); else history.replaceState({ tab: name }, "", url); }
     if (scroll) try { window.scrollTo(0, 0); } catch (e) {}
     try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "tab-" + name, title: "tab-" + name, event: true }); } catch (e) {}
   }
@@ -1233,6 +1255,8 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   }
   set(fromUrl());
   window.addEventListener("hashchange", function () { if (/^#v=/.test(location.hash)) location.reload(); else set(fromUrl()); });
+  window.addEventListener("popstate", function (e) { if (/^#[vr]=/.test(location.hash)) return; set(e.state && e.state.tab ? e.state.tab : fromUrl()); });
+  try { history.replaceState({ tab: NAMES.filter(function (k) { return !views[k].hidden; })[0] }, "", location.href); } catch (e) {}
 })();
 </script>
 <script>
@@ -1366,8 +1390,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     var loanAmt = Math.min(h.loan || 0, Math.max(0, balAmt));
     var st = function (d) { return d && d < today() ? "done" : "todo"; };
     var pay = function (title, date, amt, who, est, note) { if (amt > 0) state.items.push({ id: newId(), kind: "pay", auto: true, title: title, date: date || "", amt: Math.round(amt), who: who, est: !!est, note: note || "", status: st(date), hist: [] }); };
-    var task = function (title, date, note, est, key) { state.items.push({ id: newId(), kind: "task", auto: true, title: title, date: date || "", note: note, est: !!est, status: st(date), hist: [], key: key || "" }); };
-    if (h.land) task("토지거래허가 신청", C ? addDays(C, -21) : "", "계약서를 쓰기 전에 매도인·매수인이 함께 시·군·구청에 신청해요. 허가가 나야 계약할 수 있고, 허가 없이 쓴 계약은 효력이 없어요. 처리 기한은 신청일부터 15일 이내(구청에 따라 영업일 기준)예요.", true, "permit");
+    var task = function (title, date, note, est, key) { state.items.push({ id: newId(), kind: "task", auto: true, title: title, date: date || "", note: note, est: !!est, status: "todo", hist: [], key: key || "" }); };   // 할 일은 날짜가 지나도 자동 완료하지 않는다
+    var permitD = C ? addDays(C, -21) : ""; if (permitD && permitD < today()) permitD = today();   // 예상일이 이미 지났으면 오늘
+    if (h.land) task("토지거래허가 신청", permitD, "계약서를 쓰기 전에 매도인·매수인이 함께 시·군·구청에 신청해요. 허가가 나야 계약할 수 있고, 허가 없이 쓴 계약은 효력이 없어요. 처리 기한은 신청일부터 15일 이내(구청에 따라 영업일 기준)예요.", true, "permit");
     pay("계약금", C, depAmt, "cash", !C, h.land ? "토지거래허가를 받은 뒤 계약서를 쓰고 매도인 계좌로" : "계약서 쓰는 날 매도인 계좌로");
     task("거래 신고·자금조달계획서 기한", C ? addDays(C, 30) : "", h.land ? "토지거래허가 신청 때 자금조달계획서를 이미 내요. 거래 신고 방법은 중개사·구청에 확인해 주세요." : "계약 후 30일 안. 거래 신고는 보통 중개사가 해요. 규제지역이거나 6억 이상이면 자금조달계획서도 함께 내요.", !C);
     if (midAmt > 0) pay("중도금", h.midDate || (C ? addDays(C, 30) : ""), midAmt, "cash", !h.midDate, "중도금을 내면 계약을 일방적으로 해제하기 어려워져요");
@@ -1456,6 +1481,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       Object.keys(state.icsMap).forEach(function (k) { if (!(k in cur)) changed++; });
       if (changed) w.unshift(["<b>캘린더</b> 휴대폰 캘린더에 넣은 뒤 바뀐 일정이 " + changed + "건 있어요. 아래 <b>바뀐 일정만 다시 넣기</b>를 눌러 주세요.", ""]);
     }
+    var tdy0 = today(), overdue = its.filter(function (it) { return it.date && it.date < tdy0 && it.status !== "done"; });
+    if (overdue.length && !readOnly) w.unshift(["<b>점검</b> 날짜가 지났는데 완료로 바꾸지 않은 일정이 " + overdue.length + "건 있어요(" + overdue.slice(0, 2).map(function (it) { return esc(shortD(it.date) + " " + it.title); }).join(", ") + (overdue.length > 2 ? " 외" : "") + "). 했으면 <b>완료</b>로, 아니면 날짜를 바꿔 주세요.", ""]);
+    overdue.forEach(function (it) { flagged[it.id] = 1; });
     var noDate = its.filter(function (it) { return !it.date; }).length;
     var est = its.filter(function (it) { return it.kind === "pay" && it.est && it.status !== "done"; }).length;
     if (est) w.push(["'예상' 표시 납입 " + est + "건은 공고문·계약서 날짜로 고쳐 주세요(날짜 칸을 바꾸면 표시가 사라져요).", "info"]);
@@ -1521,7 +1549,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     });
     if (!its.length) { $("timeline").innerHTML = '<p class="empty">아직 일정이 없어요. 위에서 납입 일정을 만들거나 업체 일정을 추가해 보세요.</p>'; return; }
     var t = today();
-    var isPast = function (it) { return it.date && it.date < t && (it.status === "done" || it.kind !== "work") && !flagged[it.id]; };
+    var isPast = function (it) { return it.date && it.date < t && it.status === "done" && !flagged[it.id]; };   // 안 끝낸 지난 일정은 숨기지 않는다
     var past = its.filter(isPast), now = its.filter(function (it) { return !isPast(it); });
     var group = function (list) {
       var html = "", cur = null;
@@ -1854,7 +1882,14 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   }
   function visibleChecks(i) { return STEPS[i].checks.filter(function (c) { return !J.route || !c[2] || c[2] === J.route; }); }
   function isDone(c, sn, pl) { return !!J.checks[c[0]] || (c[3] ? autoDone(c[3], sn, pl) : false); }
-  function stepStat(i, sn, pl) { var cs = visibleChecks(i), d = cs.filter(function (c) { return isDone(c, sn, pl); }).length; return { done: d, total: cs.length, full: d === cs.length }; }
+  function passedUntil(pl) {   // 계약금을 이미 냈으면(일정표 기준) 0~4단계(계약까지)는 지나온 단계로 본다
+    return pl && pl.items.some(function (it) { return it.kind === "pay" && it.status === "done" && /^계약금/.test(it.title); }) ? 4 : -1;
+  }
+  function stepStat(i, sn, pl) {
+    var cs = visibleChecks(i);
+    if (i <= passedUntil(pl)) return { done: cs.length, total: cs.length, full: true, passed: true };
+    var d = cs.filter(function (c) { return isDone(c, sn, pl); }).length; return { done: d, total: cs.length, full: d === cs.length };
+  }
 
 
   function critBlock(p) {   // 만든 사람의 실제 기준 + 내 기준 3가지
@@ -1978,7 +2013,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     var detail = "";
     $("mapSteps").innerHTML = STEPS.map(function (s, i) {
       var st = stats[i], state = st.full ? "done" : i === cur ? "now" : "todo";
-      var badge = st.full ? "완료" : i === cur ? "지금 여기" : st.done + "/" + st.total;
+      var badge = st.passed ? "지나옴" : st.full ? "완료" : i === cur ? "지금 여기" : st.done + "/" + st.total;
       var body = "";
       if (i === open) {
         body = "<div class='mbody'>" + (wide ? "<h2>" + i + ". " + esc(s.t) + "</h2>" : "") + "<p class='feel'>“" + esc(s.feel) + "”</p><ul class='lines'>" + s.lines.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") + "</ul>"
@@ -2050,7 +2085,18 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   });
   view.addEventListener("change", function (ev) {
     var el = ev.target;
-    if (el.hasAttribute("data-ck")) { J.checks[el.getAttribute("data-ck")] = el.checked; save(); render(); track("map-check"); return; }
+    if (el.hasAttribute("data-ck")) {
+      var sn1 = snap(), pl1 = plan(), stepIdx = -1;
+      STEPS.forEach(function (s, i) { if (s.checks.some(function (c) { return c[0] === el.getAttribute("data-ck"); })) stepIdx = i; });
+      var wasFull = stepIdx >= 0 && stepStat(stepIdx, sn1, pl1).full;
+      J.checks[el.getAttribute("data-ck")] = el.checked; save();
+      if (stepIdx >= 0 && !wasFull && stepStat(stepIdx, sn1, pl1).full && stepIdx < STEPS.length - 1) {   // 이 단계 끝 → 다음 단계 펼치기
+        J.open = stepIdx + 1; save(); render(); track("map-step-done-" + stepIdx);
+        var t = $("toast"); if (t) { t.textContent = stepIdx + "단계 완료! 다음은 " + (stepIdx + 1) + ". " + STEPS[stepIdx + 1].t; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function () { t.hidden = true; }, 2600); }
+        var op = $("mapDetail").hidden ? view.querySelector(".mstep.open") : $("mapDetail"); if (op) try { op.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {}
+        return;
+      }
+      render(); track("map-check"); return; }
     if (el.hasAttribute("data-pd")) { var o = {}; o[el.getAttribute("data-pd")] = el.value; if (window.ujkPlanApply) window.ujkPlanApply(o); render(); return; }
     if (el.getAttribute("data-cr") === "station") { J.crit.station = el.checked; save(); render(); return; }
     if (el.getAttribute("data-bf") === "pick") { var k = +el.closest(".brow").getAttribute("data-bk"); while (J.banks.length < 2) J.banks.push({}); J.banks.forEach(function (b, i) { b.pick = i === k; }); save();
@@ -2107,7 +2153,8 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     try { if (window.ujkJourneyRender) window.ujkJourneyRender(); } catch (e) {}
     var pl = window.ujkPlanExport ? window.ujkPlanExport() : null;
     if (pl) { pl.items = (pl.items || []).map(function (it) { var o = Object.assign({}, it); delete o.hist; return o; }); delete pl.icsMap; }
-    return { app: "ujk", v: 1, at: Date.now(), plan: pl, journey: window.ujkJourney ? window.ujkJourney() : null };
+    var tab = ["map", "calc", "plan"].filter(function (k) { var v = $("view" + k.charAt(0).toUpperCase() + k.slice(1)); return v && !v.hidden; })[0] || "map";
+    return { app: "ujk", v: 1, at: Date.now(), tab: tab, calc: window.ujkCalcExport ? window.ujkCalcExport() : null, plan: pl, journey: window.ujkJourney ? window.ujkJourney() : null };
   }
   function restoreLink() { return pack(bundle()).then(function (c) { return SITE + "#r=" + c; }); }
   function copy(text, ok) {
@@ -2225,7 +2272,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     a.href = u; a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(u); a.remove(); }, 1000); track("save-file");
   });
   function apply(b) {
-    if (b && b.app === "ujk") { if (b.plan && window.ujkPlanReplace) window.ujkPlanReplace(b.plan); if (b.journey && window.ujkJourneyReplace) window.ujkJourneyReplace(b.journey); return true; }
+    if (b && b.app === "ujk") {
+      if (b.calc && window.ujkCalcRestore) window.ujkCalcRestore(b.calc);
+      if (b.plan && window.ujkPlanReplace) window.ujkPlanReplace(b.plan); if (b.journey && window.ujkJourneyReplace) window.ujkJourneyReplace(b.journey); return true; }
     if (b && Array.isArray(b.items) && window.ujkPlanReplace) { window.ujkPlanReplace(b); return true; }   // 예전 일정표 백업
     return false;
   }
@@ -2243,16 +2292,39 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   if (window.ujkPlanLoadShared) window.ujkPlanLoadShared();
 
+  // ---- 카톡·네이버 안 브라우저: 저장소가 그 창에만 따로 있어서, 다음에 사파리·크롬으로 열면 이어지지 않는다 ----
+  (function () {
+    var ua = navigator.userAgent || "", kakao = /KAKAOTALK/i.test(ua), inapp = kakao || /NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(ua);
+    var seen = false; try { seen = sessionStorage.getItem("ujk-inapp-seen") === "1"; } catch (e) {}
+    if (!inapp || seen) return;
+    var bn = $("inappBanner");
+    bn.innerHTML = "<span><b>" + (kakao ? "카카오톡" : "앱") + " 안 브라우저</b>로 보고 있어요. 여기서 한 내용은 이 창에만 저장돼서, 다음에 사파리·크롬으로 열면 이어지지 않아요.</span>"
+      + "<div class='btns'>" + (kakao ? "<button type='button' class='btn small' id='inappOpen'>기본 브라우저로 열기</button>" : "") + "<button type='button' class='btn small ghost' id='inappClose'>여기서 계속</button></div>"
+      + (kakao ? "" : "<span class='hint'>오른쪽 위 메뉴에서 '다른 브라우저로 열기'를 눌러 주세요.</span>");
+    bn.hidden = false; track("inapp-banner");
+    if (kakao) $("inappOpen").addEventListener("click", function () { track("inapp-open-external"); location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(location.href); });
+    $("inappClose").addEventListener("click", function () { bn.hidden = true; try { sessionStorage.setItem("ujk-inapp-seen", "1"); } catch (e) {} });
+  })();
+
   // ---- 이어하기 링크로 열었을 때 ----
   if (/^#r=/.test(location.hash)) {
     var code = location.hash.slice(3);
     unpack(code).then(function (b) {
       if (!b || b.app !== "ujk") throw 0;
-      var at = b.at ? new Date(+b.at) : null, bn = $("restoreBanner");
-      bn.innerHTML = "<span><b>이어하기 링크</b>로 열었어요" + (at ? " (" + (at.getMonth() + 1) + "월 " + at.getDate() + "일 저장)" : "") + ". 이 기기에서 이어서 할까요? 이 기기에 있던 지도·일정은 링크 내용으로 바뀌어요.</span>"
-        + "<div class='btns'><button type='button' class='btn small' id='restoreYes'>이 기기에서 이어서 하기</button><button type='button' class='btn small ghost' id='restoreNo'>닫기</button></div>";
+      var at = b.at ? new Date(+b.at) : null, bn = $("restoreBanner"), tab = b.tab || "map";
+      var done = function (auto) {
+        apply(b); history.replaceState(null, "", location.pathname + (tab === "plan" ? "#plan" : tab === "calc" ? "#calc" : "")); bn.hidden = true;
+        if (window.ujkShowTab) window.ujkShowTab(tab, true); if (window.ujkJourneyRender) window.ujkJourneyRender();
+        toast(auto ? "지난번 이어서 하던 화면을 불러왔어요" : "이어서 할 수 있게 불러왔어요"); track(auto ? "restore-auto" : "restore-apply");
+      };
+      var hasLocal = false;
+      try { var lp = JSON.parse(localStorage.getItem("ujk-plan-v1") || "null"), lj = JSON.parse(localStorage.getItem("ujk-journey-v1") || "null");
+        hasLocal = !!((lp && lp.items && lp.items.length) || (lj && (lj.route || Object.keys(lj.checks || {}).length > 1 || (lj.banks || []).length))); } catch (e) {}
+      if (!hasLocal) { done(true); return; }   // 처음 여는 기기: 묻지 않고 바로
+      bn.innerHTML = "<span><b>이어하기 링크</b>로 열었어요" + (at ? " (" + (at.getMonth() + 1) + "월 " + at.getDate() + "일 저장)" : "") + ". 이 기기에도 저장된 내용이 있어요. 링크 내용으로 바꿔서 이어서 할까요?</span>"
+        + "<div class='btns'><button type='button' class='btn small' id='restoreYes'>링크 내용으로 이어서 하기</button><button type='button' class='btn small ghost' id='restoreNo'>이 기기 내용 그대로</button></div>";
       bn.hidden = false; track("restore-open");
-      $("restoreYes").addEventListener("click", function () { apply(b); history.replaceState(null, "", location.pathname); bn.hidden = true; if (window.ujkJourneyRender) window.ujkJourneyRender(); toast("이어서 할 수 있게 불러왔어요"); track("restore-apply"); });
+      $("restoreYes").addEventListener("click", function () { done(false); });
       $("restoreNo").addEventListener("click", function () { history.replaceState(null, "", location.pathname); bn.hidden = true; });
     }).catch(function () { toast("이어하기 링크가 잘렸거나 잘못됐어요"); });
   }
