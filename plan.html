@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="분양 계약금·중도금·잔금 납입일과 입주 전 실측·시공·청소·배송 업체 일정을 한 곳에서 관리합니다. 휴대폰 캘린더로 내보내기, 가족 공유.">
+<meta property="og:title" content="우리집 열쇠 · 입주 일정표">
+<meta property="og:description" content="엑셀과 휴대폰 일정표에 따로 적던 납입일·업체 일정을 한 곳에. 날짜를 바꾸면 순서·겹침을 알려 드려요.">
+<meta property="og:type" content="website">
+<title>우리집 열쇠 · 입주 일정표</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root {
+  --bg: #f3f5f2; --paper: #ffffff; --ink: #17251f; --muted: #4a5751; --line: #d6ddd8;
+  --accent: #1f6b4f; --accent-soft: #e2efe8; --warn: #9a5b00; --warn-soft: #fbefdc; --bad: #a3312a; --bad-soft: #f8e3e1;
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101814; --paper: #17221d; --ink: #eef4f0; --muted: #b3c2ba; --line: #2c3a33;
+    --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15; --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101814; --paper: #17221d; --ink: #eef4f0; --muted: #b3c2ba; --line: #2c3a33;
+  --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15; --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.7;
+  word-break: keep-all; overflow-wrap: break-word; -webkit-font-smoothing: antialiased;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
+header h1 { font-weight: 800; font-size: clamp(28px, 7.5vw, 38px); margin: 0; letter-spacing: -0.01em; line-height: 1.3; }
+header p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
+.kicker { margin: 4px 0 0 !important; font-size: 17px; font-weight: 700; color: var(--accent) !important; letter-spacing: 0.04em; }
+.back { font-size: 15px; color: var(--accent); text-decoration: none; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.step { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 19px; font-weight: 700; }
+.step .no { font-size: 14px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 1px 9px; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 420px) { .row2, .row3 { grid-template-columns: minmax(0, 1fr); } }
+label.f { display: grid; gap: 6px; font-size: 15px; font-weight: 500; color: var(--muted); min-width: 0; }
+.inrow { display: flex; align-items: center; gap: 8px; }
+.inrow input { flex: 1; min-width: 0; }
+.unit { color: var(--muted); font-size: 15px; white-space: nowrap; }
+.echo { font-size: 14px; color: var(--accent); font-weight: 500; min-height: 1.2em; font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 14.5px; margin: 0; }
+input[type=number], input[type=text], input[type=date], select {
+  -webkit-appearance: none; appearance: none; font: inherit; font-size: 17px; font-variant-numeric: tabular-nums;
+  padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; min-width: 0; }
+input[type=date] { min-height: 48px; }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; }
+.check input { margin-top: 5px; accent-color: var(--accent); width: 20px; height: 20px; flex: none; }
+.btn { font: inherit; font-size: 16px; font-weight: 700; border-radius: 8px; padding: 11px 16px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: var(--paper); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.small { font-size: 14.5px; padding: 7px 11px; font-weight: 600; }
+.btn.danger { border-color: var(--bad); color: var(--bad); background: transparent; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 15px; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 99px; padding: 6px 12px; }
+.chip:hover { border-color: var(--accent); }
+.banner { border-radius: 10px; padding: 12px 14px; font-size: 15.5px; background: var(--accent-soft); display: grid; gap: 8px; }
+.banner.warn { background: var(--warn-soft); }
+.sum { display: grid; gap: 0; }
+.fact { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.fact:last-child { border-bottom: 0; }
+.fact .k { color: var(--muted); font-size: 15.5px; }
+.fact .v { font-weight: 700; text-align: right; font-size: 17px; }
+.fact .v.good { color: var(--accent); }
+.fact .v.bad { color: var(--bad); }
+.warns { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.warns li { font-size: 15px; padding: 9px 12px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); }
+.warns li.info { background: var(--bg); border: 1px solid var(--line); }
+.warns li b { color: var(--warn); }
+/* 일정 목록: 박스 대신 계산기 '핵심 숫자'처럼 얇은 구분선 행 (DESIGN.md — 카드 안에 카드 금지) */
+.day { display: grid; gap: 0; }
+.dayhead { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; font-weight: 700; font-size: 15.5px; padding: 18px 0 4px; color: var(--accent); }
+.dayhead:first-child { padding-top: 0; }
+.dayhead small { font-weight: 500; color: var(--muted); font-size: 14px; }
+.it { padding: 12px 0 12px; display: grid; gap: 6px; border-bottom: 1px solid var(--line); }
+.it.done .t, .it.done .m { color: var(--muted); }
+.it.done .t { text-decoration: line-through; text-decoration-color: var(--line); }
+.it.flagged { border-left: 3px solid var(--warn); padding-left: 10px; }
+.it .t { font-weight: 700; font-size: 16.5px; overflow-wrap: anywhere; }
+.it .t small { font-weight: 500; color: var(--muted); font-size: 14.5px; margin-left: 4px; }
+.it .m { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.it .m b { color: var(--ink); }
+.it .ctl { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto auto; gap: 6px; align-items: center; }
+.it .ctl input, .it .ctl select { font-size: 15px; padding: 7px 10px; min-height: 40px; }
+.txtbtn { font: inherit; font-size: 14.5px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 8px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.txtbtn:hover { color: var(--ink); }
+.it .ctl .txtbtn { justify-self: start; }
+@media (max-width: 420px) { .it .ctl { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+details.past { border-bottom: 1px solid var(--line); padding: 4px 0 10px; }
+details.past summary { cursor: pointer; font-size: 15px; font-weight: 600; color: var(--muted); padding: 6px 0; }
+details.past[open] summary { color: var(--accent); }
+.tag { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 0 7px; border-radius: 99px; margin-right: 6px; vertical-align: 2px; }
+.tag.pay { background: var(--accent-soft); color: var(--accent); }
+.tag.work { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
+.tag.est, .tag.wk { background: var(--warn-soft); color: var(--warn); }
+.empty { color: var(--muted); font-size: 15.5px; }
+details.more { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+details.more summary { cursor: pointer; font-size: 16px; font-weight: 600; color: var(--accent); }
+details.more .inner { display: grid; gap: 12px; margin-top: 14px; }
+.foot { font-size: 14px; color: var(--muted); margin: 0; }
+.foot a { color: var(--accent); }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 99px; font-size: 15px; max-width: calc(100% - 32px); }
+</style>
+<script>
+  // 방문 통계(GoatCounter, 쿠키 없음). 경로만 보내고, 공유 링크 안의 일정(#v=...)은 보내지 않는다.
+  window.goatcounter = { path: function () { return location.pathname; } };
+</script>
+<script data-goatcounter="https://jsbars.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="./">← 우리집 열쇠 계산기</a>
+    <h1>입주 일정표</h1>
+    <p class="kicker">납입부터 입주 청소까지 한 곳에서</p>
+    <p>엑셀과 휴대폰 일정표에 따로 적던 납입일·실측·시공·배송 일정을 여기 한 곳에 모아요. 날짜를 바꾸면 순서가 꼬였는지 알려 드려요. 입력한 내용은 <b>이 기기의 브라우저에만 저장</b>되고 운영자에게 보내지 않아요.</p>
+  </header>
+
+  <div id="sharedBanner" class="banner warn" hidden>
+    <span>가족이 보낸 <b>보기 전용 일정</b>이에요. 고치려면 내 일정으로 가져오세요(지금 이 기기에 있던 일정은 바뀝니다).</span>
+    <div class="btns"><button type="button" class="btn small" id="importShared">내 일정으로 가져오기</button><a class="btn small ghost" href="plan.html" style="text-decoration:none">내 일정 보기</a></div>
+  </div>
+  <div id="calcBanner" class="banner" hidden></div>
+  <div id="storeWarn" class="banner warn" hidden>이 브라우저는 저장이 막혀 있어요(사생활 보호 모드 등). 창을 닫기 전에 아래 <b>백업 파일 저장</b>을 눌러 주세요.</div>
+
+  <section class="card" id="houseCard">
+    <h2 class="step"><span class="no">1</span>우리집과 납입 조건</h2>
+    <p class="hint">분양 공고문의 납부 조건을 넣고 <b>납입 일정 만들기</b>를 누르면 계약금·중도금·잔금 일정이 자동으로 들어가요. 회차 날짜는 공고문과 다를 수 있어 '예상'으로 표시돼요.</p>
+    <label class="f" for="hName">우리집 이름
+      <input type="text" id="hName" maxlength="40" placeholder="예: 운정 OO 84A">
+    </label>
+    <div class="row2">
+      <label class="f" for="hPrice">분양가
+        <span class="inrow"><input type="number" id="hPrice" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
+        <span class="echo" id="hPriceEcho"></span>
+      </label>
+      <label class="f" for="hLoan">잔금 대출(집단대출) 예상 금액
+        <span class="inrow"><input type="number" id="hLoan" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
+        <span class="echo" id="hLoanEcho"></span>
+      </label>
+    </div>
+    <div class="row2">
+      <label class="f" for="hContract">계약일
+        <input type="date" id="hContract">
+      </label>
+      <label class="f" for="hMovein">잔금일(입주일)
+        <input type="date" id="hMovein">
+      </label>
+    </div>
+    <div class="row3">
+      <label class="f" for="hDep">계약금 %
+        <input type="number" id="hDep" min="0" max="100" step="5" inputmode="numeric">
+      </label>
+      <label class="f" for="hDepN">계약금 회차
+        <input type="number" id="hDepN" min="1" max="4" step="1" inputmode="numeric">
+      </label>
+      <label class="f" for="hMid">중도금 %
+        <input type="number" id="hMid" min="0" max="100" step="10" inputmode="numeric">
+      </label>
+    </div>
+    <div class="row3">
+      <label class="f" for="hMidN">중도금 회차
+        <input type="number" id="hMidN" min="0" max="10" step="1" inputmode="numeric">
+      </label>
+      <label class="f" for="hOpt">옵션 잔금
+        <span class="inrow"><input type="number" id="hOpt" min="0" step="10" inputmode="numeric"><span class="unit">만원</span></span>
+      </label>
+      <label class="f" for="hTax">취득세 등
+        <span class="inrow"><input type="number" id="hTax" min="0" step="10" inputmode="numeric"><span class="unit">만원</span></span>
+      </label>
+    </div>
+    <div class="row2">
+      <label class="check" for="hMidLoan"><input type="checkbox" id="hMidLoan"> <span>중도금은 대출로 내요(잔금일에 대출로 갚음)</span></label>
+      <label class="f" for="hMidInt">중도금 대출 이자(후불, 예상)
+        <span class="inrow"><input type="number" id="hMidInt" min="0" step="10" inputmode="numeric"><span class="unit">만원</span></span>
+      </label>
+    </div>
+    <p class="hint" id="splitLine"></p>
+    <div class="btns"><button type="button" class="btn" id="genPay">납입 일정 만들기</button><button type="button" class="btn ghost" id="loadExample">예시 일정 보기</button></div>
+  </section>
+
+  <section class="card" id="formCard">
+    <h2 class="step"><span class="no">2</span><span id="formTitle">일정 추가</span></h2>
+    <div class="chips" id="tpl"></div>
+    <div class="row2">
+      <label class="f" for="fKind">구분
+        <select id="fKind"><option value="work">업체 일정 (실측·시공·배송)</option><option value="pay">납입 (계약금·중도금·잔금 등)</option></select>
+      </label>
+      <label class="f" for="fDate">날짜 (모르면 비워 두세요)
+        <input type="date" id="fDate">
+      </label>
+    </div>
+    <div class="row2">
+      <label class="f" for="fTitle">항목
+        <input type="text" id="fTitle" maxlength="40" placeholder="예: 줄눈 시공">
+      </label>
+      <label class="f wk" for="fVendor">업체 (선택)
+        <input type="text" id="fVendor" maxlength="30" placeholder="예: OO줄눈">
+      </label>
+      <label class="f py" for="fWho" hidden>내는 돈
+        <select id="fWho"><option value="cash">내 현금</option><option value="mid">중도금 대출</option><option value="loan">잔금 대출</option></select>
+      </label>
+    </div>
+    <label class="f wk" for="fStage">단계 (순서 점검에 써요)
+      <select id="fStage">
+        <option value="measure">실측</option><option value="pre">마감 시공 (입주청소 전에 끝낼 것)</option><option value="clean">입주청소</option>
+        <option value="care">청소 후 케어 (새집증후군·코팅)</option><option value="install">설치·배송</option><option value="move">이사</option><option value="etc">기타</option>
+      </select>
+    </label>
+    <div class="row2 wk">
+      <label class="f" for="fDepAmt">계약금
+        <span class="inrow"><input type="number" id="fDepAmt" min="0" step="1" inputmode="numeric"><span class="unit">만원</span></span>
+      </label>
+      <label class="f" for="fBalAmt">잔금
+        <span class="inrow"><input type="number" id="fBalAmt" min="0" step="1" inputmode="numeric"><span class="unit">만원</span></span>
+      </label>
+    </div>
+    <label class="f py" for="fAmt" hidden>금액
+      <span class="inrow"><input type="number" id="fAmt" min="0" step="1" inputmode="numeric"><span class="unit">만원</span></span>
+    </label>
+    <label class="check wk" for="fDepPaid"><input type="checkbox" id="fDepPaid"> <span>계약금은 이미 냈어요</span></label>
+    <label class="check" for="fPair" id="pairRow"><input type="checkbox" id="fPair" checked> <span>시공 일정도 짝으로 같이 만들기 (날짜는 나중에)</span></label>
+    <div class="btns"><button type="button" class="btn" id="saveItem">추가하기</button><button type="button" class="btn ghost" id="cancelEdit" hidden>취소</button></div>
+  </section>
+
+  <section class="card" id="sumCard">
+    <h2 class="step"><span class="no">3</span>한눈에 보기</h2>
+    <div class="sum" id="sum"></div>
+    <ul class="warns" id="warns"></ul>
+  </section>
+
+  <section class="card">
+    <h2 class="step"><span class="no">4</span>날짜순 일정</h2>
+    <p class="hint">날짜 칸을 바꾸면 바로 옮겨지고 변경 기록이 남아요. 상태는 예정 → 확정 → 완료로 바꿔 두세요.</p>
+    <div id="timeline" class="day"></div>
+  </section>
+
+  <section class="card" id="toolCard">
+    <h2 class="step"><span class="no">5</span>휴대폰·가족과 함께 쓰기</h2>
+    <div class="btns">
+      <button type="button" class="btn" id="exportIcs">휴대폰 캘린더로 내보내기</button>
+      <button type="button" class="btn ghost" id="shareLink">가족에게 보기 링크 복사</button>
+    </div>
+    <p class="hint">캘린더 파일(.ics)을 열면 휴대폰 일정표에 한 번에 들어가요. 날짜를 바꾼 뒤엔 다시 내보내 주세요(같은 일정은 덮어써지는 캘린더가 많아요).</p>
+    <details class="more">
+      <summary>백업·초기화</summary>
+      <div class="inner">
+        <p class="hint">브라우저 기록을 지우면 일정도 지워져요. 가끔 백업 파일을 저장해 두세요.</p>
+        <div class="btns">
+          <button type="button" class="btn small ghost" id="backup">백업 파일 저장</button>
+          <label class="btn small ghost" for="restore" style="display:inline-block">백업 불러오기</label>
+          <input type="file" id="restore" accept=".json,application/json" hidden>
+          <button type="button" class="btn small danger" id="resetAll">모두 지우기</button>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <p class="foot">© 2026 jsbars · 우리집 열쇠. <a href="terms.html">이용약관·개인정보 안내</a> · <a href="https://blog.naver.com/jsbars">jsbars 블로그</a></p>
+  <p class="foot">납입 일정 초안은 입력한 비율로 나눈 추정이에요. 실제 회차 날짜·금액은 분양 계약서와 공고문을 따라 주세요.</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = "ujk-plan-v1";
+  var STAGE = { measure: "실측", pre: "마감 시공", clean: "입주청소", care: "청소 후 케어", install: "설치·배송", move: "이사", etc: "기타" };
+  var WHO = { cash: "내 현금", mid: "중도금 대출", loan: "잔금 대출" };
+  var STATUS = { todo: "예정", fixed: "확정", done: "완료" };
+  var TPL = [   // [항목, 단계] — 실측은 시공 짝을 같이 만든다
+    ["실측", "measure"], ["탄성 코팅", "pre"], ["줄눈", "pre"], ["시스템가구 시공", "pre"], ["붙박이장 시공", "pre"],
+    ["입주청소", "clean"], ["새집증후군 시공", "care"], ["나노코팅", "care"], ["중문 시공", "install"], ["커튼 설치", "install"],
+    ["가구 배송", "install"], ["가전 배송", "install"], ["이사", "move"]
+  ];
+
+  // ---- 날짜·금액 ----
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function toS(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function toD(s) { var p = String(s || "").split("-"); return p.length === 3 ? new Date(+p[0], +p[1] - 1, +p[2]) : null; }
+  function addDays(s, n) { var d = toD(s); if (!d) return ""; d.setDate(d.getDate() + n); return toS(d); }
+  function diffDays(a, b) { return Math.round((toD(b) - toD(a)) / 864e5); }
+  function wd(s) { var d = toD(s); return d ? "일월화수목금토".charAt(d.getDay()) : ""; }
+  function isWeekend(s) { var d = toD(s); return !!d && (d.getDay() === 0 || d.getDay() === 6); }
+  function fmtD(s) { var d = toD(s); return d ? (d.getFullYear() !== new Date().getFullYear() ? d.getFullYear() + "년 " : "") + (d.getMonth() + 1) + "월 " + d.getDate() + "일 (" + wd(s) + ")" : "날짜 미정"; }
+  function shortD(s) { var d = toD(s); return d ? (d.getMonth() + 1) + "/" + d.getDate() : "미정"; }
+  function today() { return toS(new Date()); }
+  function won(man) {
+    man = Math.round(+man || 0); var neg = man < 0; man = Math.abs(man);
+    var eok = Math.floor(man / 10000), rest = man % 10000, s;
+    if (eok && rest) s = eok + "억 " + rest.toLocaleString("ko-KR") + "만원"; else if (eok) s = eok + "억원"; else s = rest.toLocaleString("ko-KR") + "만원";
+    return (neg ? "-" : "") + s;
+  }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function num(id) { var v = parseFloat($(id).value); return isFinite(v) && v > 0 ? v : 0; }
+  function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (e) {} }
+  function toast(msg) { var t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { t.hidden = true; }, 2600); }
+
+  // ---- 상태 ----
+  var DEF_HOUSE = { name: "", price: 0, loan: 0, contract: "", movein: "", dep: 20, depN: 2, mid: 60, midN: 6, opt: 0, tax: 0, midLoan: true, midInt: 0 };
+  var state = { v: 1, house: Object.assign({}, DEF_HOUSE), items: [], seq: 1 };
+  var readOnly = false, editing = null, canStore = true, pastOpen = false;
+  function eul(w) { var c = String(w || "").charCodeAt(String(w || "").length - 1); return w + (c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 ? "을" : "를"); }
+
+  function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.items) return s; } catch (e) {} return null; }
+  function save() {
+    if (readOnly) return;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { if (canStore) { canStore = false; $("storeWarn").hidden = false; } }
+  }
+  function newId() { return "i" + (state.seq++); }
+  function byId(id) { for (var i = 0; i < state.items.length; i++) if (state.items[i].id === id) return state.items[i]; return null; }
+
+  // ---- 1. 우리집·납입 조건 ----
+  var HF = { hName: "name", hPrice: "price", hLoan: "loan", hContract: "contract", hMovein: "movein", hDep: "dep", hDepN: "depN", hMid: "mid", hMidN: "midN", hOpt: "opt", hTax: "tax", hMidInt: "midInt" };
+  function houseToForm() {
+    var h = state.house;
+    Object.keys(HF).forEach(function (id) { var v = h[HF[id]]; $(id).value = (v === 0 && /Price|Loan|Opt|Tax|MidInt/.test(id)) ? "" : (v == null ? "" : v); });
+    $("hMidLoan").checked = !!h.midLoan; houseEcho();
+  }
+  function formToHouse() {
+    var h = state.house;
+    h.name = $("hName").value.trim(); h.contract = $("hContract").value; h.movein = $("hMovein").value;
+    ["price", "loan", "opt", "tax", "midInt"].forEach(function (k) { h[k] = num("h" + k.charAt(0).toUpperCase() + k.slice(1)); });
+    h.dep = Math.min(100, num("hDep")); h.depN = Math.max(1, Math.min(4, Math.round(num("hDepN")) || 1));
+    h.mid = Math.min(100 - h.dep, num("hMid")); h.midN = Math.max(0, Math.min(10, Math.round(num("hMidN"))));
+    h.midLoan = $("hMidLoan").checked;
+  }
+  function houseEcho() {
+    var p = num("hPrice"), l = num("hLoan"), dep = num("hDep"), mid = num("hMid");
+    $("hPriceEcho").textContent = p ? "= " + won(p) : ""; $("hLoanEcho").textContent = l ? "= " + won(l) : "";
+    var bal = Math.max(0, 100 - dep - mid);
+    $("splitLine").textContent = p ? "계약금 " + dep + "% " + won(p * dep / 100) + " · 중도금 " + mid + "% " + won(p * mid / 100) + " · 잔금 " + bal + "% " + won(p * bal / 100) : "분양가를 넣으면 계약금·중도금·잔금이 얼마인지 바로 보여 드려요.";
+  }
+  function genPay() {
+    formToHouse(); var h = state.house;
+    if (!h.price) { toast("분양가를 먼저 넣어 주세요"); $("hPrice").focus(); return; }
+    var auto = state.items.filter(function (it) { return it.kind === "pay" && it.auto; });
+    if (auto.length && !confirm("자동으로 만든 납입 일정 " + auto.length + "건을 새 조건으로 바꿀까요? (직접 추가한 일정은 그대로예요)")) return;
+    state.items = state.items.filter(function (it) { return !(it.kind === "pay" && it.auto); });
+    var P = h.price, depAmt = P * h.dep / 100, midAmt = P * h.mid / 100, balAmt = P - depAmt - midAmt;
+    var add = function (title, date, amt, who, est) { state.items.push({ id: newId(), kind: "pay", auto: true, title: title, date: date || "", amt: Math.round(amt), who: who, est: !!est, status: date && date < today() ? "done" : "todo", hist: [] }); };
+    for (var i = 0; i < h.depN; i++) {
+      var dd = i === 0 ? h.contract : (h.contract ? addDays(h.contract, 30 * i) : "");
+      add("계약금 " + (h.depN > 1 ? (i + 1) + "차" : ""), dd, depAmt / h.depN, "cash", i > 0 || !h.contract);
+    }
+    var span = h.contract && h.movein ? diffDays(h.contract, h.movein) : 0;
+    for (var j = 0; j < h.midN; j++) {
+      var md = span > 0 ? addDays(h.contract, Math.round(span * (j + 1) / (h.midN + 1))) : "";
+      add("중도금 " + (j + 1) + "회", md, midAmt / h.midN, h.midLoan ? "mid" : "cash", true);
+    }
+    var mv = h.movein, payLater = h.midLoan ? "loan" : "cash";
+    if (balAmt > 0) add("분양 잔금", mv, balAmt, "loan", !mv);
+    if (h.midLoan && midAmt > 0) add("중도금 대출 상환", mv, midAmt, "loan", !mv);
+    if (h.midLoan && h.midInt > 0) add("중도금 대출 이자(후불)", mv, h.midInt, "loan", true);
+    if (h.opt > 0) add("옵션(발코니·추가선택) 잔금", mv, h.opt, payLater, !mv);
+    if (h.tax > 0) add("취득세 등", mv, h.tax, payLater, true);
+    save(); render(); track("plan-gen"); toast("납입 일정 " + state.items.filter(function (it) { return it.auto; }).length + "건을 만들었어요");
+  }
+
+  // ---- 2. 일정 추가·수정 ----
+  function kindUI() {
+    var k = $("fKind").value;
+    Array.prototype.forEach.call(document.querySelectorAll("#formCard .wk"), function (el) { el.hidden = k !== "work"; });
+    Array.prototype.forEach.call(document.querySelectorAll("#formCard .py"), function (el) { el.hidden = k !== "pay"; });
+    $("pairRow").hidden = !(k === "work" && $("fStage").value === "measure" && !editing);
+  }
+  function clearForm() {
+    editing = null; $("formTitle").textContent = "일정 추가"; $("saveItem").textContent = "추가하기"; $("cancelEdit").hidden = true;
+    ["fDate", "fTitle", "fVendor", "fDepAmt", "fBalAmt", "fAmt"].forEach(function (id) { $(id).value = ""; });
+    $("fDepPaid").checked = false; $("fPair").checked = true; kindUI();
+  }
+  function fillForm(it) {
+    editing = it.id; $("formTitle").textContent = "일정 고치기"; $("saveItem").textContent = "고친 내용 저장"; $("cancelEdit").hidden = false;
+    $("fKind").value = it.kind; $("fDate").value = it.date || ""; $("fTitle").value = it.title || ""; $("fVendor").value = it.vendor || "";
+    $("fStage").value = it.stage || "etc"; $("fDepAmt").value = it.dep || ""; $("fBalAmt").value = it.bal || ""; $("fAmt").value = it.amt || "";
+    $("fWho").value = it.who || "cash"; $("fDepPaid").checked = !!it.depPaid; kindUI();
+    $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function pairStage(title) { return /커튼|중문|블라인드|가전|가구 배송/.test(title) ? "install" : "pre"; }
+  function saveItem() {
+    var k = $("fKind").value, title = $("fTitle").value.trim();
+    if (!title) { toast("항목 이름을 넣어 주세요"); $("fTitle").focus(); return; }
+    var date = $("fDate").value, it = editing ? byId(editing) : null;
+    if (it && it.date !== date && it.date) it.hist = (it.hist || []).concat([{ f: it.date, t: date, at: today() }]).slice(-5);
+    var o = it || { id: newId(), status: "todo", hist: [] };
+    o.kind = k; o.title = title; o.date = date;
+    if (k === "work") {
+      o.vendor = $("fVendor").value.trim(); o.stage = $("fStage").value; o.dep = num("fDepAmt"); o.bal = num("fBalAmt"); o.depPaid = $("fDepPaid").checked;
+      delete o.amt; delete o.who;
+    } else { o.amt = num("fAmt"); o.who = $("fWho").value; o.est = false; delete o.stage; }
+    if (!it) {
+      state.items.push(o);
+      if (k === "work" && o.stage === "measure" && $("fPair").checked) {
+        var base = title.replace(/\s*실측\s*/g, " ").trim() || o.vendor || "시공";
+        var p = { id: newId(), kind: "work", title: base + " 시공", vendor: o.vendor, stage: pairStage(base), date: "", dep: 0, bal: 0, depPaid: false, status: "todo", hist: [], pair: o.id };
+        o.pair = p.id; state.items.push(p);
+      }
+      track("plan-add");
+    }
+    save(); clearForm(); render(); toast(it ? "고쳤어요" : "추가했어요");
+  }
+
+  // ---- 3. 요약·점검 ----
+  function checks() {
+    var w = [], its = state.items, flagged = {};
+    var cleans = its.filter(function (it) { return it.kind === "work" && it.stage === "clean" && it.date; }).map(function (it) { return it.date; }).sort();
+    var clean = cleans[0];
+    its.forEach(function (it) {
+      if (it.kind !== "work" || !it.date) return;
+      if (clean && it.stage === "pre" && it.date >= clean) { w.push(["<b>순서</b> " + esc(it.title) + "(" + shortD(it.date) + ")이 입주청소(" + shortD(clean) + ")와 같은 날이거나 뒤예요. 시공 먼지 때문에 보통 청소 전에 끝내요.", ""]); flagged[it.id] = 1; }
+      if (clean && it.stage === "care" && it.date <= clean) { w.push(["<b>순서</b> " + esc(it.title) + "(" + shortD(it.date) + ")이 입주청소(" + shortD(clean) + ")보다 앞서거나 같은 날이에요.", ""]); flagged[it.id] = 1; }
+      if (it.pair) { var p = byId(it.pair); if (p && p.date && it.stage === "measure" && p.date < it.date) { w.push(["<b>짝</b> " + esc(p.title) + "(" + shortD(p.date) + ")이 실측(" + shortD(it.date) + ")보다 앞서요.", ""]); flagged[p.id] = 1; } }
+    });
+    var perDay = {};
+    its.forEach(function (it) { if (it.kind === "work" && it.date && it.status !== "done") (perDay[it.date] = perDay[it.date] || []).push(it); });
+    Object.keys(perDay).sort().forEach(function (d) { if (perDay[d].length >= 3) w.push(["<b>겹침</b> " + fmtD(d) + "에 업체 일정이 " + perDay[d].length + "건이에요. 집에 있을 사람과 동선을 확인해 주세요.", ""]); });
+    var h = state.house;
+    if (h.movein) its.forEach(function (it) { if (it.kind === "work" && it.date && it.date < h.movein && it.stage !== "measure" && diffDays(it.date, h.movein) > 60) w.push(["<b>날짜</b> " + esc(it.title) + "이 잔금일보다 두 달 넘게 앞서요. 입력 날짜를 확인해 주세요.", ""]); });
+    var noDate = its.filter(function (it) { return !it.date; }).length;
+    var est = its.filter(function (it) { return it.kind === "pay" && it.est && it.status !== "done"; }).length;
+    if (est) w.push(["'예상' 표시 납입 " + est + "건은 공고문·계약서 날짜로 고쳐 주세요(날짜 칸을 바꾸면 표시가 사라져요).", "info"]);
+    if (noDate) w.push(["날짜 미정 " + noDate + "건이 맨 아래에 있어요.", "info"]);
+    return { list: w, flagged: flagged };
+  }
+  function sums() {
+    var r = { cash: 0, loan: 0, vendor: 0, paidDep: 0 };
+    state.items.forEach(function (it) {
+      if (it.kind === "pay") { if (it.status === "done") return; if (it.who === "cash") r.cash += it.amt || 0; else if (it.who === "loan") r.loan += it.amt || 0; }
+      else { if (it.status !== "done") r.vendor += it.bal || 0; if (!it.depPaid) r.vendor += it.dep || 0; }
+    });
+    return r;
+  }
+  function renderSum() {
+    var s = sums(), h = state.house, rows = [];
+    rows.push(["앞으로 내 현금으로 낼 돈", s.cash ? won(s.cash) : "없음", ""]);
+    rows.push(["잔금일에 대출로 낼 돈", won(s.loan), ""]);
+    if (h.loan) {
+      var left = h.loan - s.loan;
+      rows.push(["잔금 대출 " + won(h.loan) + "에서 남는 돈", won(left), left >= 0 ? "good" : "bad"]);
+      rows.push(["업체에 남은 계약금·잔금", won(s.vendor), ""]);
+      var after = left - s.vendor;
+      rows.push([after >= 0 ? "업체까지 다 내고 남는 돈" : "업체 비용까지 모자라는 돈", won(Math.abs(after)), after >= 0 ? "good" : "bad"]);
+    } else rows.push(["업체에 남은 계약금·잔금", won(s.vendor), ""]);
+    $("sum").innerHTML = rows.map(function (r) { return '<div class="fact"><span class="k">' + esc(r[0]) + '</span><span class="v ' + r[2] + '">' + esc(r[1]) + "</span></div>"; }).join("");
+    var c = checks();
+    $("warns").innerHTML = c.list.map(function (x) { return '<li class="' + x[1] + '">' + x[0] + "</li>"; }).join("");
+    return c.flagged;
+  }
+
+  // ---- 4. 타임라인 ----
+  function itemHTML(it, flagged) {
+    var tags = '<span class="tag ' + it.kind + '">' + (it.kind === "pay" ? "납입" : esc(STAGE[it.stage] || "업체")) + "</span>";
+    if (it.kind === "pay" && it.est) tags += '<span class="tag est">예상 날짜</span>';
+    var meta;
+    if (it.kind === "pay") meta = "<b>" + won(it.amt) + "</b> · " + esc(WHO[it.who] || "");
+    else {
+      var bits = [];
+      if (it.dep) bits.push("계약금 " + won(it.dep) + (it.depPaid ? " (냄)" : " (안 냄)"));
+      if (it.bal) bits.push("잔금 <b>" + won(it.bal) + "</b>");
+      if (it.pair) { var p = byId(it.pair); if (p) bits.push("짝: " + esc(p.title) + " " + shortD(p.date)); }
+      meta = bits.join(" · ") || "금액 미입력";
+    }
+    var hist = (it.hist || []).length ? '<div class="m">변경: ' + it.hist.map(function (x) { return shortD(x.f) + "→" + shortD(x.t); }).join(", ") + "</div>" : "";
+    var opts = Object.keys(STATUS).filter(function (k) { return it.kind === "work" || k !== "fixed"; }).map(function (k) { return '<option value="' + k + '"' + (it.status === k ? " selected" : "") + ">" + (it.kind === "pay" && k === "done" ? "납부 완료" : STATUS[k]) + "</option>"; }).join("");
+    var ctl = readOnly ? "" : '<div class="ctl"><input type="date" aria-label="날짜 바꾸기" data-act="date" value="' + esc(it.date) + '"><select aria-label="상태" data-act="status">' + opts + '</select><button type="button" class="txtbtn" data-act="edit">수정</button><button type="button" class="txtbtn" data-act="del">삭제</button></div>';
+    return '<div class="it' + (it.status === "done" ? " done" : "") + (flagged[it.id] ? " flagged" : "") + '" data-id="' + it.id + '"><div class="t">' + tags + esc(it.title) + (it.vendor ? "<small>" + esc(it.vendor) + "</small>" : "") + '</div><div class="m">' + meta + "</div>" + hist + ctl + "</div>";
+  }
+  function renderTimeline(flagged) {
+    var its = state.items.slice().sort(function (a, b) { return (a.date || "9999") < (b.date || "9999") ? -1 : (a.date || "9999") > (b.date || "9999") ? 1 : (a.kind === "pay" ? -1 : 1); });
+    if (!its.length) { $("timeline").innerHTML = '<p class="empty">아직 일정이 없어요. 위에서 납입 일정을 만들거나 업체 일정을 추가해 보세요.</p>'; return; }
+    var t = today();
+    var isPast = function (it) { return it.date && it.date < t && (it.status === "done" || it.kind === "pay") && !flagged[it.id]; };
+    var past = its.filter(isPast), now = its.filter(function (it) { return !isPast(it); });
+    var group = function (list) {
+      var html = "", cur = null;
+      list.forEach(function (it) {
+        var d = it.date || "";
+        if (d !== cur) {
+          cur = d;
+          var extra = d ? (isWeekend(d) ? ' <span class="tag wk">주말</span>' : "") + (d === t ? " <small>오늘</small>" : d < t ? " <small>지남</small>" : " <small>D-" + diffDays(t, d) + "</small>") : "";
+          html += '<div class="dayhead">' + fmtD(d) + extra + "</div>";
+        }
+        html += itemHTML(it, flagged);
+      });
+      return html;
+    };
+    $("timeline").innerHTML = (past.length ? '<details class="past"' + (pastOpen ? " open" : "") + '><summary>지난 일정 ' + past.length + "건</summary>" + group(past) + "</details>" : "")
+      + (now.length ? group(now) : '<p class="empty">앞으로 남은 일정이 없어요.</p>');
+    var dt = $("timeline").querySelector("details.past"); if (dt) dt.addEventListener("toggle", function () { pastOpen = dt.open; });
+  }
+  function render() {
+    var f = renderSum(); renderTimeline(f);
+    $("houseCard").hidden = $("formCard").hidden = readOnly; $("toolCard").querySelector("details").hidden = readOnly;
+    $("shareLink").hidden = readOnly;
+  }
+  $("timeline").addEventListener("change", function (ev) {
+    var el = ev.target, box = el.closest(".it"); if (!box || readOnly) return;
+    var it = byId(box.getAttribute("data-id")); if (!it) return;
+    if (el.getAttribute("data-act") === "date") {
+      if (it.date && el.value !== it.date) it.hist = (it.hist || []).concat([{ f: it.date, t: el.value, at: today() }]).slice(-5);
+      it.date = el.value; it.est = false; track("plan-move");
+    } else if (el.getAttribute("data-act") === "status") it.status = el.value;
+    save(); render();
+  });
+  $("timeline").addEventListener("click", function (ev) {
+    var el = ev.target.closest("button"); if (!el || readOnly) return;
+    var box = el.closest(".it"), it = box && byId(box.getAttribute("data-id")); if (!it) return;
+    if (el.getAttribute("data-act") === "edit") fillForm(it);
+    else if (el.getAttribute("data-act") === "del" && confirm("'" + it.title + "' 일정을 지울까요?")) {
+      state.items = state.items.filter(function (x) { return x.id !== it.id; });
+      state.items.forEach(function (x) { if (x.pair === it.id) delete x.pair; });
+      save(); render();
+    }
+  });
+
+  // ---- 5. 캘린더·공유·백업 ----
+  function icsText() {
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//jsbars//ujk-plan//KO", "CALSCALE:GREGORIAN", "X-WR-CALNAME:" + icsEsc((state.house.name || "우리집") + " 입주 일정")];
+    var stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+    state.items.forEach(function (it) {
+      if (!it.date) return;
+      var desc = it.kind === "pay" ? won(it.amt) + " · " + (WHO[it.who] || "") : [it.vendor, it.bal ? "잔금 " + won(it.bal) : "", it.dep && !it.depPaid ? "계약금 " + won(it.dep) + " 미납" : ""].filter(Boolean).join(" · ");
+      lines.push("BEGIN:VEVENT", "UID:" + it.id + "-" + (state.created || "p") + "@jsbars-calc", "DTSTAMP:" + stamp,
+        "DTSTART;VALUE=DATE:" + it.date.replace(/-/g, ""), "DTEND;VALUE=DATE:" + addDays(it.date, 1).replace(/-/g, ""),
+        "SUMMARY:" + icsEsc((it.kind === "pay" ? "[납입] " : "[" + (STAGE[it.stage] || "업체") + "] ") + it.title), "DESCRIPTION:" + icsEsc(desc),
+        "BEGIN:VALARM", "TRIGGER:-PT15H", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(it.title), "END:VALARM", "END:VEVENT");
+    });
+    lines.push("END:VCALENDAR");
+    return lines.join("\r\n") + "\r\n";
+  }
+  function icsEsc(s) { return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n"); }
+  function download(name, text, type) {
+    var a = document.createElement("a"), url = URL.createObjectURL(new Blob([text], { type: type }));
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  }
+  function b64e(s) { return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function b64d(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return decodeURIComponent(escape(atob(s))); }
+  function slim() { return { v: 1, house: state.house, items: state.items.map(function (it) { var o = Object.assign({}, it); delete o.hist; return o; }), seq: state.seq }; }
+
+  $("exportIcs").addEventListener("click", function () {
+    var n = state.items.filter(function (it) { return it.date; }).length;
+    if (!n) { toast("날짜가 들어간 일정이 없어요"); return; }
+    download("우리집-입주일정.ics", icsText(), "text/calendar;charset=utf-8"); track("plan-ics"); toast("일정 " + n + "건을 캘린더 파일로 저장했어요");
+  });
+  $("shareLink").addEventListener("click", function () {
+    var url = location.origin + location.pathname + "#v=" + b64e(JSON.stringify(slim()));
+    var done = function () { toast("보기 링크를 복사했어요. 카톡에 붙여 넣어 보내세요"); track("plan-share"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { prompt("이 링크를 복사해 보내세요", url); });
+    else prompt("이 링크를 복사해 보내세요", url);
+  });
+  $("backup").addEventListener("click", function () { download("우리집-입주일정-백업-" + today() + ".json", JSON.stringify(state, null, 1), "application/json"); track("plan-backup"); });
+  $("restore").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try { var s = JSON.parse(r.result); if (!s || !Array.isArray(s.items)) throw 0; if (!confirm("백업 파일로 지금 일정을 바꿀까요?")) return; state = normalize(s); save(); houseToForm(); render(); toast("백업을 불러왔어요"); }
+      catch (e) { toast("이 파일은 일정 백업이 아니에요"); }
+    };
+    r.readAsText(f); this.value = "";
+  });
+  $("resetAll").addEventListener("click", function () {
+    if (!confirm("일정과 납입 조건을 모두 지울까요? 되돌릴 수 없어요.")) return;
+    state = { v: 1, house: Object.assign({}, DEF_HOUSE), items: [], seq: 1, created: Date.now().toString(36) }; save(); houseToForm(); clearForm(); render();
+  });
+  function normalize(s) {
+    var o = { v: 1, house: Object.assign({}, DEF_HOUSE, s.house || {}), items: (s.items || []).filter(function (it) { return it && it.id && it.title; }).slice(0, 300), seq: +s.seq || 1, created: s.created || Date.now().toString(36) };
+    o.items.forEach(function (it) { it.title = String(it.title).slice(0, 40); if (it.vendor) it.vendor = String(it.vendor).slice(0, 30); if (!/^\d{4}-\d{2}-\d{2}$/.test(it.date || "")) it.date = ""; if (!STATUS[it.status]) it.status = "todo"; if (!Array.isArray(it.hist)) it.hist = []; var n = parseInt(String(it.id).slice(1), 10); if (n >= o.seq) o.seq = n + 1; });
+    return o;
+  }
+
+  // ---- 예시 ----
+  $("loadExample").addEventListener("click", function () {
+    if (state.items.length && !confirm("예시 일정으로 바꿀까요? 지금 일정은 지워져요(필요하면 먼저 백업하세요).")) return;
+    var mv = addDays(today(), 24), c = addDays(mv, -5);
+    state = { v: 1, house: Object.assign({}, DEF_HOUSE, { name: "예시: 분양 아파트 84㎡", price: 54810, loan: 50000, contract: addDays(mv, -900), movein: mv, opt: 1585, tax: 400, midInt: 1900 }), items: [], seq: 1, created: Date.now().toString(36) };
+    houseToForm(); genPayQuiet();
+    var W = function (title, vendor, stage, d, dep, bal, paid) { var o = { id: newId(), kind: "work", title: title, vendor: vendor, stage: stage, date: d, dep: dep, bal: bal, depPaid: paid, status: "todo", hist: [] }; state.items.push(o); return o; };
+    var m1 = W("현관중문 실측", "A중문", "measure", addDays(c, -7), 0, 0, false), s1 = W("현관중문 시공", "A중문", "install", addDays(c, 3), 26, 59, true); m1.pair = s1.id; s1.pair = m1.id;
+    var m2 = W("붙박이장 실측", "B가구", "measure", addDays(c, -7), 0, 0, false), s2 = W("붙박이장 시공", "B가구", "pre", addDays(c, -1), 62, 248, true); m2.pair = s2.id; s2.pair = m2.id;
+    W("탄성 코팅", "C탄성", "pre", addDays(c, -6), 16, 55, true); W("줄눈", "D줄눈", "pre", addDays(c, -5), 32, 128, true);
+    W("입주청소", "E청소", "clean", c, 0, 56, false); W("새집증후군 시공", "F케어", "care", addDays(c, 1), 0, 51, false);
+    W("나노코팅", "G코팅", "care", addDays(c, 2), 15, 39, true); W("쇼파·식탁 배송", "", "install", addDays(c, 3), 20, 345, true); W("이사", "", "move", mv, 0, 200, false);
+    save(); render(); track("plan-example"); toast("예시 일정을 불러왔어요. 날짜를 바꿔 보세요");
+  });
+  function genPayQuiet() { var c = window.confirm; window.confirm = function () { return true; }; try { genPay(); } finally { window.confirm = c; } }
+
+  // ---- 시작 ----
+  TPL.forEach(function (t) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = t[0];
+    b.addEventListener("click", function () { if (editing) clearForm(); $("fKind").value = "work"; $("fTitle").value = t[0] === "실측" ? "" : t[0]; $("fStage").value = t[1]; kindUI(); (t[0] === "실측" ? $("fTitle") : $("fDate")).focus(); if (t[0] === "실측") $("fTitle").placeholder = "예: 붙박이장 실측"; });
+    $("tpl").appendChild(b);
+  });
+  $("fKind").addEventListener("change", kindUI); $("fStage").addEventListener("change", kindUI);
+  $("saveItem").addEventListener("click", saveItem); $("cancelEdit").addEventListener("click", clearForm);
+  $("genPay").addEventListener("click", genPay);
+  Object.keys(HF).concat(["hMidLoan"]).forEach(function (id) { $(id).addEventListener("input", function () { houseEcho(); formToHouse(); save(); renderSum(); }); });
+
+  var shared = /^#v=/.test(location.hash) ? location.hash.slice(3) : "";
+  if (shared) {
+    try { state = normalize(JSON.parse(b64d(shared))); readOnly = true; $("sharedBanner").hidden = false; track("plan-shared-open"); }
+    catch (e) { toast("공유 링크가 잘렸거나 잘못됐어요"); shared = ""; }
+  }
+  if (!readOnly) { var s = load(); if (s) state = normalize(s); else state.created = Date.now().toString(36); }
+  $("importShared").addEventListener("click", function () {
+    if (load() && !confirm("이 기기에 있던 내 일정을 공유받은 일정으로 바꿀까요?")) return;
+    readOnly = false; $("sharedBanner").hidden = true; history.replaceState(null, "", location.pathname); save(); houseToForm(); render(); toast("내 일정으로 가져왔어요");
+  });
+
+  // 계산기에서 넘어온 집: ?name=&price=&ps=(청약홈 공고번호)
+  var q = {}; try { new URLSearchParams(location.search).forEach(function (v, k) { q[k] = v; }); } catch (e) {}
+  function applyCalc(name, price, contract, movein) {
+    var h = state.house; if (name) h.name = name.slice(0, 40); if (price) h.price = price; if (contract) h.contract = contract; if (movein) h.movein = movein;
+    save(); houseToForm(); render();
+  }
+  if (!readOnly && (q.price || q.ps)) {
+    track("plan-from-calc");
+    var qp = parseFloat(q.price), qname = (q.name || "").slice(0, 40);
+    var go = function (contract, movein, extra) {
+      var fresh = !state.items.length && !state.house.price;
+      if (fresh) { applyCalc(qname, qp, contract, movein); $("calcBanner").hidden = false; $("calcBanner").innerHTML = "<span>계산기에서 고른 <b>" + esc(qname || "집") + "</b>" + (qp ? " · " + esc(eul(won(qp))) : "") + " 채웠어요." + extra + " 납부 비율을 공고문과 맞춘 뒤 <b>납입 일정 만들기</b>를 눌러 주세요.</span>"; }
+      else {
+        $("calcBanner").hidden = false;
+        $("calcBanner").innerHTML = "<span>계산기에서 <b>" + esc(eul(qname || "다른 집")) + "</b> 골라 왔어요. 지금 일정은 그대로 두고 집 정보만 바꿀까요?</span><div class='btns'><button type='button' class='btn small' id='useCalc'>이 집으로 바꾸기</button></div>";
+        $("useCalc").addEventListener("click", function () { applyCalc(qname, qp, contract, movein); $("calcBanner").hidden = true; toast("집 정보를 바꿨어요. 납입 일정 만들기를 다시 눌러 주세요"); });
+      }
+      history.replaceState(null, "", location.pathname);
+    };
+    if (q.ps) {
+      fetch("data/presale.json").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (list) {
+        var p = (list || []).filter(function (x) { return String(x.no) === String(q.ps); })[0];
+        var c = p && p.cntrct && /^\d{4}-\d{2}-\d{2}$/.test(p.cntrct[0] || "") ? p.cntrct[0] : "";
+        var ym = p ? String(p.mvn || "") : "", mv = ym.length >= 6 ? ym.slice(0, 4) + "-" + ym.slice(4, 6) + "-01" : "";
+        go(c, mv, p ? " 청약홈 공고의 계약일" + (c ? "(" + shortD(c) + ")" : "") + "과 입주 예정월" + (mv ? "(" + ym.slice(0, 4) + "년 " + parseInt(ym.slice(4, 6), 10) + "월, 날짜는 임시로 1일)" : "") + "도 넣었어요." : "");
+      });
+    } else go("", "", "");
+  }
+  houseToForm(); clearForm(); render();
+})();
+</script>
+</body>
+</html>

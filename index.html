@@ -130,6 +130,7 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .check.small { font-size: 15px; }
 select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
 .hint.note { font-size: 13.5px; margin: -4px 0 0; }
+.toplan { display: block; margin-top: 8px; text-decoration: none; background: var(--paper); }
 </style>
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
@@ -199,6 +200,7 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
       <span class="house" id="aHouse"></span>
       <span class="yes" id="aYes"></span>
       <span class="sub" id="aSub"></span>
+      <a class="linkbtn toplan" id="toPlan" href="plan.html" hidden>이 집으로 납입·입주 일정 짜기 →</a>
     </section>
 
     <section class="card facts" aria-label="핵심 숫자">
@@ -365,6 +367,9 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
 
     var a = $("answer"), house = (p.name || "이 집") + (p.price ? " · " + won(p.price) : "");
     $("aHouse").textContent = house;
+    var tp = $("toPlan");   // 입주 일정표로: 집 이름·가격(+분양 공고번호)만 넘긴다. 연봉·현금은 넘기지 않는다
+    tp.hidden = p.price <= 0;
+    tp.href = "plan.html?name=" + encodeURIComponent((p.name || "").slice(0, 40)) + "&price=" + Math.round(p.price) + (pickedPs ? "&ps=" + encodeURIComponent(pickedPs) : "");
     if (p.price <= 0) {
       a.className = "answer"; $("aYes").textContent = "우리집 후보부터 골라 주세요"; $("aSub").textContent = "단지를 검색하거나 집 가격을 넣으면 바로 계산해요.";
     } else if (gap >= 0) {
@@ -453,7 +458,8 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
   function regionForSgg(code) { return /^11/.test(code) || REG_SGG[code] ? "reg" : "capital"; }
   function norm(s) { return String(s || "").replace(/[\s()·\-]/g, "").toLowerCase(); }
   function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (err) {} }
-  var idx = [], presale = [], loading = null, sggCache = {};
+  var idx = [], presale = [], loading = null, sggCache = {}, pickedPs = null;
+  $("toPlan").addEventListener("click", function () { track("go-plan"); });
   function getJSON(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
   function loadData() {
     if (loading) return loading;
@@ -469,7 +475,8 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
     var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.innerHTML = html;
     b.addEventListener("click", onClick); return b;
   }
-  function fill(name, price, region, note) {
+  function fill(name, price, region, note, ps) {
+    pickedPs = ps || null;   // 분양 단지면 청약홈 공고번호 — 입주 일정표로 넘겨 계약일·입주월을 채운다
     $("name").value = name.slice(0, 40); $("price").value = price;
     $("region").value = region; ltvTouched = false; stressTouched = false; syncAuto();
     $("exampleNote").textContent = note;
@@ -612,7 +619,7 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
     var region = (p.spec || p.adj || p.area === "서울") ? "reg" : (p.area ? "capital" : "local");
     var chips = (p.t || []).map(function (t) {   // [주택형, 전용㎡, 분양가 최고가, 공급세대]
       return chip(esc(pyeong(t[1], t[4] || 0, t[0])) + " · 전용 " + t[1] + "㎡ · " + rooms(t[1], String(p.mvn || "").slice(0, 4)) + " <b>" + won(t[2]) + "</b><small>" + esc(tyName(t[0])) + "타입 분양가(최고가) · " + t[3] + "세대</small>", function () {
-        fill(p.n + " " + pyeong(t[1], t[4] || 0, t[0]), t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.");
+        fill(p.n + " " + pyeong(t[1], t[4] || 0, t[0]), t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.", p.no);
       });
     });
     var sub = (st ? stationGrade(st.d) + esc(st.name) + " 직선 " + meters(st.d) + " · " : "") + "입주 예정 " + fmtYM(p.mvn) + (p.cntrct && p.cntrct[0] ? " · 계약 " + esc(p.cntrct[0]) : "") + (p.cap ? " · 분양가상한제" : "")

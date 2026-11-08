@@ -31,7 +31,7 @@ jobs:
           fi
       - name: 사이트 조립
         run: |
-          cp index.html terms.html site/
+          cp index.html terms.html plan.html site/
           touch site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
