@@ -322,7 +322,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 <script>
   // 방문 통계(GoatCounter, 쿠키 없음). 주소의 ?salary=&cash= 같은 입력값은 보내지 않고 경로만 보낸다.
   window.goatcounter = { path: function () {
-    var linked = /[?&](salary|cash|price)=/.test(location.search), src = (location.search.match(/[?&]src=(apt|presale)/) || [])[1];
+    var linked = /[?&](salary|cash|price)=/.test(location.search), src = (location.search.match(/[?&]src=(apt|presale|ebook)/) || [])[1];
     return location.pathname + (src ? "#from-" + src + "-page" : linked ? "#from-blog-link" : "");
   } };
 </script>
@@ -844,8 +844,8 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   $("region").value = LTV_TABLE[q.region] ? q.region : DEFAULTS.region;
   $("first").checked = q.first ? q.first === "1" : DEFAULTS.first;
   $("baby").checked = q.baby === "1";
-  var fromPage = q.src === "apt" || q.src === "presale";
-  if (fromLink) $("exampleNote").textContent = fromPage ? (q.src === "apt" ? "실거래 중간값으로 집 가격을 채웠어요. 연봉·현금을 내 숫자로 바꿔 보세요." : "분양가로 집 가격을 채웠어요. 연봉·현금을 내 숫자로 바꿔 보세요.") : "블로그 글의 예시 조건으로 열었어요. 이제 내 숫자로 바꿔 보세요.";
+  var fromPage = q.src === "apt" || q.src === "presale" || q.src === "ebook";
+  if (fromLink) $("exampleNote").textContent = fromPage ? (q.src === "apt" ? "실거래 중간값으로 집 가격을 채웠어요. 연봉·현금을 내 숫자로 바꿔 보세요." : q.src === "ebook" ? "전자책 속 예시 조건으로 열었어요. 연봉·현금을 내 숫자로 바꿔 보세요." : "분양가로 집 가격을 채웠어요. 연봉·현금을 내 숫자로 바꿔 보세요.") : "블로그 글의 예시 조건으로 열었어요. 이제 내 숫자로 바꿔 보세요.";
   syncAuto();
 
   $("ltv").addEventListener("input", function () { ltvTouched = true; });
