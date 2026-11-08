@@ -241,6 +241,16 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 .mfact { font-size: 15.5px; padding: 11px 13px; border-radius: 8px; background: var(--bg); font-variant-numeric: tabular-nums; }
 .mfact b { color: var(--accent); }
 .mfact b.bad { color: var(--bad); }
+.exp { display: grid; gap: 4px; padding: 11px 13px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; font-size: 15px; }
+.exp b { color: var(--accent); }
+.crit { align-items: end; }
+.crit input { font-size: 16px !important; padding: 9px 11px !important; }
+.dsr { display: grid; gap: 8px; padding-top: 4px; }
+.dsr > b { font-size: 16px; }
+.dsr input { font-size: 16px !important; padding: 9px 11px !important; }
+.bmob { display: none; font-size: 13px; color: var(--muted); }
+@media (max-width: 560px) { .bmob { display: block; } }
+.brow.best input[data-bf=name] { border-color: var(--accent); color: var(--accent); font-weight: 800; }
 .cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .cmp > div { display: grid; gap: 6px; align-content: start; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14.5px; }
 .cmp > div > b { font-size: 16px; color: var(--accent); }
@@ -260,15 +270,19 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 .next li b { color: var(--accent); display: inline-block; min-width: 46px; font-variant-numeric: tabular-nums; }
 .sv input { font-size: 16px !important; padding: 9px 11px !important; }
 .banks { display: grid; gap: 6px; }
-.bhead, .brow { display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.1fr 34px; gap: 6px; align-items: center; }
+.bhead, .brow { display: grid; grid-template-columns: 1fr 0.9fr 0.9fr 0.75fr 1.1fr 30px; gap: 6px; align-items: center; }
 .bhead { font-size: 12.5px; color: var(--muted); font-weight: 700; }
 .brow input[type=text] { font-size: 14.5px !important; padding: 8px 9px !important; }
 .brow input[type=radio] { width: 20px; height: 20px; accent-color: var(--accent); justify-self: center; }
 @media (max-width: 560px) {
   .bhead { display: none; }
-  .brow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-  .brow input[data-bf=name] { grid-column: 1 / 3; }
-  .brow input[data-bf=pick] { grid-column: 3; grid-row: 1; }
+  .brow { grid-template-columns: repeat(3, minmax(0, 1fr)) 34px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .brow input[data-bf=name] { grid-column: 1 / 4; grid-row: 1; }
+  .brow input[data-bf=pick] { grid-column: 4; grid-row: 1; }
+  .brow input[data-bf=apr] { grid-column: 1; grid-row: 2; }
+  .brow input[data-bf=lim] { grid-column: 2; grid-row: 2; }
+  .brow input[data-bf=rate] { grid-column: 3; grid-row: 2; }
+  .brow input[data-bf=note] { grid-column: 1 / 4; grid-row: 3; }
 }
 details.docs summary { cursor: pointer; font-size: 15px; font-weight: 600; color: var(--accent); }
 details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display: grid; gap: 4px; }
@@ -778,6 +792,8 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   window.ujkCalcSnapshot = function () {   // 내 집 지도가 읽는 값 (이 화면 안에서만, 저장·전송 없음)
     var p = read();
     return { touched: calcTouched, salary: p.salary, cash: p.cash, price: p.price, name: p.name, first: p.first, maxReg: maxFor("reg"), maxCap: maxFor("capital"),
+      dsr: function (pr, debt) { var e = evaluate(Object.assign({}, p, { price: pr, debt: Math.max(0, +debt || 0) })); return { loan: Math.round(e.loan), bind: e.bind }; },
+      debt: p.debt,
       saleNeed: function (pr) { var e = evaluate(Object.assign({}, p, { price: pr })); return { price: pr, need: Math.round(e.need), loan: Math.round(e.loan) }; } };
   };
   $("form").addEventListener("input", function () {
@@ -1645,9 +1661,12 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   var KEY = "ujk-journey-v1";
-  var J = { route: "", checks: {}, save: { target: 0, have: 0, monthly: 0 }, banks: [], open: -1 };
+  var J = { route: "", checks: {}, save: { target: 0, have: 0, monthly: 0 }, banks: [], open: -1, crit: { min: 0, cap: 0, station: false }, debt: -1 };
   try { var s0 = JSON.parse(localStorage.getItem(KEY) || "null"); if (s0 && typeof s0 === "object") J = Object.assign(J, s0); } catch (e) {}
   if (!Array.isArray(J.banks)) J.banks = [];
+  if (!J.crit || typeof J.crit !== "object") J.crit = { min: 0, cap: 0, station: false };
+  J.banks.forEach(function (b) { if (!b.note && (b.early || b.extra)) b.note = [b.early, b.extra].filter(Boolean).join(", "); });
+  function numOf(s) { var m = String(s || "").replace(/,/g, "").match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : NaN; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(J)); } catch (e) {} }
   function track(p) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -1672,7 +1691,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       checks: [["c0a", "연봉·현금 넣고 '닿는 최고가' 보기", R_ALL, "calc"], ["c0b", "관심 단지나 동네 하나 계산해 보기", R_ALL, "house"]] },
     { t: "분양? 매매? 길 고르기", feel: "청약을 기다릴까, 지금 살까?",
       lines: ["분양(새 아파트 청약)은 계약금(보통 10~20%)을 먼저 내고, 2~3년 뒤 입주할 때 잔금을 내요. 중도금은 보통 대출로 내요.", "매매(기존 집)는 계약 후 2~3개월 안에 잔금까지 다 내요. 대신 바로 들어가 살 수 있어요.", "같은 예산으로 두 길에 필요한 돈이 언제 얼마인지 나란히 비교해 보세요."],
-      checks: [["c1a", "분양과 매매 차이 비교해 보기", R_ALL], ["c1b", "우리 길 고르기", R_ALL, "route"]] },
+      checks: [["c1a", "분양과 매매 차이 비교해 보기", R_ALL], ["c1c", "우리 집 고르는 기준 3가지 정하기", R_ALL, "crit"], ["c1b", "우리 길 고르기", R_ALL, "route"]] },
     { t: "자격·규제 확인", feel: "나도 되는 걸까?",
       lines: ["청약은 무주택·청약통장 순위·특별공급(생애최초·신혼부부·신생아 등) 자격에 따라 넣을 수 있는 곳이 달라요.", "대출은 지역(규제지역 여부)과 생애최초 여부에 따라 한도가 달라지고, 토지거래허가구역은 계약 전에 허가가 필요해요.", "규칙은 자주 바뀌어서, 여기서는 확인할 것과 공식 확인처만 알려 드려요."],
       checks: [["c2a", "우리 세대가 무주택인지 확인", R_ALL], ["c2b", "청약통장 순위·납입 인정 확인 (청약홈)", R_PS], ["c2c", "특별공급 대상인지 확인 (생애최초·신혼부부·신생아 등)", R_PS], ["c2d", "사려는 지역의 대출 규제 확인 (규제지역·생애최초)", R_ALL], ["c2e", "토지거래허가구역인지 확인 (토지이음)", R_SL]],
@@ -1684,8 +1703,8 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       lines: ["계약은 되돌리기 어려운 단계예요. 순서와 확인할 서류를 체크하며 가요.", "분양은 입주자모집공고에 계약 일정·서류·계약금 비율이 나와요.", "매매는 등기부등본으로 진짜 집주인과 빚(근저당)을 확인하고, 계약금은 집주인 명의 계좌로 보내요."],
       checks: [["c4p1", "입주자모집공고에서 계약 일정·서류 확인", R_PS], ["c4p2", "계약금 보내기 (분양 계약일)", R_PS], ["c4p3", "발코니 확장·옵션 정하기", R_PS], ["c4s1", "(토지거래허가구역이면) 허가 먼저 받기", R_SL], ["c4s2", "등기부등본으로 집주인·근저당 확인", R_SL], ["c4s3", "계약금은 등기부상 집주인 명의 계좌로", R_SL], ["c4s4", "특약 확인 (대출이 안 나오면 어떻게 할지 등)", R_SL], ["c4b", "일정표에 계약일·잔금일 넣기", R_ALL, "dates"]] },
     { t: "대출 준비", feel: "은행이 얼마나 빌려줄까?",
-      lines: ["분양은 중도금 대출(시행사가 정한 은행)로 버티다가, 입주할 때 잔금 대출(집단대출)로 갈아타요. 잔금 대출 한도는 분양가가 아니라 감정가(시세) 기준이라, 시세가 오르면 한도가 늘 수 있어요.", "매매는 주택담보대출을 잔금 한 달쯤 전에 신청해요. 심사·감정에 2~4주가 걸려요.", "은행마다 금리·중도상환수수료·우대 조건(급여이체·카드 등)이 달라서, 2곳 이상 비교하면 차이가 나요."],
-      checks: [["c5p1", "중도금 대출 은행·조건 확인", R_PS], ["c5p2", "입주 전 감정가 확인", R_PS], ["c5a", "대출 은행 2곳 이상 비교하기", R_ALL, "banks"], ["c5s1", "잔금 한 달 전 대출 신청", R_SL], ["c5d", "소득 서류 준비 (부부 각각)", R_ALL]] },
+      lines: ["분양은 중도금 대출(시행사가 정한 은행)로 버티다가, 입주할 때 잔금 대출(집단대출)로 갈아타요. 잔금 대출 한도는 분양가가 아니라 감정가(시세) 기준이라, 시세가 오르면 한도가 늘 수 있어요.", "매매는 주택담보대출을 잔금 한 달쯤 전에 신청해요. 심사·감정에 2~4주가 걸려요.", "은행마다 감정가(집값 평가)가 달라서 최대 한도도 달라져요. 한도 → 금리 → 중도상환수수료·우대 조건 순으로 비교해요."],
+      checks: [["c5p1", "중도금 대출 은행·조건 확인", R_PS], ["c5p2", "입주 전 감정가 확인", R_PS], ["c5a", "대출 은행 2곳 이상 비교하기", R_ALL, "banks"], ["c5e", "기존 대출을 갚으면 한도가 얼마나 느는지 확인", R_ALL], ["c5s1", "잔금 한 달 전 대출 신청", R_SL], ["c5d", "소득 서류 준비 (부부 각각)", R_ALL]] },
     { t: "입주 준비", feel: "업체 바가지 쓰면 어떡하지?",
       lines: ["새 아파트는 입주 전 사전점검에서 하자를 찾아 접수해요. 기존 집은 도배·장판 같은 공사를 먼저 정해요.", "업체는 입주박람회·입주예정자협의회 공동구매·직접 찾기로 구해요. 박람회는 업체가 참가비를 내고 나와서 가격에 반영될 수 있어요. 같은 단지 사람들의 후기와 견적 2~3곳 비교가 가장 믿을 만해요.", "순서가 있어요: 실측 → 시공(탄성·줄눈·붙박이) → 입주청소 → 새집증후군·코팅 → 가구·가전 배송 → 이사."],
       checks: [["c6a", "사전점검에서 하자 확인·접수", R_PS], ["c6b", "필요한 품목 정하기", R_ALL], ["c6c", "품목마다 견적 2곳 이상 받기", R_ALL], ["c6d", "업체 일정을 일정표에 넣기", R_ALL, "works"], ["c6e", "이사 날짜 잡기", R_ALL]] },
@@ -1703,6 +1722,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     if (kind === "monthly") return J.save.monthly > 0;
     if (kind === "reached") return J.save.target > 0 && J.save.have >= J.save.target;
     if (kind === "dates") return !!(pl && pl.house.contract && pl.house.movein);
+    if (kind === "crit") return J.crit.min > 0 && J.crit.cap > 0;
     if (kind === "banks") return J.banks.filter(function (b) { return b.name; }).length >= 2;
     if (kind === "works") return !!(pl && pl.items.some(function (it) { return it.kind === "work"; }));
     return false;
@@ -1711,6 +1731,16 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function isDone(c, sn, pl) { return !!J.checks[c[0]] || (c[3] ? autoDone(c[3], sn, pl) : false); }
   function stepStat(i, sn, pl) { var cs = visibleChecks(i), d = cs.filter(function (c) { return isDone(c, sn, pl); }).length; return { done: d, total: cs.length, full: d === cs.length }; }
 
+
+  function critBlock(p) {   // 만든 사람의 실제 기준 + 내 기준 3가지
+    var c = J.crit, capPh = p ? Math.floor(p.maxReg / 1000) * 1000 : 50000;
+    var mine = c.min > 0 && c.cap > 0 ? "<div class='mfact'>우리 기준: 회사까지 차로 <b>" + c.min + "분</b> 이내 · <b>" + won(c.cap) + "</b> 이하" + (c.station ? " · <b>역 근처</b>" : "") + "</div>" : "";
+    return "<div class='exp'><b>만든 사람은 이렇게 골랐어요</b><span>① 회사에서 차로 50분 이내 ② 분양가 5억 이하(그때 기준) ③ 역 근처. 이 기준에 맞는 분양 단지를 사전청약으로 먼저 잡았어요.</span></div>"
+      + "<div class='row3 crit'><label class='f'>회사까지 (차로)<span class='inrow'><input type='number' min='0' step='5' inputmode='numeric' data-cr='min' value='" + (c.min || "") + "' placeholder='50'><span class='unit'>분 이내</span></span></label>"
+      + "<label class='f'>가격 상한<span class='inrow'><input type='number' min='0' step='1000' inputmode='numeric' data-cr='cap' value='" + (c.cap || "") + "' placeholder='" + capPh + "'><span class='unit'>만원</span></span></label>"
+      + "<label class='check'><input type='checkbox' data-cr='station'" + (c.station ? " checked" : "") + "> <span>역 근처(걸어서)</span></label></div>"
+      + mine + "<div class='btns'><button type='button' class='btn small ghost' data-findq='1'>역 이름으로 예산 안 단지 찾기</button></div>";
+  }
   // ---- 단계별 '내 숫자' ----
   function mine(i, sn, pl) {
     var p = sn && sn.touched ? sn : null;
@@ -1718,13 +1748,13 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       : "<div class='mfact'>아직 계산 전이에요. 연봉과 현금만 넣어 보세요.</div>";
     if (i === 1) {
       var price = p ? (p.price > 0 ? p.price : p.maxReg) : 0;
-      if (!price) return "<div class='mfact'>0단계에서 계산하면, 그 가격으로 두 길을 나란히 보여 드려요.</div>";
+      if (!price) return "<div class='mfact'>0단계에서 계산하면, 그 가격으로 두 길을 나란히 보여 드려요.</div>" + critBlock(p);
       var dep20 = price * 0.2, sale = p.saleNeed(price);
       var vs = function (need) { var g = p.cash - need; return "<span class='" + (g >= 0 ? "ok" : "no") + "'>" + (g >= 0 ? "지금 현금으로 가능 (남는 돈 " + won(g) + ")" : "지금 현금보다 " + won(-g) + " 부족") + "</span>"; };
       return "<div class='mfact'><b>" + won(price) + "</b> 집이라면</div><div class='cmp'>"
         + "<div><b>분양</b><span>계약할 때 <b>" + won(dep20) + "</b><br>(분양가 20% 가정, 공고마다 10~20%)</span>" + vs(dep20) + "<span>중도금은 보통 대출, 2~3년 뒤 입주 때 잔금</span><span>잔금 대출은 감정가 기준</span></div>"
         + "<div><b>매매</b><span>2~3개월 안에 내 현금 <b>" + won(sale.need) + "</b><br>(대출 " + won(sale.loan) + " 빼고, 세금·중개보수 포함)</span>" + vs(sale.need) + "<span>계약 후 바로 대출 신청</span><span>들어가 살 수 있는 시점이 빨라요</span></div></div>"
-        + "<div class='btns'><button type='button' class='btn small" + (J.route === "presale" ? "" : " ghost") + "' data-route='presale'>분양으로 갈래요</button><button type='button' class='btn small" + (J.route === "sale" ? "" : " ghost") + "' data-route='sale'>매매로 갈래요</button></div>";
+        + "<div class='btns'><button type='button' class='btn small" + (J.route === "presale" ? "" : " ghost") + "' data-route='presale'>분양으로 갈래요</button><button type='button' class='btn small" + (J.route === "sale" ? "" : " ghost") + "' data-route='sale'>매매로 갈래요</button></div>" + critBlock(p);
     }
     if (i === 2) return "<div class='mfact'>" + (J.route === "presale" ? "분양 길: 청약 자격부터 확인해요." : J.route === "sale" ? "매매 길: 대출 규제와 토지거래허가부터 확인해요." : "길을 고르면 확인할 것이 그 길에 맞게 줄어요.") + "</div>"
       + "<div class='links'>" + STEPS[2].links.map(function (l) { return "<a href='" + l[1] + "' target='_blank' rel='noopener'>" + esc(l[0]) + " ↗</a>"; }).join("") + "</div>";
@@ -1749,10 +1779,35 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         var loanNeed = 0; pl.items.forEach(function (it) { if (it.kind === "pay" && it.who === "loan" && it.status !== "done") loanNeed += it.amt || 0; });
         if (loanNeed) info = "<div class='mfact'>일정표 기준 대출로 낼 돈 <b>" + won(loanNeed) + "</b>" + (pl.house.loan ? " · 대출 예상 <b>" + won(pl.house.loan) + "</b> → " + (pl.house.loan >= loanNeed ? "여유 <b>" + won(pl.house.loan - loanNeed) + "</b>" : "<b class='bad'>" + won(loanNeed - pl.house.loan) + " 모자라요</b>") : "") + "</div>";
       }
-      return info + "<div class='banks'><div class='bhead'><span>은행</span><span>금리</span><span>중도상환수수료</span><span>우대 조건</span><span>고름</span></div>"
+      var exp = "<div class='exp'><b>만든 사람은 이렇게 은행을 골랐어요</b><span>① 최대 대출 금액(목표 6억) ② 가장 낮은 금리 ③ DSR: 기존 대출을 먼저 갚고, 연봉이 어떻게 잡히는지 확인.</span>"
+        + "<span>같은 아파트인데 은행마다 감정가가 6억 5천~7억 8천으로 갈렸어요. 그래서 한도도 은행마다 달랐어요.</span></div>";
+      // 은행 비교: 한도 큰 곳 → 금리 낮은 곳
+      var named = rows.map(function (b, k) { return { k: k, b: b, lim: numOf(b.lim), rate: numOf(b.rate) }; }).filter(function (x) { return x.b.name; });
+      var best = null;
+      named.forEach(function (x) { if (isNaN(x.lim)) return; if (!best || x.lim > best.lim || (x.lim === best.lim && !isNaN(x.rate) && (isNaN(best.rate) || x.rate < best.rate))) best = x; });
+      var table = "<div class='banks'><div class='bmob'>칸 순서: 은행 · 감정가 · 최대 한도(만원) · 금리(%) · 중도상환·우대 조건</div><div class='bhead'><span>은행</span><span>감정가</span><span>최대 한도</span><span>금리</span><span>중도상환·우대</span><span>고름</span></div>"
         + rows.map(function (b, k) {
-          return "<div class='brow' data-bk='" + k + "'><input type='text' maxlength='20' placeholder='예: ○○은행' data-bf='name' value='" + esc(b.name || "") + "'><input type='text' maxlength='30' placeholder='예: 변동 4.2%' data-bf='rate' value='" + esc(b.rate || "") + "'><input type='text' maxlength='30' placeholder='예: 0.6%, 3년' data-bf='early' value='" + esc(b.early || "") + "'><input type='text' maxlength='40' placeholder='예: 급여이체·카드' data-bf='extra' value='" + esc(b.extra || "") + "'><input type='radio' name='bpick' aria-label='이 은행으로' data-bf='pick'" + (b.pick ? " checked" : "") + "></div>";
+          return "<div class='brow" + (best && best.k === k ? " best" : "") + "' data-bk='" + k + "'><input type='text' maxlength='20' placeholder='○○은행' aria-label='은행' data-bf='name' value='" + esc(b.name || "") + "'>"
+            + "<input type='text' maxlength='12' inputmode='numeric' placeholder='감정가(만원)' aria-label='감정가' data-bf='apr' value='" + esc(b.apr || "") + "'>"
+            + "<input type='text' maxlength='12' inputmode='numeric' placeholder='한도(만원)' aria-label='최대 한도' data-bf='lim' value='" + esc(b.lim || "") + "'>"
+            + "<input type='text' maxlength='20' placeholder='금리 %' aria-label='금리' data-bf='rate' value='" + esc(b.rate || "") + "'>"
+            + "<input type='text' maxlength='40' placeholder='수수료·급여이체 등' aria-label='중도상환·우대 조건' data-bf='note' value='" + esc(b.note || "") + "'>"
+            + "<input type='radio' name='bpick' aria-label='이 은행으로' data-bf='pick'" + (b.pick ? " checked" : "") + "></div>";
         }).join("") + "</div><div class='btns'><button type='button' class='txtbtn' data-bank='add'>은행 추가</button></div>"
+        + (best ? "<div class='mfact'>만든 사람 기준이면 <b>" + esc(best.b.name) + "</b> — 한도 " + won(best.lim) + (isNaN(best.rate) ? "" : " · 금리 " + best.rate + "%") + "</div>" : "");
+      // DSR: 기존 대출을 갚으면?
+      var dsr = "";
+      var price5 = pl && pl.house.price ? pl.house.price : (p && p.price > 0 ? p.price : 0);
+      if (p && price5) {
+        var debt = J.debt >= 0 ? J.debt : (sn.debt || 0), a1 = sn.dsr(price5, debt), a0 = sn.dsr(price5, 0);
+        var why = a0.bind === "dsr" ? "연봉(DSR)" : a0.bind === "ltv" ? "집값(LTV)" : "지역 한도";
+        dsr = "<div class='dsr'><b>기존 대출을 갚으면 한도가 얼마나 늘까?</b>"
+          + "<label class='f'>기존 대출 1년 원리금 (신용대출·차 할부 등)<span class='inrow'><input type='number' min='0' step='10' inputmode='numeric' data-debt='1' value='" + (debt || "") + "' placeholder='0'><span class='unit'>만원/년</span></span></label>"
+          + "<div class='mfact'>" + won(price5) + " 집 기준 · 지금 은행이 보태 줄 돈 <b>" + won(a1.loan) + "</b>"
+          + (debt > 0 ? (a0.loan > a1.loan ? " → 다 갚으면 <b>" + won(a0.loan) + "</b> (<b>+" + won(a0.loan - a1.loan) + "</b>)" : " → 다 갚아도 같아요(" + why + "에 먼저 걸려요)") : "") + "</div>"
+          + "<span class='hint'>연봉은 소득 증빙(원천징수영수증·소득금액증명) 기준으로 잡혀요. 부부 소득을 합칠 수 있는지는 은행·상품마다 달라서 상담 때 꼭 물어보세요. 월 상환액을 모르면 대출 앱의 월 상환액 × 12로 넣어요.</span></div>";
+      } else dsr = "<div class='mfact'>0단계에서 연봉·현금과 집 가격을 넣으면, 기존 대출을 갚았을 때 한도가 얼마나 느는지 계산해 드려요.</div>";
+      return info + exp + table + dsr
         + "<details class='docs'><summary>대출 서류 미리 챙기기 (은행마다 조금씩 달라요)</summary><ul><li>신분증, 주민등록등본, 가족관계증명서</li><li>소득 서류: 근로소득 원천징수영수증, 소득금액증명원 (부부 합산이면 두 사람 모두)</li><li>재직증명서, 건강보험 자격득실확인서</li><li>분양: 분양계약서·옵션계약서 / 매매: 매매계약서</li></ul></details>";
     }
     if (i === 6 || i === 7) {
@@ -1814,19 +1869,29 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       var el = wideNow ? $("mapDetail") : view.querySelector(".mstep.open"); if (el && (wideNow || !b.classList.contains("mhead"))) try { el.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {} return; }
     if (b.hasAttribute("data-route")) { J.route = b.getAttribute("data-route"); J.checks.c1a = true; save(); if (window.ujkPlanSetMode) window.ujkPlanSetMode(J.route); render(); track("map-route-" + J.route); return; }
     if (b.hasAttribute("data-go")) { go(b.getAttribute("data-go")); return; }
+    if (b.hasAttribute("data-findq")) { go("calc"); setTimeout(function () { var q = $("q"); if (q) { q.placeholder = "역 이름 (예: 운정중앙역) — 역세권 순, 예산 안 단지만"; q.focus(); try { q.scrollIntoView({ block: "center" }); } catch (e) {} } }, 50); track("map-find-station"); return; }
     if (b.hasAttribute("data-sug")) { J.save.target = +b.getAttribute("data-sug"); save(); render(); return; }
     if (b.getAttribute("data-bank") === "add") { if (J.banks.length < 2) J.banks = J.banks.concat([{}, {}]).slice(0, 2); if (J.banks.length < 8) J.banks.push({}); save(); render(); return; }
   });
   view.addEventListener("change", function (ev) {
     var el = ev.target;
     if (el.hasAttribute("data-ck")) { J.checks[el.getAttribute("data-ck")] = el.checked; save(); render(); track("map-check"); return; }
+    if (el.getAttribute("data-cr") === "station") { J.crit.station = el.checked; save(); render(); return; }
     if (el.getAttribute("data-bf") === "pick") { var k = +el.closest(".brow").getAttribute("data-bk"); while (J.banks.length < 2) J.banks.push({}); J.banks.forEach(function (b, i) { b.pick = i === k; }); save(); return; }
   });
   view.addEventListener("input", function (ev) {
     var el = ev.target;
     if (el.hasAttribute("data-sv")) { var v = parseFloat(el.value); J.save[el.getAttribute("data-sv")] = isFinite(v) && v > 0 ? v : 0; save(); clearTimeout(render.t); render.t = setTimeout(function () { var f = document.activeElement && document.activeElement.getAttribute("data-sv"); render(); if (f) { var x = view.querySelector("[data-sv='" + f + "']"); if (x) { x.focus(); var l = x.value.length; try { x.setSelectionRange(l, l); } catch (e) {} } } }, 500); return; }
-    if (el.hasAttribute("data-bf") && el.type === "text") { var k = +el.closest(".brow").getAttribute("data-bk"); while (J.banks.length <= k) J.banks.push({}); J.banks[k][el.getAttribute("data-bf")] = el.value.slice(0, 40); save(); return; }
+    if (el.hasAttribute("data-cr") && el.type === "number") { var cv = parseFloat(el.value); J.crit[el.getAttribute("data-cr")] = isFinite(cv) && cv > 0 ? cv : 0; save(); refocus(el); return; }
+    if (el.hasAttribute("data-debt")) { var dv = parseFloat(el.value); J.debt = isFinite(dv) && dv >= 0 ? dv : 0; save(); refocus(el); return; }
+    if (el.hasAttribute("data-bf") && el.type === "text") { var k = +el.closest(".brow").getAttribute("data-bk"); while (J.banks.length <= k) J.banks.push({}); J.banks[k][el.getAttribute("data-bf")] = el.value.slice(0, 40); save(); refocus(el); return; }
   });
+  function refocus(el) {   // 입력하다 멈추면 다시 그리고, 쓰던 칸으로 커서를 돌려놓는다
+    var sel = el.hasAttribute("data-bf") ? "[data-bk='" + el.closest(".brow").getAttribute("data-bk") + "'] [data-bf='" + el.getAttribute("data-bf") + "']"
+      : el.hasAttribute("data-cr") ? "[data-cr='" + el.getAttribute("data-cr") + "']" : "[data-debt]";
+    clearTimeout(refocus.t);
+    refocus.t = setTimeout(function () { if (document.activeElement !== el) return; render(); var x = view.querySelector(sel); if (x) { x.focus(); var l = x.value.length; try { x.setSelectionRange(l, l); } catch (e) {} } }, 600);
+  }
   render();
 })();
 </script>
