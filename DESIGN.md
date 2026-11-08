@@ -1,6 +1,6 @@
 # DESIGN.md — 우리집 열쇠
 
-계산기(index.html)·입주 일정표(plan.html)·약관(terms.html)이 같은 규칙을 따른다. 새 화면을 만들 때 이 파일을 먼저 읽는다.
+메인 페이지(index.html: 집 매매 전략 짜기 탭 + 입주 일정표 탭)·약관(terms.html)이 같은 규칙을 따른다. plan.html은 옛 주소를 일정표 탭으로 넘기는 연결 페이지다. 새 화면을 만들 때 이 파일을 먼저 읽는다.
 기준 레퍼런스: Brex(styles.refero.design) — 밝은 바탕, 포인트 색 하나, 그림자 없이 얇은 선으로 구분. 한국어·금액 규칙은 우리가 정했다.
 
 ## Principles
@@ -48,6 +48,7 @@
 - 예외: 떠 있는 알림(toast) 하나.
 
 ## Components
+- **탭(.tabs)**: 화면 위 세그먼트 2칸, 스크롤해도 위에 붙음(sticky). 선택된 칸 = accent-soft 바탕 + accent 800. 주소 #plan = 일정표 탭.
 - **카드(.card)**: --paper, 1px --line, 12 radius, 패딩 18, 첫 줄은 번호 배지(.step .no) + 단계 제목.
 - **답 상자(.answer)**: 결과 한 문장. 좋음 = --accent-soft 바탕 + accent 글자, 모자람 = --bad-soft + bad 글자.
 - **사실 행(.fact)**: 왼쪽 라벨(muted) · 오른쪽 금액(700, 오른쪽 정렬), 행 사이 1px 선.
