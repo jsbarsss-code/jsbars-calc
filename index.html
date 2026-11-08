@@ -130,6 +130,17 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .check.small { font-size: 15px; }
 select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
 .hint.note { font-size: 13.5px; margin: -4px 0 0; }
+/* 신뢰 표시: 공공데이터 출처·규모·갱신일 (DESIGN.md — 사실은 accent, 장식 없음) */
+.trust { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--bg); }
+.trow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 16px; }
+.trow b { color: var(--ink); }
+.tbadge { font-size: 12.5px; font-weight: 800; padding: 2px 9px; border-radius: 99px; background: var(--accent); color: var(--paper); letter-spacing: 0.02em; }
+.tsrc { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 15px; font-weight: 600; }
+.tsrc small { font-weight: 400; color: var(--muted); font-size: 13.5px; }
+.tchk { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 6px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 900; vertical-align: 1px; }
+.tmeta { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.6; }
+.tmeta b { color: var(--accent); }
+.trust .hint { font-size: 14px; }
 .toplan { display: block; margin-top: 8px; text-decoration: none; background: var(--paper); }
 
 /* ---- 탭 (DESIGN.md: 세그먼트) ---- */
@@ -323,8 +334,24 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </nav>
 
   <div class="view" id="viewMap" role="tabpanel" aria-labelledby="tabMap">
+    <div id="restoreBanner" class="banner warn" hidden></div>
     <section class="card maphero" id="mapHead"></section>
     <div class="mapgrid" id="mapGrid"><div class="msteps" id="mapSteps"></div><div class="mdetail" id="mapDetail" hidden></div></div>
+    <section class="card" id="saveCard">
+      <h2 class="step">내 진행 저장·보내기</h2>
+      <p class="hint" style="margin:0">지도와 일정표는 지금 이 기기의 브라우저에만 있어요. 다른 휴대폰·PC에서 이어 하거나 잃어버리지 않으려면 저장해 두세요. 회원가입 없이, 운영자 서버에 남기지 않아요.</p>
+      <div class="btns">
+        <button type="button" class="btn" id="saveKakao">카카오톡으로 보내기</button>
+        <button type="button" class="btn ghost" id="saveLink">이어하기 링크 복사</button>
+        <button type="button" class="btn ghost" id="saveImage">요약 이미지 저장</button>
+      </div>
+      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면, 어느 기기에서든 링크를 눌러 그대로 이어서 할 수 있어요. 링크에는 일정·금액이 들어 있으니 나와 가족에게만 보내 주세요.</p>
+      <details class="more"><summary>파일로 백업·불러오기</summary><div class="inner"><div class="btns">
+        <button type="button" class="btn small ghost" id="saveFile">백업 파일 저장</button>
+        <label class="btn small ghost" for="loadFile" style="display:inline-block">백업 불러오기</label>
+        <input type="file" id="loadFile" accept=".json,application/json" hidden>
+      </div></div></details>
+    </section>
     <p class="foot" style="margin:0">지도에 체크한 내용은 이 기기에만 저장돼요. 단계 설명은 일반적인 흐름이에요. 실제 조건은 분양 공고문·은행·구청에서 확인해 주세요.</p>
   </div>
 
@@ -357,7 +384,15 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <div id="results" class="results" hidden></div>
       <button type="button" id="again" class="linkbtn" hidden></button>
       <div id="picked" class="picked" hidden></div>
-      <span class="hint" id="dataMeta">단지를 고르면 최근 실거래가나 분양가가 자동으로 채워져요. 마음에 둔 집이 없으면 아래에 직접 넣으세요.</span>
+      <div class="trust" aria-label="데이터 출처">
+        <div class="trow"><span class="tbadge">공공데이터</span><b>실제 거래·분양 정보로 계산해요</b></div>
+        <ul class="tsrc">
+          <li><span class="tchk" aria-hidden="true">✓</span>국토교통부 아파트 매매 실거래가 <small>(공공데이터포털)</small></li>
+          <li><span class="tchk" aria-hidden="true">✓</span>한국부동산원 청약홈 분양정보 <small>(입주자모집공고 분양가)</small></li>
+        </ul>
+        <div class="tmeta" id="dataMeta">매주 자동 반영</div>
+        <span class="hint">단지를 고르면 그 단지의 최근 실거래가나 분양가가 자동으로 채워져요. 마음에 둔 집이 없으면 아래에 직접 넣으세요.</span>
+      </div>
       <label class="f" for="name">우리집 후보 별명 (선택)
         <input type="text" id="name" maxlength="40" placeholder="예: 정릉풍림아이원 59㎡, 우리 첫 집">
       </label>
@@ -577,6 +612,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <button type="button" class="btn" id="exportIcs">휴대폰 캘린더로 내보내기</button>
       <button type="button" class="btn ghost" id="shareLink">가족에게 보기 링크 복사</button>
     </div>
+    <p class="hint">지도까지 통째로 저장하거나 다른 기기에서 이어 하려면 <a href="#" id="toSaveCard" style="color:var(--accent)">내 집 지도 → 내 진행 저장·보내기</a>를 써 주세요.</p>
     <p class="hint">캘린더 파일(.ics)을 열면 휴대폰 일정표에 한 번에 들어가요. 날짜를 바꾼 뒤엔 다시 내보내 주세요(같은 일정은 덮어써지는 캘린더가 많아요).</p>
     <details class="more">
       <summary>백업·초기화</summary>
@@ -813,17 +849,22 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function norm(s) { return String(s || "").replace(/[\s()·\-]/g, "").toLowerCase(); }
   function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (err) {} }
   var idx = [], presale = [], loading = null, sggCache = {}, pickedPs = null;
+  setTimeout(function () { getJSON("data/meta.json").then(function (m) { if (m && !loading) showMeta(m); }); }, 0);
   $("toPlan").addEventListener("click", function () {   // 같은 페이지의 입주 일정표 탭으로: 집 이름·가격(+분양 공고번호)만 넘긴다
     track("go-plan"); var p = read(), e = evaluate(p);   // 연봉·현금은 넘기지 않는다. 가격·대출 예상액·생애최초만
     if (window.ujkPlanFromCalc) window.ujkPlanFromCalc(p.name, p.price, pickedPs, Math.round(e.loan), p.first);
     if (window.ujkShowTab) window.ujkShowTab("plan", true);
   });
+  function showMeta(m) {   // 신뢰 표시: 규모와 마지막 갱신일 (data/meta.json — 주간 자동 빌드가 쓴다)
+    var d = String(m.built || "").match(/(\d{4})-(\d{2})-(\d{2})/), when = d ? (+d[2]) + "월 " + (+d[3]) + "일" : (m.built || "");
+    $("dataMeta").innerHTML = "<b>매주 자동 반영</b> · 마지막 갱신 <b>" + esc(when) + "</b><br>실거래 " + (+m.complexes || 0).toLocaleString("ko-KR") + "개 단지 (최근 " + (+m.months || 12) + "개월 " + (+m.trades || 0).toLocaleString("ko-KR") + "건) · 분양 공고 " + (+m.presale || 0).toLocaleString("ko-KR") + "건";
+  }
   function getJSON(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
   function loadData() {
     if (loading) return loading;
     loading = Promise.all([getJSON("data/apt-index.json"), getJSON("data/presale.json"), getJSON("data/meta.json")]).then(function (a) {
       idx = a[0] || []; presale = a[1] || [];
-      if (a[2]) $("dataMeta").textContent = "실거래 " + a[2].complexes.toLocaleString("ko-KR") + "개 단지 · 분양 공고 " + a[2].presale + "건 · " + a[2].built + " 갱신";
+      if (a[2]) showMeta(a[2]);
       else $("dataMeta").textContent = "단지 데이터를 불러오지 못했어요. 집 가격을 직접 넣어 주세요.";
     });
     return loading;
@@ -1494,7 +1535,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       if (it.date && el.value !== it.date) it.hist = (it.hist || []).concat([{ f: it.date, t: el.value, at: today() }]).slice(-5);
       it.date = el.value; it.est = false; track("plan-move");
     } else if (el.getAttribute("data-act") === "status") it.status = el.value;
-    save(); render();
+    save(); render(); if (window.ujkJourneyRender) window.ujkJourneyRender();
   });
   $("timeline").addEventListener("click", function (ev) {
     var el = ev.target.closest("button"); if (!el || readOnly) return;
@@ -1650,6 +1691,15 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   }
   window.ujkPlanFromCalc = fromCalc;
   window.ujkPlan = function () { return state; };
+  window.ujkPlanExport = function () { return JSON.parse(JSON.stringify(state)); };
+  window.ujkPlanReplace = function (s) { if (readOnly) return; state = normalize(s); save(); houseToForm(); clearForm(); render(); };
+  window.ujkPlanApply = function (o) {   // 지도에서 고친 값(계약일·잔금일·대출 금액)을 일정표에 그대로
+    if (readOnly) return; var h = state.house;
+    if (o.contract != null) h.contract = o.contract; if (o.movein != null) h.movein = o.movein; if (o.loan > 0) h.loan = Math.round(o.loan);
+    if (o.price > 0) h.price = Math.round(o.price); if (o.name) h.name = String(o.name).slice(0, 40); if (o.first != null) h.first = !!o.first;
+    houseToForm(); autoCosts(); houseEcho(); save(); render();
+  };
+  window.ujkPlanGen = function () { if (!readOnly) genPay(); };
   window.ujkPlanSetMode = function (m) { if (!readOnly && MODE_DEF[m]) setMode(m); };
   if (q.to === "plan" && (q.price || q.ps)) fromCalc(q.name, q.price, q.ps);
   $("myPlan").addEventListener("click", function () { location.replace(location.pathname + "#plan"); location.reload(); });
@@ -1701,16 +1751,16 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       checks: [["c3a", "목표 금액 정하기", R_ALL, "target"], ["c3b", "매달 모을 돈 정하기", R_ALL, "monthly"], ["c3c", "목표 금액 모으기", R_ALL, "reached"]] },
     { t: "계약하기", feel: "혹시 잘못되면 어떡하지?",
       lines: ["계약은 되돌리기 어려운 단계예요. 순서와 확인할 서류를 체크하며 가요.", "분양은 입주자모집공고에 계약 일정·서류·계약금 비율이 나와요.", "매매는 등기부등본으로 진짜 집주인과 빚(근저당)을 확인하고, 계약금은 집주인 명의 계좌로 보내요."],
-      checks: [["c4p1", "입주자모집공고에서 계약 일정·서류 확인", R_PS], ["c4p2", "계약금 보내기 (분양 계약일)", R_PS], ["c4p3", "발코니 확장·옵션 정하기", R_PS], ["c4s1", "(토지거래허가구역이면) 허가 먼저 받기", R_SL], ["c4s2", "등기부등본으로 집주인·근저당 확인", R_SL], ["c4s3", "계약금은 등기부상 집주인 명의 계좌로", R_SL], ["c4s4", "특약 확인 (대출이 안 나오면 어떻게 할지 등)", R_SL], ["c4b", "일정표에 계약일·잔금일 넣기", R_ALL, "dates"]] },
+      checks: [["c4p1", "입주자모집공고에서 계약 일정·서류 확인", R_PS], ["c4p2", "계약금 보내기 (분양 계약일)", R_PS, "pp:^계약금"], ["c4p3", "발코니 확장·옵션 정하기", R_PS], ["c4s1", "(토지거래허가구역이면) 허가 먼저 받기", R_SL, "pd:토지거래허가"], ["c4s2", "등기부등본으로 집주인·근저당 확인", R_SL], ["c4s3", "계약금은 등기부상 집주인 명의 계좌로", R_SL, "pp:^계약금"], ["c4s4", "특약 확인 (대출이 안 나오면 어떻게 할지 등)", R_SL], ["c4b", "일정표에 계약일·잔금일 넣기", R_ALL, "dates"]] },
     { t: "대출 준비", feel: "은행이 얼마나 빌려줄까?",
       lines: ["분양은 중도금 대출(시행사가 정한 은행)로 버티다가, 입주할 때 잔금 대출(집단대출)로 갈아타요. 잔금 대출 한도는 분양가가 아니라 감정가(시세) 기준이라, 시세가 오르면 한도가 늘 수 있어요.", "매매는 주택담보대출을 잔금 한 달쯤 전에 신청해요. 심사·감정에 2~4주가 걸려요.", "은행마다 감정가(집값 평가)가 달라서 최대 한도도 달라져요. 한도 → 금리 → 중도상환수수료·우대 조건 순으로 비교해요."],
-      checks: [["c5p1", "중도금 대출 은행·조건 확인", R_PS], ["c5p2", "입주 전 감정가 확인", R_PS], ["c5a", "대출 은행 2곳 이상 비교하기", R_ALL, "banks"], ["c5e", "기존 대출을 갚으면 한도가 얼마나 느는지 확인", R_ALL], ["c5s1", "잔금 한 달 전 대출 신청", R_SL], ["c5d", "소득 서류 준비 (부부 각각)", R_ALL]] },
+      checks: [["c5p1", "중도금 대출 은행·조건 확인", R_PS], ["c5p2", "입주 전 감정가 확인", R_PS], ["c5a", "대출 은행 2곳 이상 비교하기", R_ALL, "banks"], ["c5e", "기존 대출을 갚으면 한도가 얼마나 느는지 확인", R_ALL], ["c5s1", "잔금 한 달 전 대출 신청", R_SL, "pd:주택담보대출 신청"], ["c5d", "소득 서류 준비 (부부 각각)", R_ALL]] },
     { t: "입주 준비", feel: "업체 바가지 쓰면 어떡하지?",
       lines: ["새 아파트는 입주 전 사전점검에서 하자를 찾아 접수해요. 기존 집은 도배·장판 같은 공사를 먼저 정해요.", "업체는 입주박람회·입주예정자협의회 공동구매·직접 찾기로 구해요. 박람회는 업체가 참가비를 내고 나와서 가격에 반영될 수 있어요. 같은 단지 사람들의 후기와 견적 2~3곳 비교가 가장 믿을 만해요.", "순서가 있어요: 실측 → 시공(탄성·줄눈·붙박이) → 입주청소 → 새집증후군·코팅 → 가구·가전 배송 → 이사."],
-      checks: [["c6a", "사전점검에서 하자 확인·접수", R_PS], ["c6b", "필요한 품목 정하기", R_ALL], ["c6c", "품목마다 견적 2곳 이상 받기", R_ALL], ["c6d", "업체 일정을 일정표에 넣기", R_ALL, "works"], ["c6e", "이사 날짜 잡기", R_ALL]] },
+      checks: [["c6a", "사전점검에서 하자 확인·접수", R_PS], ["c6b", "필요한 품목 정하기 (업체 일정 3개 이상)", R_ALL, "works3"], ["c6c", "품목마다 견적 2곳 이상 받기", R_ALL], ["c6d", "업체 일정을 일정표에 넣기", R_ALL, "works"], ["c6e", "이사 날짜 잡기", R_ALL, "pmove"]] },
     { t: "열쇠 받는 날", feel: "드디어! 근데 뭐 빠뜨린 거 없나?",
       lines: ["잔금을 내고 대출이 실행되면 열쇠를 받아요. 분양은 잔금을 내고 입주증을 받아야 열쇠를 줘요.", "잔금일부터 60일 안에 취득세를 신고·납부하고, 소유권 등기는 보통 법무사가 잔금날 접수해요.", "이사한 날부터 14일 안에 전입신고를 해요. 토지거래허가로 산 집은 2년 직접 살아야 해요."],
-      checks: [["c7a", "잔금 내고 대출 실행 확인", R_ALL], ["c7b", "열쇠 받기 (분양은 입주증 먼저)", R_ALL], ["c7c", "취득세 신고·납부 (60일 안)", R_ALL], ["c7d", "등기 완료 확인", R_ALL], ["c7e", "전입신고 (14일 안)", R_ALL]] }
+      checks: [["c7a", "잔금 내고 대출 실행 확인", R_ALL, "pp:잔금"], ["c7b", "열쇠 받기 (분양은 입주증 먼저)", R_ALL], ["c7c", "취득세 신고·납부 (60일 안)", R_ALL, "pp:취득세"], ["c7d", "등기 완료 확인", R_ALL, "pd:등기"], ["c7e", "전입신고 (14일 안)", R_ALL, "pd:전입신고"]] }
   ];
 
   // ---- 자동 체크: 다른 화면에서 이미 한 일 ----
@@ -1722,6 +1772,12 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     if (kind === "monthly") return J.save.monthly > 0;
     if (kind === "reached") return J.save.target > 0 && J.save.have >= J.save.target;
     if (kind === "dates") return !!(pl && pl.house.contract && pl.house.movein);
+    if (kind.indexOf("pd:") === 0 || kind.indexOf("pp:") === 0) {   // 일정표에서 그 항목을 '완료'로 바꾸면 자동 체크
+      var re = new RegExp(kind.slice(3)), payOnly = kind.charAt(1) === "p";
+      return !!(pl && pl.items.some(function (it) { return (!payOnly || it.kind === "pay") && it.status === "done" && re.test(it.title); }));
+    }
+    if (kind === "works3") return !!(pl && pl.items.filter(function (it) { return it.kind === "work"; }).length >= 3);
+    if (kind === "pmove") return !!(pl && pl.items.some(function (it) { return it.kind === "work" && it.stage === "move" && it.date; }));
     if (kind === "crit") return J.crit.min > 0 && J.crit.cap > 0;
     if (kind === "banks") return J.banks.filter(function (b) { return b.name; }).length >= 2;
     if (kind === "works") return !!(pl && pl.items.some(function (it) { return it.kind === "work"; }));
@@ -1745,6 +1801,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function mine(i, sn, pl) {
     var p = sn && sn.touched ? sn : null;
     if (i === 0) return p ? "<div class='mfact'>연봉 <b>" + won(p.salary) + "</b> · 현금 <b>" + won(p.cash) + "</b>이면<br>규제지역 <b>" + won(p.maxReg) + "</b>, 그 밖 수도권 <b>" + won(p.maxCap) + "</b>까지 닿아요.</div>"
+      : J.last ? "<div class='mfact'>지난번 계산(" + md(J.last.at) + "): 규제지역 <b>" + won(J.last.maxReg) + "</b>, 그 밖 수도권 <b>" + won(J.last.maxCap) + "</b>까지 닿았어요. 숫자가 바뀌었으면 다시 계산해 보세요.</div>"
       : "<div class='mfact'>아직 계산 전이에요. 연봉과 현금만 넣어 보세요.</div>";
     if (i === 1) {
       var price = p ? (p.price > 0 ? p.price : p.maxReg) : 0;
@@ -1769,8 +1826,11 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         + "<div class='mfact'>" + (!need ? "목표 금액을 넣어 보세요." : left <= 0 ? "목표 금액을 모았어요! 다음 단계로 가요." : "목표까지 <b>" + won(left) + "</b> 남았어요. " + (when || "매달 모을 돈을 넣으면 언제 닿는지 알려 드려요.")) + "</div>";
     }
     if (i === 4) {
-      if (pl && pl.house.contract) return "<div class='mfact'>계약일 <b>" + md(pl.house.contract) + "</b> · 잔금일 <b>" + md(pl.house.movein) + "</b> (일정표 기준)</div>";
-      return "<div class='mfact'>계약일이 정해지면 일정표에 넣어 두세요. 계약금·잔금·신고 기한이 자동으로 들어가요.</div><div class='btns'><button type='button' class='btn small ghost' data-go='plan'>일정표 열기</button></div>";
+      var h4 = pl ? pl.house : {}, ready = J.save.target > 0 && J.save.have >= J.save.target, hasAuto = !!(pl && pl.items.some(function (it) { return it.auto; }));
+      return (ready ? "<div class='exp'><b>계약할 준비가 됐어요</b><span>3단계 목표 금액 " + won(J.save.target) + "을 모았어요.</span></div>" : "")
+        + "<div class='row2 d4'><label class='f'>계약일<input type='date' data-pd='contract' value='" + esc(h4.contract || "") + "'></label><label class='f'>" + (J.route === "presale" ? "잔금일(입주일)" : "잔금일") + "<input type='date' data-pd='movein' value='" + esc(h4.movein || "") + "'></label></div>"
+        + "<div class='btns'><button type='button' class='btn small' data-gen='1'>" + (hasAuto ? "이 날짜로 일정 다시 만들기" : "이 날짜로 납입 일정 만들기") + "</button><button type='button' class='btn small ghost' data-go='plan'>일정표 열기</button></div>"
+        + "<span class='hint'>날짜는 일정표에도 같이 들어가요. 만들기를 누르면 계약금·잔금·신고 기한이 일정표에 생기고, 일정표에서 '완료'로 바꾸면 여기 체크도 따라와요.</span>";
     }
     if (i === 5) {
       var rows = J.banks.length ? J.banks : [{}, {}];
@@ -1794,6 +1854,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
             + "<input type='text' maxlength='40' placeholder='수수료·급여이체 등' aria-label='중도상환·우대 조건' data-bf='note' value='" + esc(b.note || "") + "'>"
             + "<input type='radio' name='bpick' aria-label='이 은행으로' data-bf='pick'" + (b.pick ? " checked" : "") + "></div>";
         }).join("") + "</div><div class='btns'><button type='button' class='txtbtn' data-bank='add'>은행 추가</button></div>"
+        + (J.loanMsg && J.banks.some(function (b) { return b.pick; }) ? "<div class='mfact'>일정표 대출 금액을 <b>" + esc(J.loanMsg) + "</b>으로 맞췄어요.</div>" : "")
         + (best ? "<div class='mfact'>만든 사람 기준이면 <b>" + esc(best.b.name) + "</b> — 한도 " + won(best.lim) + (isNaN(best.rate) ? "" : " · 금리 " + best.rate + "%") + "</div>" : "");
       // DSR: 기존 대출을 갚으면?
       var dsr = "";
@@ -1826,6 +1887,13 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   // ---- 그리기 ----
   function render() {
     var sn = snap(), pl = plan(), done = 0, cur = -1;
+    if (sn && sn.touched) {   // 한 번 끝낸 0단계는 새로고침·다른 기기에서도 유지 (연봉·현금 원값은 저장하지 않고 결과 두 숫자만)
+      var ch = false;
+      if (!J.checks.c0a) { J.checks.c0a = true; ch = true; }
+      if (autoDone("house", sn, pl) && !J.checks.c0b) { J.checks.c0b = true; ch = true; }
+      if (!J.last || J.last.maxReg !== sn.maxReg || J.last.maxCap !== sn.maxCap) { J.last = { maxReg: sn.maxReg, maxCap: sn.maxCap, at: todayS() }; ch = true; }
+      if (ch) save();
+    }
     var stats = STEPS.map(function (s, i) { var st = stepStat(i, sn, pl); if (st.full) done++; else if (cur < 0) cur = i; return st; });
     var left = STEPS.length - done, KEY = '<svg class="key" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 12h10M18.5 12v3.5M21.5 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
     var wide = window.matchMedia && window.matchMedia("(min-width: 960px)").matches;
@@ -1858,6 +1926,25 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   }
   var rt = null; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!$("viewMap").hidden) render(); }, 200); });
   window.ujkJourneyRender = render;
+  window.ujkJourney = function () { return JSON.parse(JSON.stringify(J)); };
+  window.ujkJourneyReplace = function (o) {
+    J = Object.assign({ route: "", checks: {}, save: { target: 0, have: 0, monthly: 0 }, banks: [], open: -1, crit: { min: 0, cap: 0, station: false }, debt: -1 }, o || {});
+    if (!Array.isArray(J.banks)) J.banks = []; save(); render();
+  };
+  window.ujkJourneySummary = function () {   // 저장·공유·이미지에 쓰는 요약
+    var sn = snap(), pl = plan(), done = 0, cur = -1;
+    STEPS.forEach(function (s, i) { var st = stepStat(i, sn, pl); if (st.full) done++; else if (cur < 0) cur = i; });
+    var p = sn && sn.touched ? sn : null, lines = [];
+    lines.push(["지금 단계", cur < 0 ? "열쇠 받기 완료" : cur + ". " + STEPS[cur].t]);
+    var lm = p || J.last; if (lm) lines.push(["우리 돈으로 닿는 집", "규제지역 " + won(lm.maxReg) + " · 그 밖 수도권 " + won(lm.maxCap)]);
+    if (J.route) lines.push(["고른 길", J.route === "presale" ? "분양(청약)" : "매매"]);
+    var sv = J.save; if (sv.target) { var left = Math.max(0, sv.target - sv.have), m = sv.monthly > 0 ? Math.ceil(left / sv.monthly) : 0; lines.push(["첫 목돈", left ? "목표 " + won(sv.target) + " 중 " + won(left) + " 남음" + (m ? " · 약 " + m + "개월" : "") : "목표 " + won(sv.target) + " 모음"]); }
+    var pick = J.banks.filter(function (b) { return b.pick && b.name; })[0];
+    if (pick) lines.push(["고른 은행", pick.name + (numOf(pick.lim) ? " · 한도 " + won(numOf(pick.lim)) : "") + (pick.rate ? " · " + pick.rate + (/%/.test(pick.rate) ? "" : "%") : "")]);
+    var t = todayS(), nx = pl ? pl.items.filter(function (it) { return it.date && it.date >= t && it.status !== "done"; }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }).slice(0, 3) : [];
+    if (nx.length) lines.push(["다음 할 일", nx.map(function (it) { return md(it.date) + " " + it.title; }).join(" · ")]);
+    return { left: STEPS.length - done, now: cur < 0 ? "" : STEPS[cur].t, next: nx.length ? md(nx[0].date) + " " + nx[0].title : "", lines: lines };
+  };
 
   // ---- 이벤트 ----
   var view = $("viewMap");
@@ -1869,6 +1956,14 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       var el = wideNow ? $("mapDetail") : view.querySelector(".mstep.open"); if (el && (wideNow || !b.classList.contains("mhead"))) try { el.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {} return; }
     if (b.hasAttribute("data-route")) { J.route = b.getAttribute("data-route"); J.checks.c1a = true; save(); if (window.ujkPlanSetMode) window.ujkPlanSetMode(J.route); render(); track("map-route-" + J.route); return; }
     if (b.hasAttribute("data-go")) { go(b.getAttribute("data-go")); return; }
+    if (b.hasAttribute("data-gen")) {   // 일정표에 집 가격이 없으면 계산기에서 고른 집으로 채운 뒤 만든다
+      var pl0 = plan(), sn0 = snap();
+      if (pl0 && !pl0.house.price && sn0 && sn0.touched && sn0.price > 0 && window.ujkPlanApply) {
+        var ex = { price: sn0.price, name: /^예시/.test(sn0.name || "") ? "" : sn0.name, first: sn0.first };
+        if (!pl0.house.loan) ex.loan = sn0.dsr(sn0.price, sn0.debt).loan;
+        window.ujkPlanApply(ex);
+      }
+      go("plan"); if (window.ujkPlanGen) window.ujkPlanGen(); track("map-gen"); return; }
     if (b.hasAttribute("data-findq")) { go("calc"); setTimeout(function () { var q = $("q"); if (q) { q.placeholder = "역 이름 (예: 운정중앙역) — 역세권 순, 예산 안 단지만"; q.focus(); try { q.scrollIntoView({ block: "center" }); } catch (e) {} } }, 50); track("map-find-station"); return; }
     if (b.hasAttribute("data-sug")) { J.save.target = +b.getAttribute("data-sug"); save(); render(); return; }
     if (b.getAttribute("data-bank") === "add") { if (J.banks.length < 2) J.banks = J.banks.concat([{}, {}]).slice(0, 2); if (J.banks.length < 8) J.banks.push({}); save(); render(); return; }
@@ -1876,8 +1971,11 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   view.addEventListener("change", function (ev) {
     var el = ev.target;
     if (el.hasAttribute("data-ck")) { J.checks[el.getAttribute("data-ck")] = el.checked; save(); render(); track("map-check"); return; }
+    if (el.hasAttribute("data-pd")) { var o = {}; o[el.getAttribute("data-pd")] = el.value; if (window.ujkPlanApply) window.ujkPlanApply(o); render(); return; }
     if (el.getAttribute("data-cr") === "station") { J.crit.station = el.checked; save(); render(); return; }
-    if (el.getAttribute("data-bf") === "pick") { var k = +el.closest(".brow").getAttribute("data-bk"); while (J.banks.length < 2) J.banks.push({}); J.banks.forEach(function (b, i) { b.pick = i === k; }); save(); return; }
+    if (el.getAttribute("data-bf") === "pick") { var k = +el.closest(".brow").getAttribute("data-bk"); while (J.banks.length < 2) J.banks.push({}); J.banks.forEach(function (b, i) { b.pick = i === k; }); save();
+      var lim = numOf(J.banks[k].lim); if (lim > 0 && window.ujkPlanApply) { window.ujkPlanApply({ loan: lim }); J.loanMsg = (J.banks[k].name || "고른 은행") + " 한도 " + won(lim); save(); }
+      render(); return; }
   });
   view.addEventListener("input", function (ev) {
     var el = ev.target;
@@ -1896,5 +1994,184 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 })();
 </script>
 
+<script>
+(function () {   // 내 진행 저장·보내기: 서버 없이 (이어하기 링크 #r= · 카카오톡 · 요약 이미지 · 백업 파일)
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var KAKAO_KEY = "104b0b832c31f640d287641f56ad1bb0", KAKAO_SDK = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js";
+  var SITE = location.origin + location.pathname;
+  function track(p) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} }
+  function toast(msg) { var t = $("toast"); if (!t) return; t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { t.hidden = true; }, 2800); }
+  function won(man) {
+    man = Math.round(+man || 0); var neg = man < 0; man = Math.abs(man);
+    var eok = Math.floor(man / 10000), rest = man % 10000, s;
+    if (eok && rest) s = eok + "억 " + rest.toLocaleString("ko-KR") + "만원"; else if (eok) s = eok + "억원"; else s = rest.toLocaleString("ko-KR") + "만원";
+    return (neg ? "-" : "") + s;
+  }
+
+  // ---- 압축 링크: 브라우저 기본 압축(deflate-raw) → base64url. 지원 안 되면 압축 없이 ----
+  function b64u(bytes) { var s = ""; for (var i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function unb64u(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; var bin = atob(s), out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  function streamBytes(bytes, stream) { return new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer().then(function (b) { return new Uint8Array(b); }); }
+  function pack(obj) {
+    var raw = new TextEncoder().encode(JSON.stringify(obj));
+    if (window.CompressionStream) return streamBytes(raw, new CompressionStream("deflate-raw")).then(function (z) { return "z" + b64u(z); }).catch(function () { return "p" + b64u(raw); });
+    return Promise.resolve("p" + b64u(raw));
+  }
+  function unpack(code) {
+    var kind = code.charAt(0), bytes = unb64u(code.slice(1));
+    var p = kind === "z" ? streamBytes(bytes, new DecompressionStream("deflate-raw")) : Promise.resolve(bytes);
+    return p.then(function (b) { return JSON.parse(new TextDecoder().decode(b)); });
+  }
+  function bundle() {
+    var pl = window.ujkPlanExport ? window.ujkPlanExport() : null;
+    if (pl) { pl.items = (pl.items || []).map(function (it) { var o = Object.assign({}, it); delete o.hist; return o; }); delete pl.icsMap; }
+    return { app: "ujk", v: 1, at: Date.now(), plan: pl, journey: window.ujkJourney ? window.ujkJourney() : null };
+  }
+  function restoreLink() { return pack(bundle()).then(function (c) { return SITE + "#r=" + c; }); }
+  function copy(text, ok) {
+    var done = function () { toast(ok); };
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(done, function () { prompt("이 링크를 복사해 두세요", text); });
+    prompt("이 링크를 복사해 두세요", text);
+  }
+  function summary() { return window.ujkJourneySummary ? window.ujkJourneySummary() : { left: 8, now: "", lines: [] }; }
+  function shareText(s) { return "우리집 열쇠: 열쇠까지 " + s.left + "단계" + (s.now ? " (지금: " + s.now + ")" : "") + (s.next ? "\n다음 할 일: " + s.next : ""); }
+
+  // ---- 1) 이어하기 링크 ----
+  $("saveLink").addEventListener("click", function () {
+    restoreLink().then(function (url) { copy(url, "이어하기 링크를 복사했어요. 카톡 '나와의 채팅'에 붙여 두세요"); track("save-link"); });
+  });
+
+  // ---- 2) 카카오톡으로 보내기 (카카오톡 공유 → 안 되면 휴대폰 공유창 → 링크 복사) ----
+  function loadKakaoSdk() {
+    if (window.Kakao && window.Kakao.Share) return Promise.resolve(true);
+    return new Promise(function (res) {
+      var s = document.createElement("script"); s.src = KAKAO_SDK; s.async = true; s.crossOrigin = "anonymous";
+      s.onload = function () { res(!!(window.Kakao && window.Kakao.Share)); }; s.onerror = function () { res(false); };
+      document.head.appendChild(s); setTimeout(function () { res(!!(window.Kakao && window.Kakao.Share)); }, 6000);
+    });
+  }
+  $("saveKakao").addEventListener("click", function () {
+    var s = summary();
+    restoreLink().then(function (url) {
+      loadKakaoSdk().then(function (ok) {
+        try {
+          if (!ok) throw new Error("sdk");
+          if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_KEY);
+          window.Kakao.Share.sendDefault({ objectType: "text", text: shareText(s).slice(0, 190), link: { webUrl: url, mobileWebUrl: url }, buttonTitle: "이어서 하기" });
+          track("save-kakao");
+        } catch (e) {
+          if (navigator.share) navigator.share({ title: "우리집 열쇠 — 내 진행", text: shareText(s), url: url }).then(function () { track("save-webshare"); }, function () {});
+          else copy(url, "카카오톡 공유를 열 수 없어 링크를 복사했어요. 카톡에 붙여 넣어 주세요");
+        }
+      });
+    });
+  });
+
+  // ---- 3) 요약 이미지 (화면 안에서 직접 그림, 외부 도구 없음) ----
+  function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function keyIcon(ctx, x, y, s, color) {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = s * 0.09; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(x + s * 0.31, y + s * 0.5, s * 0.19, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + s * 0.5, y + s * 0.5); ctx.lineTo(x + s * 0.92, y + s * 0.5); ctx.moveTo(x + s * 0.77, y + s * 0.5); ctx.lineTo(x + s * 0.77, y + s * 0.65); ctx.moveTo(x + s * 0.9, y + s * 0.5); ctx.lineTo(x + s * 0.9, y + s * 0.6); ctx.stroke(); ctx.restore();
+  }
+  function wrap(ctx, text, maxW) {   // 띄어쓰기 단위로 줄바꿈, 한 단어가 너무 길 때만 글자 단위
+    var out = [], line = "";
+    String(text).split(" ").forEach(function (w) {
+      var t = line ? line + " " + w : w;
+      if (ctx.measureText(t).width <= maxW) { line = t; return; }
+      if (line) out.push(line);
+      line = "";
+      w.split("").forEach(function (ch) { var u = line + ch; if (ctx.measureText(u).width > maxW && line) { out.push(line); line = ch; } else line = u; });
+    });
+    if (line) out.push(line); return out;
+  }
+  function drawReport() {
+    var s = summary(), W = 1080, H = 1350, c = document.createElement("canvas"); c.width = W; c.height = H;
+    var ctx = c.getContext("2d"), F = "'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
+    var ink = "#17251f", muted = "#4a5751", line = "#d6ddd8", accent = "#1f6b4f", soft = "#e2efe8";
+    ctx.fillStyle = "#f3f5f2"; ctx.fillRect(0, 0, W, H);
+    rr(ctx, 48, 48, W - 96, H - 96, 36); ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.strokeStyle = line; ctx.lineWidth = 2; ctx.stroke();
+    var x = 104, y = 150;
+    ctx.fillStyle = ink; ctx.font = "800 54px " + F; ctx.fillText("우리집 열쇠가 내 손에", x, y);
+    keyIcon(ctx, x + ctx.measureText("우리집 열쇠가 내 손에").width + 18, y - 50, 62, accent);
+    var d = new Date(); ctx.fillStyle = muted; ctx.font = "500 30px " + F; ctx.fillText(d.getFullYear() + "년 " + (d.getMonth() + 1) + "월 " + d.getDate() + "일 · 내 집 마련 리포트", x, y + 52);
+    y += 150; ctx.fillStyle = ink; ctx.font = "800 70px " + F;
+    var head = s.left ? "열쇠까지 " : "열쇠를 받았어요!"; ctx.fillText(head, x, y);
+    if (s.left) { var hw = ctx.measureText(head).width; ctx.fillStyle = accent; ctx.fillText(s.left + "단계", x + hw, y); }
+    y += 44; rr(ctx, x, y, W - 2 * x - 80, 22, 11); ctx.fillStyle = "#f3f5f2"; ctx.fill(); ctx.strokeStyle = line; ctx.stroke();
+    rr(ctx, x, y, Math.max(22, (W - 2 * x - 80) * (8 - s.left) / 8), 22, 11); ctx.fillStyle = accent; ctx.fill();
+    keyIcon(ctx, W - x - 62, y - 22, 66, s.left ? muted : accent);
+    y += 92;
+    (s.lines || []).forEach(function (r) {
+      ctx.fillStyle = muted; ctx.font = "600 30px " + F; ctx.fillText(r[0], x, y);
+      ctx.fillStyle = r[2] === "bad" ? "#a3312a" : ink; ctx.font = "700 40px " + F;
+      var ls = wrap(ctx, r[1], W - 2 * x); ls.slice(0, 3).forEach(function (l, k) { ctx.fillText(l, x, y + 52 + k * 52); });
+      y += 52 + Math.min(3, ls.length) * 52 + 26;
+      ctx.strokeStyle = line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - 40); ctx.lineTo(W - x, y - 40); ctx.stroke();
+    });
+    rr(ctx, x, H - 250, W - 2 * x, 126, 18); ctx.fillStyle = soft; ctx.fill();
+    ctx.fillStyle = accent; ctx.font = "800 26px " + F; ctx.fillText("공공데이터 · 매주 자동 반영", x + 26, H - 204);
+    ctx.fillStyle = ink; ctx.font = "500 25px " + F; ctx.fillText("국토교통부 아파트 매매 실거래가 · 한국부동산원 청약홈 분양정보", x + 26, H - 166);
+    ctx.fillStyle = muted; ctx.font = "500 24px " + F; ctx.fillText("참고용 추정치예요. 실제 조건은 공고문·은행·구청에서 확인해요.", x + 26, H - 134);
+    ctx.fillStyle = muted; ctx.font = "500 26px " + F; ctx.fillText("jsbarsss-code.github.io/jsbars-calc", x, H - 80);
+    return c;
+  }
+  $("saveImage").addEventListener("click", function () {
+    var go = function () {
+      var c = drawReport();
+      c.toBlob(function (blob) {
+        if (!blob) { toast("이미지를 만들지 못했어요"); return; }
+        var name = "우리집열쇠-리포트.png", file = null;
+        try { file = new File([blob], name, { type: "image/png" }); } catch (e) {}
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: "우리집 열쇠 리포트" }).then(function () { track("save-image-share"); }, function () {});
+        } else {
+          var a = document.createElement("a"), u = URL.createObjectURL(blob); a.href = u; a.download = name; document.body.appendChild(a); a.click();
+          setTimeout(function () { URL.revokeObjectURL(u); a.remove(); }, 1000); toast("요약 이미지를 저장했어요"); track("save-image");
+        }
+      }, "image/png");
+    };
+    if (document.fonts && document.fonts.load) Promise.all(["800 70px 'Pretendard Variable'", "700 40px 'Pretendard Variable'", "500 30px 'Pretendard Variable'"].map(function (f) { return document.fonts.load(f, "우리집열쇠"); })).then(go, go);
+    else go();
+  });
+  window.ujkDrawReport = drawReport;
+
+  // ---- 4) 백업 파일 (지도 + 일정표) ----
+  $("saveFile").addEventListener("click", function () {
+    var d = new Date(), name = "우리집열쇠-백업-" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + ".json";
+    var a = document.createElement("a"), u = URL.createObjectURL(new Blob([JSON.stringify(bundle(), null, 1)], { type: "application/json" }));
+    a.href = u; a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(u); a.remove(); }, 1000); track("save-file");
+  });
+  function apply(b) {
+    if (b && b.app === "ujk") { if (b.plan && window.ujkPlanReplace) window.ujkPlanReplace(b.plan); if (b.journey && window.ujkJourneyReplace) window.ujkJourneyReplace(b.journey); return true; }
+    if (b && Array.isArray(b.items) && window.ujkPlanReplace) { window.ujkPlanReplace(b); return true; }   // 예전 일정표 백업
+    return false;
+  }
+  $("loadFile").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () { try { var b = JSON.parse(r.result); if (!confirm("백업 파일로 지금 지도·일정을 바꿀까요?")) return; if (!apply(b)) throw 0; toast("백업을 불러왔어요"); if (window.ujkJourneyRender) window.ujkJourneyRender(); } catch (e) { toast("이 파일은 우리집 열쇠 백업이 아니에요"); } };
+    r.readAsText(f); this.value = "";
+  });
+
+  // ---- 이어하기 링크로 열었을 때 ----
+  if (/^#r=/.test(location.hash)) {
+    var code = location.hash.slice(3);
+    unpack(code).then(function (b) {
+      if (!b || b.app !== "ujk") throw 0;
+      var at = b.at ? new Date(+b.at) : null, bn = $("restoreBanner");
+      bn.innerHTML = "<span><b>이어하기 링크</b>로 열었어요" + (at ? " (" + (at.getMonth() + 1) + "월 " + at.getDate() + "일 저장)" : "") + ". 이 기기에서 이어서 할까요? 이 기기에 있던 지도·일정은 링크 내용으로 바뀌어요.</span>"
+        + "<div class='btns'><button type='button' class='btn small' id='restoreYes'>이 기기에서 이어서 하기</button><button type='button' class='btn small ghost' id='restoreNo'>닫기</button></div>";
+      bn.hidden = false; track("restore-open");
+      $("restoreYes").addEventListener("click", function () { apply(b); history.replaceState(null, "", location.pathname); bn.hidden = true; if (window.ujkJourneyRender) window.ujkJourneyRender(); toast("이어서 할 수 있게 불러왔어요"); track("restore-apply"); });
+      $("restoreNo").addEventListener("click", function () { history.replaceState(null, "", location.pathname); bn.hidden = true; });
+    }).catch(function () { toast("이어하기 링크가 잘렸거나 잘못됐어요"); });
+  }
+})();
+</script>
+<script>
+document.getElementById("toSaveCard").addEventListener("click", function (e) { e.preventDefault(); if (window.ujkShowTab) window.ujkShowTab("map"); var c = document.getElementById("saveCard"); if (c) try { c.scrollIntoView({ block: "start" }); } catch (x) {} });
+</script>
 </body>
 </html>
