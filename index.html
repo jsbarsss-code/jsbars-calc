@@ -141,6 +141,7 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
 .tmeta { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.6; }
 .tmeta b { color: var(--accent); }
 .trust .hint { font-size: 14px; }
+.savebar { margin: 0; }
 .toplan { display: block; margin-top: 8px; text-decoration: none; background: var(--paper); }
 
 /* ---- 탭 (DESIGN.md: 세그먼트) ---- */
@@ -342,10 +343,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <p class="hint" style="margin:0">지도와 일정표는 지금 이 기기의 브라우저에만 있어요. 다른 휴대폰·PC에서 이어 하거나 잃어버리지 않으려면 저장해 두세요. 회원가입 없이, 운영자 서버에 남기지 않아요.</p>
       <div class="btns">
         <button type="button" class="btn" id="saveKakao">카카오톡으로 보내기</button>
-        <button type="button" class="btn ghost" id="saveLink">이어하기 링크 복사</button>
         <button type="button" class="btn ghost" id="saveImage">요약 이미지 저장</button>
       </div>
-      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면, 어느 기기에서든 링크를 눌러 그대로 이어서 할 수 있어요. 링크에는 일정·금액이 들어 있으니 나와 가족에게만 보내 주세요.</p>
+      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면, 어느 기기에서든 메시지의 <b>이어서 하기</b>를 눌러 그대로 이어서 할 수 있어요. 일정·금액이 담기니 나와 가족에게만 보내 주세요.</p>
       <details class="more"><summary>파일로 백업·불러오기</summary><div class="inner"><div class="btns">
         <button type="button" class="btn small ghost" id="saveFile">백업 파일 저장</button>
         <label class="btn small ghost" for="loadFile" style="display:inline-block">백업 불러오기</label>
@@ -464,6 +464,11 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       </div>
     </details>
   </form>
+    <section class="card">
+      <h2 class="step">다음에 이어서 하려면</h2>
+      <p class="hint" style="margin:0">이 계산 결과(닿는 최고가)와 지도·일정을 카톡 <b>나와의 채팅</b>에 보내 두면, 다른 휴대폰·PC에서도 그대로 이어서 할 수 있어요. 연봉·현금 원래 값은 담지 않아요.</p>
+      <div class="btns savebar"><button type="button" class="btn" data-save="Kakao" data-from="calc">카카오톡으로 보내기</button><button type="button" class="btn ghost" data-save="Image" data-from="calc">요약 이미지 저장</button></div>
+    </section>
   </div>
 
   <div class="view" id="viewPlan" role="tabpanel" aria-labelledby="tabPlan" hidden>
@@ -612,7 +617,8 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <button type="button" class="btn" id="exportIcs">휴대폰 캘린더로 내보내기</button>
       <button type="button" class="btn ghost" id="shareLink">가족에게 보기 링크 복사</button>
     </div>
-    <p class="hint">지도까지 통째로 저장하거나 다른 기기에서 이어 하려면 <a href="#" id="toSaveCard" style="color:var(--accent)">내 집 지도 → 내 진행 저장·보내기</a>를 써 주세요.</p>
+    <p class="hint" style="margin:0"><b>다른 기기에서 이어서 하기</b>: 일정과 지도를 통째로 카톡 나와의 채팅에 보내 두세요.</p>
+    <div class="btns savebar"><button type="button" class="btn" data-save="Kakao" data-from="plan">카카오톡으로 보내기</button><button type="button" class="btn ghost" data-save="Image" data-from="plan">요약 이미지 저장</button></div>
     <p class="hint">캘린더 파일(.ics)을 열면 휴대폰 일정표에 한 번에 들어가요. 날짜를 바꾼 뒤엔 다시 내보내 주세요(같은 일정은 덮어써지는 캘린더가 많아요).</p>
     <details class="more">
       <summary>백업·초기화</summary>
@@ -2027,6 +2033,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     return p.then(function (b) { return JSON.parse(new TextDecoder().decode(b)); });
   }
   function bundle() {
+    try { if (window.ujkJourneyRender) window.ujkJourneyRender(); } catch (e) {}
     var pl = window.ujkPlanExport ? window.ujkPlanExport() : null;
     if (pl) { pl.items = (pl.items || []).map(function (it) { var o = Object.assign({}, it); delete o.hist; return o; }); delete pl.icsMap; }
     return { app: "ujk", v: 1, at: Date.now(), plan: pl, journey: window.ujkJourney ? window.ujkJourney() : null };
@@ -2040,10 +2047,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function summary() { return window.ujkJourneySummary ? window.ujkJourneySummary() : { left: 8, now: "", lines: [] }; }
   function shareText(s) { return "우리집 열쇠: 열쇠까지 " + s.left + "단계" + (s.now ? " (지금: " + s.now + ")" : "") + (s.next ? "\n다음 할 일: " + s.next : ""); }
 
-  // ---- 1) 이어하기 링크 ----
-  $("saveLink").addEventListener("click", function () {
-    restoreLink().then(function (url) { copy(url, "이어하기 링크를 복사했어요. 카톡 '나와의 채팅'에 붙여 두세요"); track("save-link"); });
-  });
+  window.ujkRestoreLink = restoreLink;   // 링크는 카카오톡 보내기(안 되면 공유창·복사)가 만든다
 
   // ---- 2) 카카오톡으로 보내기 (카카오톡 공유 → 안 되면 휴대폰 공유창 → 링크 복사) ----
   function loadKakaoSdk() {
@@ -2159,6 +2163,11 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     r.readAsText(f); this.value = "";
   });
 
+  // ---- 계산기·일정표 아래 버튼도 같은 동작 (어느 화면에서 보냈는지만 따로 센다) ----
+  Array.prototype.forEach.call(document.querySelectorAll("[data-save]"), function (b) {
+    b.addEventListener("click", function () { track("save-from-" + b.getAttribute("data-from")); var t = $("save" + b.getAttribute("data-save")); if (t) t.click(); });
+  });
+
   // ---- 이어하기 링크로 열었을 때 ----
   if (/^#r=/.test(location.hash)) {
     var code = location.hash.slice(3);
@@ -2173,9 +2182,6 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     }).catch(function () { toast("이어하기 링크가 잘렸거나 잘못됐어요"); });
   }
 })();
-</script>
-<script>
-document.getElementById("toSaveCard").addEventListener("click", function (e) { e.preventDefault(); if (window.ujkShowTab) window.ujkShowTab("map"); var c = document.getElementById("saveCard"); if (c) try { c.scrollIntoView({ block: "start" }); } catch (x) {} });
 </script>
 </body>
 </html>
