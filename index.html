@@ -1312,7 +1312,7 @@ details.past[open] summary { color: var(--accent); }
     if (it.kind !== "work" && it.est) tags += '<span class="tag est">예상 날짜</span>';
     var meta;
     if (it.kind === "task") meta = esc(it.note || "");
-    else if (it.kind === "pay") meta = "<b>" + won(it.amt) + "</b> · " + esc(WHO[it.who] || "") + (it.note ? "<br>" + esc(it.note) : "");
+    else if (it.kind === "pay") meta = "<b>" + won(it.amt) + "</b> · " + esc(it.who === "loan" && state.house.mode === "sale" ? "주택담보대출" : (WHO[it.who] || "")) + (it.note ? "<br>" + esc(it.note) : "");
     else {
       var bits = [];
       if (it.dep) bits.push("계약금 " + won(it.dep) + (it.depPaid ? " (냄)" : " (안 냄)"));

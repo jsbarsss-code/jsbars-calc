@@ -49,6 +49,7 @@
 
 ## Components
 - **탭(.tabs)**: 화면 위 세그먼트 2칸, 스크롤해도 위에 붙음(sticky). 선택된 칸 = accent-soft 바탕 + accent 800. 주소 #plan = 일정표 탭.
+- **선택 칸(.seg)**: 카드 안의 2지선다(분양/매매). 바탕 --bg, 선택된 칸 = paper 바탕 + accent 800 + 1px 선.
 - **카드(.card)**: --paper, 1px --line, 12 radius, 패딩 18, 첫 줄은 번호 배지(.step .no) + 단계 제목.
 - **답 상자(.answer)**: 결과 한 문장. 좋음 = --accent-soft 바탕 + accent 글자, 모자람 = --bad-soft + bad 글자.
 - **사실 행(.fact)**: 왼쪽 라벨(muted) · 오른쪽 금액(700, 오른쪽 정렬), 행 사이 1px 선.
