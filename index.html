@@ -2044,11 +2044,11 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   // ---- 2) 카카오톡으로 보내기 (카카오톡 공유 → 안 되면 휴대폰 공유창 → 링크 복사) ----
   function loadKakaoSdk() {
-    if (window.Kakao && window.Kakao.Share) return Promise.resolve(true);
+    if (window.Kakao) return Promise.resolve(true);   // Kakao.Share는 init 뒤에 생긴다
     return new Promise(function (res) {
-      var s = document.createElement("script"); s.src = KAKAO_SDK; s.async = true; s.crossOrigin = "anonymous";
-      s.onload = function () { res(!!(window.Kakao && window.Kakao.Share)); }; s.onerror = function () { res(false); };
-      document.head.appendChild(s); setTimeout(function () { res(!!(window.Kakao && window.Kakao.Share)); }, 6000);
+      var s = document.createElement("script"); s.src = KAKAO_SDK; s.async = true;
+      s.onload = function () { res(!!window.Kakao); }; s.onerror = function () { res(false); };
+      document.head.appendChild(s); setTimeout(function () { res(!!window.Kakao); }, 6000);
     });
   }
   $("saveKakao").addEventListener("click", function () {
@@ -2058,6 +2058,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         try {
           if (!ok) throw new Error("sdk");
           if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_KEY);
+          if (!window.Kakao.Share) throw new Error("share");
           window.Kakao.Share.sendDefault({ objectType: "text", text: shareText(s).slice(0, 190), link: { webUrl: url, mobileWebUrl: url }, buttonTitle: "이어서 하기" });
           track("save-kakao");
         } catch (e) {
