@@ -108,6 +108,15 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .flag { font-size: 16px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
 .flag b { color: var(--accent); }
 .foot { font-size: 14.5px; color: var(--muted); }
+.sitefoot { display: grid; gap: 12px; margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--line); }
+.sitefoot .foot { margin: 0; }
+.sitefoot .foot b { color: var(--ink); font-weight: 600; }
+.sitefoot a { color: var(--accent); text-underline-offset: 3px; }
+.footd summary { cursor: pointer; font-size: 14.5px; font-weight: 600; color: var(--accent); }
+.footd summary:focus-visible, .footnav a:focus-visible, .sitefoot .fine a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.footd .foot { margin-top: 8px; }
+.footnav { display: grid; gap: 6px; font-size: 14.5px; }
+.sitefoot .fine { font-size: 13px; }
 .results, .picked { display: grid; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { font: inherit; word-break: keep-all; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
@@ -663,11 +672,19 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </div>
 
 
-  <p class="foot">© 2026 jsbars · 우리집 열쇠. 화면 구성·문구·코드는 저작권법으로 보호되며 무단 복제·재배포를 금지합니다. <a href="terms.html" style="color:var(--accent)">이용약관·개인정보 안내</a></p>
-  <p class="foot">미리 계산해 둔 곳: <a href="apt/" style="color:var(--accent)">지역별 아파트 실거래로 본 필요 현금·연봉</a> · <a href="presale/" style="color:var(--accent)">분양 단지별 계약금·필요 연봉</a></p>
-  <p class="foot">만든 곳: <a href="https://blog.naver.com/jsbars" style="color:var(--accent)">jsbars 블로그 — 뉴스 속 집·돈 이야기를 내 연봉으로 계산합니다</a></p>
-  <p class="foot">데이터 출처: 국토교통부 아파트 매매 실거래가(공공데이터포털), 한국부동산원 청약홈 분양정보. 매주 자동 갱신하며 신고가 늦은 거래는 빠질 수 있어요. 분양가는 주택형별 최고가입니다.</p>
-  <p class="foot">참고용 추정치입니다. 실제 한도와 금리는 은행 심사로 정해집니다. 반영 기준: 수도권·규제지역 주담대 한도(시가 15억 이하 6억 · 15억~25억 4억 · 25억 초과 2억), DSR 40%, 취득세 1주택 기본세율+지방교육세(생애최초 12억 이하 최대 200만원 감면), 중개보수 법정 상한.</p>
+  <footer class="sitefoot">
+    <p class="foot"><b>참고용 추정치예요.</b> 실제 대출 한도와 금리는 은행 심사로 정해져요.</p>
+    <details class="footd"><summary>계산 기준과 데이터 출처</summary>
+      <p class="foot">계산 기준: 수도권·규제지역 주담대 한도(시가 15억 이하 6억 · 15억~25억 4억 · 25억 초과 2억), DSR 40%, 취득세 1주택 기본세율+지방교육세(생애최초 12억 이하 최대 200만원 감면), 중개보수 법정 상한.</p>
+      <p class="foot">데이터 출처: 국토교통부 아파트 매매 실거래가(공공데이터포털), 한국부동산원 청약홈 분양정보. 매주 자동 갱신하며 신고가 늦은 거래는 빠질 수 있어요. 분양가는 주택형별 최고가입니다.</p>
+    </details>
+    <nav class="footnav" aria-label="더 보기">
+      <a href="apt/">지역별 아파트 실거래로 본 필요 현금·연봉</a>
+      <a href="presale/">분양 단지별 계약금·필요 연봉</a>
+      <a href="https://blog.naver.com/jsbars">만든 곳: jsbars 블로그(뉴스 속 집·돈 이야기를 내 연봉으로 계산)</a>
+    </nav>
+    <p class="foot fine">© 2026 jsbars 우리집 열쇠. 화면 구성·문구·코드는 저작권법으로 보호되며 무단 복제·재배포를 금지합니다. <a href="terms.html">이용약관·개인정보 안내</a></p>
+  </footer>
 </div>
 
 <script>
