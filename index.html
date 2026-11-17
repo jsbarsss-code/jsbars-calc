@@ -64,6 +64,13 @@ header p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
 .hlogin:hover { border-color: var(--accent); }
 .hlogin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .fresh .hlogin { margin-top: 0; }
+.hacct { position: relative; flex: none; }
+.hlogin { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; }
+.hmenu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 200px; display: grid; padding: 6px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+.hmenu button { font: inherit; font-size: 15.5px; text-align: left; color: var(--ink); background: none; border: 0; border-radius: 6px; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; }
+.hmenu button:hover, .hmenu button:focus-visible { background: var(--bg); outline: none; }
+.hmenu button[data-hm="logout"] { color: var(--muted); border-top: 1px solid var(--line); border-radius: 0 0 6px 6px; margin-top: 4px; padding-top: 12px; }
+.hmenu small { color: var(--muted); font-size: 14px; }
 .card { background: var(--paper); border: 0; border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
 .step { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 19px; font-weight: 700; }
 .step .no { font-size: 19px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -370,6 +377,20 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 .perks li:first-child { padding-top: 0; }
 .perks b { font-size: 16.5px; }
 .perks span { font-size: 14.5px; color: var(--muted); }
+.candbtn { justify-self: start; margin-top: 8px; }
+.candn { font-size: 15px; font-weight: 700; color: var(--muted); margin-left: 4px; }
+.clist { display: grid; }
+.crow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.crow:last-child { border-bottom: 0; }
+.cmain { display: grid; gap: 1px; min-width: 0; }
+.cmain b { font-size: 16.5px; overflow-wrap: anywhere; }
+.cmain span { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cst { font-size: 15px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cst small { display: block; font-size: 13.5px; font-weight: 500; color: var(--muted); }
+.cst.ok { color: var(--accent); }
+.cst.no { color: var(--bad); }
+.cact { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; margin-left: -6px; }
+#acctCands { border-top: 1px solid var(--line); }
 .nudge { display: grid; gap: 10px; }
 .nudge p { margin: 0; font-size: 16px; }
 .nudge p b { white-space: nowrap; }
@@ -412,7 +433,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
 <div class="wrap">
   <header>
-    <div class="htop"><h1>우리집 열쇠가 내 손에<svg class="key" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 12h10M18.5 12v3.5M21.5 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></h1><button type="button" class="hlogin" id="hLogin">로그인</button></div>
+    <div class="htop"><h1>우리집 열쇠가 내 손에<svg class="key" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 12h10M18.5 12v3.5M21.5 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></h1><div class="hacct"><button type="button" class="hlogin" id="hLogin" aria-haspopup="false">로그인</button><div class="hmenu" id="hMenu" role="menu" hidden><button type="button" role="menuitem" data-hm="cands">우리집 후보 보기<small id="hmCandN"></small></button><button type="button" role="menuitem" data-hm="acct">내 기록·계정 정보</button><button type="button" role="menuitem" data-hm="logout">로그아웃</button></div></div></div>
     <p>집이 없어도, 아직 아무것도 몰라도 괜찮아요. 내 돈으로 지금 우리집 후보를 찾고, 계약부터 열쇠 받는 날까지 한 단계씩 같이 가요.</p>
   </header>
 
@@ -457,9 +478,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         <button type="button" class="btn ghost" id="saveImage">요약 이미지 저장</button>
       </div>
       <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면, 어느 기기에서든 메시지의 <b>이어서 하기</b>를 눌러 보낸 화면 그대로 이어서 할 수 있어요. 입력한 연봉·현금과 일정·금액이 담기니 나에게만 보내 주세요(가족에게는 입주까지 일정의 <b>보기 전용</b> 보내기를 써 주세요).</p>
-      <details class="more"><summary>파일로 백업·불러오기</summary><div class="inner"><div class="btns">
-        <button type="button" class="btn small ghost" id="saveFile">백업 파일 저장</button>
-        <label class="btn small ghost" for="loadFile" style="display:inline-block">백업 불러오기</label>
+      <details class="more"><summary>예전에 저장한 백업 파일 불러오기</summary><div class="inner"><div class="btns">
+        <button type="button" class="btn small ghost" id="saveFile" hidden>백업 파일 저장</button>
+        <label class="btn small ghost" for="loadFile" style="display:inline-block">백업 파일 고르기</label>
         <input type="file" id="loadFile" accept=".json,application/json" hidden>
       </div></div></details>
       <div class="acctcta" id="acctCta">
@@ -537,6 +558,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <span class="yes" id="aYes"></span>
       <div class="abar" id="aBar"></div>
       <span class="sub" id="aSub"></span>
+      <button type="button" class="btn candbtn" id="candBtn" hidden>우리집 후보에 담기</button>
       <button type="button" class="linkbtn toplan" id="toPlan" hidden>이 집으로 납입·입주 일정 짜기</button>
       <button type="button" class="txtbtn" id="toMap" style="justify-self:start">열쇠까지 지도에서 다음 단계 보기</button>
     </section>
@@ -546,6 +568,12 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <div class="fact"><span class="k">은행이 보태 줄 수 있는 돈</span><span class="v" id="fLoan"></span></div>
       <div class="fact"><span class="k">매달 은행에 보낼 돈</span><span class="v" id="fMonthly"></span></div>
       <div class="fact"><span class="k">지금 우리집 후보 최고가</span><span class="v" id="fMax"></span></div>
+    </section>
+
+    <section class="card" id="candCard" hidden>
+      <h2 class="step">담아 둔 우리집 후보 <span class="candn" id="candN"></span></h2>
+      <p class="hint" style="margin:0">지금 넣은 연봉·현금으로 집마다 되는지 나란히 보여 드려요. 연봉·현금을 바꾸면 바로 다시 계산해요.</p>
+      <div class="clist" id="candList"></div>
     </section>
 
     <details class="more">
@@ -603,7 +631,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     <div class="btns"><button type="button" class="btn small" id="importShared">내 일정으로 가져오기</button><button type="button" class="btn small ghost" id="myPlan">내 일정 보기</button></div>
   </div>
   <div id="calcBanner" class="banner" hidden></div>
-  <div id="storeWarn" class="banner warn" hidden>이 브라우저는 저장이 막혀 있어요(사생활 보호 모드 등). 창을 닫기 전에 아래 <b>백업 파일 저장</b>을 눌러 주세요.</div>
+  <div id="storeWarn" class="banner warn" hidden>이 브라우저는 저장이 막혀 있어요(사생활 보호 모드 등). 창을 닫기 전에 아래 <b>카카오톡으로 보내기</b>로 나에게 보내 두세요.</div>
 
   <section class="card" id="houseCard">
     <h2 class="step"><span class="no">1</span>우리집과 납입 조건</h2>
@@ -750,12 +778,12 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     <details class="more" id="gcalBox"><summary>구글 캘린더에 하나씩 넣기 (가장 쉬운 방법)</summary><div class="inner"><p class="hint" style="margin:0">눌러서 저장만 하면 들어가요. 안드로이드는 캘린더 앱이 바로 열려요.</p><ul class="next" id="gcalList"></ul></div></details>
     <p class="hint" style="display:none">캘린더 파일(.ics)을 열면 휴대폰 일정표에 한 번에 들어가요. 날짜를 바꾼 뒤엔 다시 내보내 주세요(같은 일정은 덮어써지는 캘린더가 많아요).</p>
     <details class="more">
-      <summary>백업·초기화</summary>
+      <summary>일정 지우기</summary>
       <div class="inner">
-        <p class="hint">브라우저 기록을 지우면 일정도 지워져요. 가끔 백업 파일을 저장해 두세요.</p>
+        <p class="hint">브라우저 기록을 지우면 일정도 지워져요. <button type="button" class="txtbtn" data-acct="plan-reset" style="padding:0">로그인</button>해 두면 내 계정에 자동으로 저장돼 그대로 남아요.</p>
         <div class="btns">
-          <button type="button" class="btn small ghost" id="backup">백업 파일 저장</button>
-          <label class="btn small ghost" for="restore" style="display:inline-block">백업 불러오기</label>
+          <button type="button" class="btn small ghost" id="backup" hidden>백업 파일 저장</button>
+          <label class="btn small ghost" for="restore" style="display:inline-block">예전 백업 파일 불러오기</label>
           <input type="file" id="restore" accept=".json,application/json" hidden>
           <button type="button" class="btn small danger" id="resetAll">모두 지우기</button>
         </div>
@@ -767,14 +795,14 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </div>
 
   <div class="view" id="viewAcct" hidden>
-  <div class="vhead"><h2>내 계정</h2><p id="acctLead">가입하지 않아도 모든 기능을 쓸 수 있어요. 로그인하면 내 기록을 계정에 자동으로 저장해 지켜요.</p></div>
+  <div class="vhead"><h2>내 기록·계정 정보</h2><p id="acctLead">가입하지 않아도 모든 기능을 쓸 수 있어요. 로그인하면 내 기록을 계정에 자동으로 저장해 지켜요.</p></div>
   <section class="card" id="acct">
     <div id="acctOut" class="acctb">
       <h2 class="step">로그인하면 이렇게 달라져요</h2>
       <ul class="perks">
         <li><b>휴대폰을 바꾸거나 브라우저 기록을 지워도 그대로</b><span>로그인하지 않으면 이 기기 브라우저에만 저장돼요.</span></li>
         <li><b>휴대폰에서 체크하고 PC에서 일정 정리</b><span>같은 계정으로 로그인하면 어느 기기에서든 이어져요.</span></li>
-        <li><b>연봉·현금은 저장하지 않아요</b><span>지도 체크, 저축 목표, 은행 비교 메모, 입주까지 일정만 저장해요.</span></li>
+        <li><b>연봉·현금은 저장하지 않아요</b><span>지도 체크, 담아 둔 우리집 후보, 저축 목표, 은행 비교 메모, 입주까지 일정만 저장해요.</span></li>
         <li><b>비밀번호 없이 카카오·Google로</b><span>탈퇴하면 저장 내용을 바로 지워요.</span></li>
       </ul>
       <label class="check small" for="acctAgree"><input type="checkbox" id="acctAgree"> <span>만 14세 이상이에요. <a href="terms.html#privacy" target="_blank" rel="noopener">개인정보 처리방침</a>(로그인 ID·닉네임·이메일·지도와 일정 저장, 탈퇴하면 바로 삭제)에 동의해요.</span></label>
@@ -789,9 +817,10 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   <section class="card" id="acctRec" hidden>
     <h2 class="step">내 기록</h2>
     <div class="facts" id="acctFacts"></div>
+    <div class="clist" id="acctCands" hidden></div>
     <p class="hint" style="margin:0" id="acctState"></p>
     <p class="hint" style="margin:0">연봉·현금·모은 돈은 계정에 저장하지 않고 이 기기에만 둬요.</p>
-    <div class="btns"><button type="button" class="btn small ghost" id="syncNow">지금 저장·불러오기</button><button type="button" class="btn small ghost" id="acctBackup">백업 파일 내려받기</button></div>
+    <div class="btns"><button type="button" class="btn small ghost" id="syncNow">지금 저장·불러오기</button><button type="button" class="btn small ghost" data-go-calc>우리집 후보 더 찾기</button></div>
   </section>
   <section class="card" id="acctAlert" hidden>
     <h2 class="step">알림 (준비 중)</h2>
@@ -954,6 +983,38 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     var p = regionOverride(read(), region), mp = maxPrice(p);
     return { price: mp, html: mp > 0 ? barHTML(breakdown(Object.assign({}, p, { price: mp }))) + "<p class='lim'>" + limitText(p, mp) + "</p>" : "" };
   };
+  // ---- 우리집 후보 담기: 여러 집을 담아 두고 지금 내 돈으로 되는지 나란히 본다 ----
+  function candList() { var j = window.ujkJourney ? window.ujkJourney() : null; return j && Array.isArray(j.cands) ? j.cands : []; }
+  function candSave(list) { if (!window.ujkJourney) return; var j = window.ujkJourney(); j.cands = list.slice(0, 20); window.ujkJourneyReplace(j); }
+  function candCur() { var p = read(); return p.price > 0 ? { name: p.name && p.name.indexOf("예시") !== 0 ? p.name : "", price: p.price, region: p.region, ps: pickedPs || null } : null; }
+  function candIdx(list, c) { for (var i = 0; i < list.length; i++) if (+list[i].price === +c.price && (list[i].name || "") === (c.name || "") && list[i].region === c.region) return i; return -1; }
+  function candStatus(c) {
+    if (!calcTouched) return { cls: "", txt: "연봉·현금을 넣으면 보여요" };
+    var g = budgetGap(+c.price, c.region);
+    return g >= 0 ? { cls: "ok", txt: "지금 가능" + (g >= 100 ? "<small>남는 돈 " + won(g) + "</small>" : "") } : { cls: "no", txt: won(-g) + " 부족" };
+  }
+  function candRender() {
+    var list = candList(), cur = candCur(), btn = $("candBtn");
+    if (btn) {
+      var at = cur ? candIdx(list, cur) : -1;
+      btn.hidden = !cur; btn.className = at >= 0 ? "btn ghost candbtn" : "btn candbtn";
+      btn.textContent = at >= 0 ? "우리집 후보에 담겨 있어요 (빼기)" : "우리집 후보에 담기" + (list.length ? " (지금 " + list.length + "곳)" : "");
+    }
+    $("candCard").hidden = !list.length; $("candN").textContent = list.length ? list.length + "곳" : "";
+    $("candList").innerHTML = list.map(function (c, i) {
+      var st = candStatus(c);
+      return "<div class='crow'><div class='cmain'><b>" + esc(c.name || "이름 없는 집") + "</b><span>" + won(+c.price) + ", " + esc(REGION_NAME[c.region] || "") + "</span></div>"
+        + "<span class='cst " + st.cls + "'>" + st.txt + "</span>"
+        + "<div class='cact'><button type='button' class='txtbtn' data-cand-open='" + i + "'>이 집 다시 계산</button><button type='button' class='txtbtn' data-cand-del='" + i + "'>빼기</button></div></div>";
+    }).join("");
+  }
+  window.ujkCands = function () { return candList().map(function (c, i) { var st = candStatus(c); return { i: i, name: c.name || "이름 없는 집", price: won(+c.price), region: REGION_NAME[c.region] || "", status: st.txt, cls: st.cls }; }); };
+  window.ujkCandOpen = function (i) {
+    var c = candList()[i]; if (!c) return;
+    if (window.ujkShowTab) window.ujkShowTab("calc");
+    fill(c.name || "", +c.price, c.region, "담아 둔 우리집 후보를 다시 계산했어요.", c.ps);
+  };
+  window.ujkCandRender = function () { try { candRender(); } catch (e) {} };
   function render() {
     var p = read(), e = evaluate(p), gap = p.cash - e.need;
     $("priceEcho").textContent = p.price ? "= " + won(p.price) : "";
@@ -996,6 +1057,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       ? "이 군자금이면 <b>그 밖 수도권 " + won(mc) + "</b>까지가 우리집 후보예요." + (mr !== mc ? " 서울·경기 규제지역은 은행이 빌려주는 비율이 낮아 <b>" + won(mr) + "</b>까지예요." : " 서울·경기 규제지역도 같아요.")
       : "연봉과 현금을 넣으면 어디까지 노려볼 수 있는지 바로 알려 드려요";
     if (lastRows && !$("results").hidden) renderCandidates();
+    candRender();
 
     var capTxt = e.cap === Infinity ? "지방은 금액 상한 없음" : (p.price <= 150000 ? "시가 15억 이하" : p.price <= 250000 ? "시가 15억~25억" : "시가 25억 초과");
     var rows = [
@@ -1094,6 +1156,20 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (err) {} }
   var idx = [], presale = [], loading = null, sggCache = {}, pickedPs = null;
   setTimeout(function () { getJSON("data/meta.json").then(function (m) { if (m && !loading) showMeta(m); }); }, 0);
+  $("candBtn").addEventListener("click", function () {
+    var list = candList().slice(), cur = candCur(); if (!cur) return;
+    var at = candIdx(list, cur);
+    if (at >= 0) { list.splice(at, 1); track("cand-del"); }
+    else { if (list.length >= 20) { alert("우리집 후보는 20곳까지 담을 수 있어요. 안 볼 집을 빼고 담아 주세요."); return; } cur.at = Date.now(); list.unshift(cur); track("cand-add"); }
+    candSave(list); candRender();
+    if (at < 0) try { $("candCard").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+  });
+  $("candList").addEventListener("click", function (ev) {
+    var o = ev.target.closest("[data-cand-open]"), d = ev.target.closest("[data-cand-del]");
+    if (o) { track("cand-open"); window.ujkCandOpen(+o.getAttribute("data-cand-open")); }
+    if (d) { var list = candList().slice(); list.splice(+d.getAttribute("data-cand-del"), 1); candSave(list); candRender(); track("cand-del"); }
+  });
+  window.addEventListener("load", function () { candRender(); });
   $("toMap").addEventListener("click", function () { track("calc-to-map"); if (window.ujkShowTab) window.ujkShowTab("map", true); });
   $("toPlan").addEventListener("click", function () {   // 같은 페이지의 입주까지 일정 탭으로: 집 이름·가격(+분양 공고번호)만 넘긴다
     track("go-plan"); var p = read(), e = evaluate(p);   // 연봉·현금은 넘기지 않는다. 가격·대출 예상액·생애최초만
@@ -1900,7 +1976,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   // ---- 예시 ----
   $("loadExample").addEventListener("click", function () {
-    if (state.items.length && !confirm("예시 일정으로 바꿀까요? 지금 일정은 지워져요(필요하면 먼저 백업하세요).")) return;
+    if (state.items.length && !confirm("예시 일정으로 바꿀까요? 지금 일정은 지워져요.")) return;
     if (state.house.mode === "sale") { saleExample(); return; }
     var mv = addDays(today(), 24), c = addDays(mv, -5);
     state = { v: 1, house: Object.assign({}, DEF_HOUSE, { name: "예시: 분양 아파트 84㎡", price: 54810, loan: 50000, contract: addDays(mv, -900), movein: mv, opt: 1585, tax: 400, midInt: 1900 }), items: [], seq: 1, created: Date.now().toString(36) };
@@ -2571,7 +2647,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   }
   function isEmpty(d) {
     var j = d && d.journey, pl = d && d.plan;
-    var jEmpty = !j || ((!j.checks || !Object.keys(j.checks).length) && !j.route && !(j.banks || []).length && !(j.save && (j.save.target || j.save.monthly)));
+    var jEmpty = !j || ((!j.checks || !Object.keys(j.checks).length) && !j.route && !(j.banks || []).length && !(j.save && (j.save.target || j.save.monthly)) && !(j.cands || []).length);
     return jEmpty && (!pl || !(pl.items || []).length);
   }
   function applyServer(d) {   // 기기 전용 값(모은 돈·기존 대출·지난 계산·펼친 단계)은 이 기기 것을 그대로 둔다
@@ -2623,8 +2699,15 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
     $("acctFacts").innerHTML = row("열쇠까지 지도", sm ? (8 - sm.left) + "/8단계<small>" + (sm.now ? "지금 단계: " + esc(sm.now) + ", " : "") + "체크 " + cnt(j.checks) + "개</small>" : "체크 " + cnt(j.checks) + "개")
       + row("입주까지 일정", items.length ? "일정 " + items.length + "개" + (nx ? "<small>다음: " + (+nx.date.slice(5, 7)) + "/" + (+nx.date.slice(8, 10)) + " " + esc(nx.title || "") + "</small>" : "") : "아직 없음")
+      + row("우리집 후보", (j.cands || []).length ? (j.cands || []).length + "곳 담음" : "아직 없음<small>열쇠 갖기 전략에서 집을 고르고 담아 보세요</small>")
       + row("은행 비교", banks ? banks + "곳" : "아직 없음")
       + row("마지막 저장", meta && meta.uid === user.id && meta.at ? when(meta.at) : "확인 중");
+    var cs = window.ujkCands ? window.ujkCands() : [];
+    $("acctCands").hidden = !cs.length;
+    $("acctCands").innerHTML = cs.map(function (c) {
+      return "<div class='crow'><div class='cmain'><b>" + esc(c.name) + "</b><span>" + c.price + ", " + esc(c.region) + "</span></div><span class='cst " + c.cls + "'>" + c.status + "</span>"
+        + "<div class='cact'><button type='button' class='txtbtn' data-cand-open='" + c.i + "'>이 집 다시 계산</button></div></div>";
+    }).join("");
   }
   window.ujkAccountRender = renderAcct;
   function show() {
@@ -2632,7 +2715,10 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     ["acctRec", "acctAlert", "acctManage"].forEach(function (id) { $(id).hidden = !user; });
     $("acctCta").hidden = !!user;
     $("acctLead").textContent = user ? "내 기록이 계정에 자동으로 저장되고 있어요. 다른 기기에서 같은 계정으로 로그인하면 그대로 이어져요." : "가입하지 않아도 모든 기능을 쓸 수 있어요. 로그인하면 내 기록을 계정에 자동으로 저장해 지켜요.";
-    $("hLogin").textContent = user ? "내 계정" : "로그인";
+    var nm = user ? ((user.user_metadata || {}).name || (user.user_metadata || {}).full_name || (user.user_metadata || {}).nickname || (user.user_metadata || {}).preferred_username || (user.email || "").split("@")[0] || "회원") : "";
+    $("hLogin").textContent = user ? nm + "님" : "로그인";
+    $("hLogin").setAttribute("aria-haspopup", user ? "menu" : "false");
+    if (!user) $("hMenu").hidden = true;
     if (!user) return;
     var m = user.user_metadata || {}, prov = (user.app_metadata && user.app_metadata.provider) || "";
     var name = m.name || m.full_name || m.nickname || m.preferred_username || m.user_name || user.email || "회원";
@@ -2642,7 +2728,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   // ---- 맞추기: 이 기기 / 서버 중 바뀐 쪽을 따른다. 둘 다 바뀌었으면 묻는다 ----
   function upload(local, lh) {
     var text = JSON.stringify(local);
-    if (text.length > MAX) { setState("저장 내용이 200KB를 넘어 계정에 저장하지 못했어요. 지난 일정을 정리하거나 백업 파일을 써 주세요."); return Promise.resolve(); }
+    if (text.length > MAX) { setState("저장 내용이 200KB를 넘어 계정에 저장하지 못했어요. 지난 일정을 정리해 주세요."); return Promise.resolve(); }
     return sb.from("ujk_sync").upsert({ user_id: user.id, data: local }, { onConflict: "user_id" }).select("updated_at").single().then(function (r) {
       if (r.error) throw r.error;
       writeMeta({ uid: user.id, hash: lh, at: r.data.updated_at });
@@ -2727,9 +2813,27 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       return c.auth.signInWithOAuth({ provider: provider, options: { redirectTo: location.origin + location.pathname } });
     }).then(function (r) { if (r && r.error) throw r.error; }).catch(function () { b.disabled = false; toast("로그인 창을 열지 못했어요. 잠시 뒤 다시 눌러 주세요"); });
   }
-  $("hLogin").addEventListener("click", function () { goAcct("header"); });
+  function menu(open) {   // 로그인한 사람: 이름 버튼 → 우리집 후보 보기 / 내 기록·계정 정보 / 로그아웃
+    var m = $("hMenu"); m.hidden = !open; $("hLogin").setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) { var n = (window.ujkJourney && window.ujkJourney().cands || []).length; $("hmCandN").textContent = n ? n + "곳" : "아직 없음"; track("hmenu-open"); }
+  }
+  $("hLogin").addEventListener("click", function (ev) { ev.stopPropagation(); if (!user) return goAcct("header"); menu($("hMenu").hidden); });
+  document.addEventListener("click", function (ev) { if (!$("hMenu").hidden && !ev.target.closest(".hacct")) menu(false); });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !$("hMenu").hidden) { menu(false); $("hLogin").focus(); } });
+  $("hMenu").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-hm]"); if (!b) return; var k = b.getAttribute("data-hm"); menu(false); track("hmenu-" + k);
+    if (k === "acct") goAcct("menu");
+    else if (k === "logout") $("logout").click();
+    else if (k === "cands") {
+      if (window.ujkShowTab) window.ujkShowTab("calc", true);
+      var c = $("candCard");
+      if (c && !c.hidden) setTimeout(function () { try { var t = $("tabMap").parentNode.getBoundingClientRect().height + 12; window.scrollTo(0, c.getBoundingClientRect().top + window.pageYOffset - t); } catch (e) {} }, 60);   // 위에 붙은 탭에 제목이 가리지 않게
+      else toast("아직 담은 집이 없어요. 집을 검색하고 '우리집 후보에 담기'를 눌러 보세요");
+    }
+  });
   Array.prototype.forEach.call(document.querySelectorAll("[data-acct]"), function (b) { b.addEventListener("click", function () { goAcct(b.getAttribute("data-acct")); }); });
-  $("acctBackup").addEventListener("click", function () { var f = $("saveFile"); if (f) f.click(); track("account-backup"); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-go-calc]"), function (b) { b.addEventListener("click", function () { track("account-to-calc"); if (window.ujkShowTab) window.ujkShowTab("calc", true); }); });
+  $("acctCands").addEventListener("click", function (ev) { var o = ev.target.closest("[data-cand-open]"); if (o && window.ujkCandOpen) { track("account-cand-open"); window.ujkCandOpen(+o.getAttribute("data-cand-open")); try { window.scrollTo(0, 0); } catch (e) {} } });
   Array.prototype.forEach.call(document.querySelectorAll("[data-interest]"), function (b) {   // 준비 중 기능 관심 표시(이벤트만 센다)
     b.addEventListener("click", function () { track("interest-" + b.getAttribute("data-interest")); b.disabled = true; b.textContent = "알려 주셔서 고마워요"; toast("알려 주셔서 고마워요. 준비되면 내 계정 화면에서 켤 수 있어요"); });
   });
