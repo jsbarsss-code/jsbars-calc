@@ -59,6 +59,11 @@ body {
 .wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
 header h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 40px); margin: 0; letter-spacing: -0.01em; line-height: 1.3; text-wrap: balance; }
 header p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
+.htop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.hlogin { flex: none; margin-top: 4px; font: inherit; font-size: 14.5px; font-weight: 700; color: var(--accent); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+.hlogin:hover { border-color: var(--accent); }
+.hlogin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fresh .hlogin { margin-top: 0; }
 .card { background: var(--paper); border: 0; border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
 .step { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 19px; font-weight: 700; }
 .step .no { font-size: 19px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -246,6 +251,7 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--key); vertical-alig
 /* 처음 온 사람(값 없는 주소 + 이 기기 저장 없음)의 첫 화면: 답을 스크롤 없이, 저장·초기화는 숨김 */
 .fresh header h1 { font-size: 22px; }
 .fresh header p, .fresh #saveCard, .fresh #mapReset { display: none; }
+.fresh.showacct #saveCard { display: grid; }
 .start { gap: 14px; }
 .start h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(23px, 6.2vw, 30px); line-height: 1.35; letter-spacing: -0.01em; text-wrap: balance; }
 .start .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -395,7 +401,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
 <div class="wrap">
   <header>
-    <h1>우리집 열쇠가 내 손에<svg class="key" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 12h10M18.5 12v3.5M21.5 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></h1>
+    <div class="htop"><h1>우리집 열쇠가 내 손에<svg class="key" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 12h10M18.5 12v3.5M21.5 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></h1><button type="button" class="hlogin" id="hLogin">로그인</button></div>
     <p>집이 없어도, 아직 아무것도 몰라도 괜찮아요. 내 돈으로 지금 우리집 후보를 찾고, 계약부터 열쇠 받는 날까지 한 단계씩 같이 가요.</p>
   </header>
 
@@ -2550,8 +2556,15 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   // ---- 화면 ----
   function setState(t) { $("acctState").textContent = t; }
+  function goAcct() {   // 어느 화면·처음 방문이든 지도 탭의 로그인 상자로
+    document.documentElement.classList.add("showacct");
+    if (window.ujkShowTab) window.ujkShowTab("map");
+    setTimeout(function () { try { $("acct").scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} if (!user) try { $("acctAgree").focus({ preventScroll: true }); } catch (e) {} }, 60);
+    track(user ? "hlogin-account" : "hlogin-open");
+  }
   function show() {
     $("acctOut").hidden = !!user; $("acctIn").hidden = !user;
+    $("hLogin").textContent = user ? "내 계정" : "로그인";
     if (!user) return;
     var m = user.user_metadata || {}, prov = (user.app_metadata && user.app_metadata.provider) || "";
     var name = m.name || m.full_name || m.nickname || m.preferred_username || m.user_name || user.email || "회원";
@@ -2628,12 +2641,20 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   function login(provider) {
     if (!$("acctAgree").checked) { toast("먼저 처리방침 동의에 체크해 주세요"); $("acctAgree").focus(); return; }
+    var ua = navigator.userAgent || "", inKakao = /KAKAOTALK/i.test(ua), inApp = inKakao || /NAVER\(inapp|; wv\)|Instagram|FBAN|FBAV|Line\//i.test(ua);
+    if (provider === "google" && inApp) {   // 구글은 앱 안 브라우저(웹뷰) 로그인을 막는다(403 disallowed_useragent) → 기본 브라우저로 연다
+      track("login-google-inapp");
+      if (inKakao) { toast("구글 로그인은 카카오톡 안에서 막혀 있어요. 기본 브라우저로 열게요"); setTimeout(function () { location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(location.origin + location.pathname); }, 900); }
+      else toast("구글 로그인은 앱 안 브라우저에서 막혀 있어요. 오른쪽 위 메뉴의 '다른 브라우저로 열기'로 연 뒤 눌러 주세요");
+      return;
+    }
     var b = $(provider === "kakao" ? "loginKakao" : "loginGoogle"); b.disabled = true;
     track("login-start-" + provider);
     client().then(function (c) {
       return c.auth.signInWithOAuth({ provider: provider, options: { redirectTo: location.origin + location.pathname } });
     }).then(function (r) { if (r && r.error) throw r.error; }).catch(function () { b.disabled = false; toast("로그인 창을 열지 못했어요. 잠시 뒤 다시 눌러 주세요"); });
   }
+  $("hLogin").addEventListener("click", goAcct);
   $("loginKakao").addEventListener("click", function () { login("kakao"); });
   $("loginGoogle").addEventListener("click", function () { login("google"); });
   $("syncNow").addEventListener("click", function () { setState("맞추는 중…"); sync(true); });
