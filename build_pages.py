@@ -268,7 +268,7 @@ def write_region(out, sgg, rname, region, items, built, urls):
     body = f"""<nav class="crumb"><a href="{root}apt/">지역별 실거래</a></nav>
 <h1>{e(rname)} 아파트, 얼마 있어야 살 수 있을까?</h1>
 <p class="sub">최근 12개월 거래 {MIN_TRADES}건 이상 단지 {len(items)}곳 · 가장 많이 거래된 면적의 중간값 · {REGION_NAME[region]} 생애최초 기준 필요한 현금</p>
-<a class="cta" href="{root}#calc">내 연봉·현금으로 닿는 집 찾기</a>
+<a class="cta" href="{root}#calc">내 연봉·현금으로 지금 우리집 후보 찾기</a>
 <section class="card list">{''.join(rows)}</section>"""
     write(out, path, page(path, title, desc, body, root, built))
     urls.append(path)

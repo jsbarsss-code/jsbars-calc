@@ -368,7 +368,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 <div class="wrap">
   <header>
     <h1>우리집 열쇠가 내 손에<svg class="key" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 12h10M18.5 12v3.5M21.5 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></h1>
-    <p>집이 없어도, 아직 아무것도 몰라도 괜찮아요. 내 돈으로 닿는 집을 찾고, 계약부터 열쇠 받는 날까지 한 단계씩 같이 가요.</p>
+    <p>집이 없어도, 아직 아무것도 몰라도 괜찮아요. 내 돈으로 지금 우리집 후보를 찾고, 계약부터 열쇠 받는 날까지 한 단계씩 같이 가요.</p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="화면 고르기">
@@ -382,7 +382,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   <div class="view" id="viewMap" role="tabpanel" aria-labelledby="tabMap">
     <section class="card start" id="startHero" hidden aria-labelledby="startTitle">
-      <h2 id="startTitle">연봉과 모은 돈만 넣으면,<br>지금 닿는 집값이 바로 나와요</h2>
+      <h2 id="startTitle">연봉과 모은 돈만 넣으면,<br>지금 우리집 후보가 바로 나와요</h2>
       <div class="row2">
         <label class="f" for="sSalary">연봉 (세전)
           <span class="inrow"><input type="number" id="sSalary" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
@@ -424,7 +424,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </div>
 
   <div class="view" id="viewCalc" role="tabpanel" aria-labelledby="tabCalc" hidden>
-  <div class="vhead"><h2>우리집 열쇠 갖기 전략 짜기</h2><p>연봉과 꺼낼 수 있는 현금으로 닿는 집, 모자란 돈, 필요한 연봉을 계산해요. 입력한 숫자는 이 화면에서만 계산하고 어디에도 저장하지 않아요.</p></div>
+  <div class="vhead"><h2>우리집 열쇠 갖기 전략 짜기</h2><p>연봉과 꺼낼 수 있는 현금으로 지금 우리집 후보 가격, 모자란 돈, 필요한 연봉을 계산해요. 입력한 숫자는 이 화면에서만 계산하고 어디에도 저장하지 않아요.</p></div>
 
   <form id="form" autocomplete="off" style="display:grid; gap:16px;">
     <section class="card">
@@ -493,7 +493,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <div class="fact"><span class="k">이 집 열쇠에 필요한 연봉</span><span class="v" id="fSalary"></span></div>
       <div class="fact"><span class="k">은행이 보태 줄 수 있는 돈</span><span class="v" id="fLoan"></span></div>
       <div class="fact"><span class="k">매달 은행에 보낼 돈</span><span class="v" id="fMonthly"></span></div>
-      <div class="fact"><span class="k">지금 내 돈으로 닿는 최고가</span><span class="v" id="fMax"></span></div>
+      <div class="fact"><span class="k">지금 우리집 후보 최고가</span><span class="v" id="fMax"></span></div>
     </section>
 
     <details class="more">
@@ -849,7 +849,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       $("aSub").textContent = "대출 " + won(e.loan) + "에 내 현금 " + won(e.need) + "을 넣으면 됩니다. 남는 " + won(gap) + "은 이사·입주 준비 몫으로 두세요.";
     } else {
       a.className = "answer short"; $("aYes").textContent = "열쇠까지 " + won(-gap) + " 남았어요";
-      $("aSub").textContent = "대출 " + won(e.loan) + "을 받아도 현금이 " + won(e.need) + " 필요한데, 지금 " + won(p.cash) + "이 있어요. 아래 '열쇠에 필요한 연봉'과 '닿는 최고가'로 전략을 짜 보세요.";
+      $("aSub").textContent = "대출 " + won(e.loan) + "을 받아도 현금이 " + won(e.need) + " 필요한데, 지금 " + won(p.cash) + "이 있어요. 아래 '열쇠에 필요한 연봉'과 '지금 우리집 후보 최고가'로 전략을 짜 보세요.";
     }
 
     var ns = neededSalary(p);
@@ -1054,7 +1054,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     box.appendChild(tg);
     tg.querySelector("input").addEventListener("change", function (ev) { ev.stopPropagation(); fitOnly = this.checked; renderCandidates(); });
     tg.querySelector("input").addEventListener("input", function (ev) { ev.stopPropagation(); });
-    if (fitOnly && !fits.length && rows.length) box.insertAdjacentHTML("beforeend", '<p class="hint">지금 군자금으로 닿는 곳이 없어 전체를 보여 드려요. 아래 "열쇠에 필요한 연봉"으로 전략을 짜 보세요.</p>');
+    if (fitOnly && !fits.length && rows.length) box.insertAdjacentHTML("beforeend", '<p class="hint">지금 군자금으로는 우리집 후보가 없어 전체를 보여 드려요. 아래 "열쇠에 필요한 연봉"으로 전략을 짜 보세요.</p>');
     if (!rows.length) { box.insertAdjacentHTML("beforeend", '<p class="hint">찾은 단지가 없어요. 가격을 직접 넣어 주세요.</p>'); }
     lastList = (lastStation ? lastStation.split(" ")[0] : "검색") + " 후보 " + rows.length + "곳";
     list.slice(0, 30).forEach(function (r, i) {
@@ -1904,9 +1904,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   // ---- 단계 정의 (규칙은 자주 바뀌므로 판정 대신 '확인할 것'과 공식 확인처를 준다) ----
   var R_ALL = "", R_PS = "presale", R_SL = "sale";
   var STEPS = [
-    { t: "우리 돈으로 닿는 집", feel: "우리도 살 수 있긴 할까?",
-      lines: ["연봉과 꺼낼 수 있는 현금만 넣으면, 은행 대출까지 더해 닿는 최고 가격이 나와요.", "그 가격 안에 있는 단지를 역이나 동네 이름으로 찾아볼 수 있어요.", "숫자는 참고용이고, 실제 한도는 은행 심사로 정해져요."],
-      checks: [["c0a", "연봉·현금 넣고 '닿는 최고가' 보기", R_ALL, "calc"], ["c0b", "관심 단지나 동네 하나 계산해 보기", R_ALL, "house"]] },
+    { t: "지금 우리집 후보", feel: "우리도 살 수 있긴 할까?",
+      lines: ["연봉과 꺼낼 수 있는 현금만 넣으면, 은행 대출까지 더해 지금 우리집 후보 최고가가 나와요.", "그 가격 안에 있는 단지를 역이나 동네 이름으로 찾아볼 수 있어요.", "숫자는 참고용이고, 실제 한도는 은행 심사로 정해져요."],
+      checks: [["c0a", "연봉·현금 넣고 '지금 우리집 후보 최고가' 보기", R_ALL, "calc"], ["c0b", "관심 단지나 동네 하나 계산해 보기", R_ALL, "house"]] },
     { t: "분양? 매매? 길 고르기", feel: "청약을 기다릴까, 지금 살까?",
       lines: ["분양(새 아파트 청약)은 계약금(보통 10~20%)을 먼저 내고, 2~3년 뒤 입주할 때 잔금을 내요. 중도금은 보통 대출로 내요.", "매매(기존 집)는 계약 후 2~3개월 안에 잔금까지 다 내요. 대신 바로 들어가 살 수 있어요.", "같은 예산으로 두 길에 필요한 돈이 언제 얼마인지 나란히 비교해 보세요."],
       checks: [["c1a", "분양과 매매 차이 비교해 보기", R_ALL], ["c1c", "우리 집 고르는 기준 3가지 정하기", R_ALL, "crit"], ["c1b", "우리 길 고르기", R_ALL, "route"]] },
@@ -1975,7 +1975,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   // ---- 단계별 '내 숫자' ----
   function mine(i, sn, pl) {
     var p = sn && sn.touched ? sn : null;
-    if (i === 0) return p ? "<div class='mfact'>연봉 <b>" + won(p.salary) + "</b> · 현금 <b>" + won(p.cash) + "</b>이면<br>규제지역 <b>" + won(p.maxReg) + "</b>, 그 밖 수도권 <b>" + won(p.maxCap) + "</b>까지 닿아요.</div>"
+    if (i === 0) return p ? "<div class='mfact'>연봉 <b>" + won(p.salary) + "</b> · 현금 <b>" + won(p.cash) + "</b>이면<br>규제지역 <b>" + won(p.maxReg) + "</b>, 그 밖 수도권 <b>" + won(p.maxCap) + "</b>까지가 지금 우리집 후보예요.</div>"
       : J.last ? "<div class='mfact'>지난번 계산(" + md(J.last.at) + "): 규제지역 <b>" + won(J.last.maxReg) + "</b>, 그 밖 수도권 <b>" + won(J.last.maxCap) + "</b>까지 닿았어요. 숫자가 바뀌었으면 다시 계산해 보세요.</div>"
       : "<div class='mfact'>아직 계산 전이에요. 연봉과 현금만 넣어 보세요.</div>";
     if (i === 1) {
@@ -2122,7 +2122,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     STEPS.forEach(function (s, i) { var st = stepStat(i, sn, pl); if (st.full) done++; else if (cur < 0) cur = i; });
     var p = sn && sn.touched ? sn : null, lines = [];
     lines.push(["지금 단계", cur < 0 ? "열쇠 받기 완료" : cur + ". " + STEPS[cur].t]);
-    var lm = p || J.last; if (lm) lines.push(["우리 돈으로 닿는 집", "규제지역 " + won(lm.maxReg) + " · 그 밖 수도권 " + won(lm.maxCap)]);
+    var lm = p || J.last; if (lm) lines.push(["지금 우리집 후보", "규제지역 " + won(lm.maxReg) + " · 그 밖 수도권 " + won(lm.maxCap)]);
     if (J.route) lines.push(["고른 길", J.route === "presale" ? "분양(청약)" : "매매"]);
     var sv = J.save; if (sv.target) { var left = Math.max(0, sv.target - sv.have), m = sv.monthly > 0 ? Math.ceil(left / sv.monthly) : 0; lines.push(["첫 목돈", left ? "목표 " + won(sv.target) + " 중 " + won(left) + " 남음" + (m ? " · 약 " + m + "개월" : "") : "목표 " + won(sv.target) + " 모음"]); }
     var pick = J.banks.filter(function (b) { return b.pick && b.name; })[0];
@@ -2402,7 +2402,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 })();
 </script>
 <script>
-(function () {   // 처음 온 사람의 첫 화면(#startHero): 연봉·현금 → 닿는 집값을 지도 탭 맨 위에서 바로. 값은 계산기 입력칸으로 넘겨 같은 공식으로 계산한다(저장·전송 없음).
+(function () {   // 처음 온 사람의 첫 화면(#startHero): 연봉·현금 → 지금 우리집 후보 최고가를 지도 탭 맨 위에서 바로. 값은 계산기 입력칸으로 넘겨 같은 공식으로 계산한다(저장·전송 없음).
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   if (!document.documentElement.classList.contains("fresh")) return;
@@ -2417,7 +2417,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function answer() {
     var s = window.ujkCalcSnapshot ? window.ujkCalcSnapshot() : null; if (!s) return;
     var r = Math.floor(s.maxReg / 100) * 100, c = Math.floor(s.maxCap / 100) * 100;
-    $("sAnswer").innerHTML = "<span class='sl'>" + (used ? "지금 내 돈으로 닿는 집값 (은행 대출 포함)" : "예시 값이에요. 내 숫자로 바꿔 보세요") + "</span>"
+    $("sAnswer").innerHTML = "<span class='sl'>" + (used ? "지금 우리집 후보 최고가 (은행 대출 포함)" : "예시 값이에요. 내 숫자로 바꿔 보세요") + "</span>"
       + "<span class='sb'>" + won(c) + "까지</span>"
       + "<span class='ss'>" + (r === c ? "수도권 어디든, 서울·경기 규제지역도 같아요." : "그 밖 수도권 기준이에요. 서울·경기 규제지역은 <b>" + won(r) + "</b>까지예요.") + "</span>";
   }
