@@ -20,7 +20,7 @@ SCRIPT_HOSTS = [
     "https://dapi.kakao.com",         # 카카오 지도 SDK·장소 검색(JSONP)
     "https://t1.daumcdn.net",         # 카카오 지도 SDK 본체
 ]
-CONNECT = ["'self'", SUPABASE, "https://jsbars.goatcounter.com", "https://dapi.kakao.com"]
+CONNECT = ["'self'", SUPABASE, "https://jsbars.goatcounter.com", "https://dapi.kakao.com", "https://kapi.kakao.com"]   # kapi: 카카오톡 공유 메시지 검증(빠지면 공유가 4002로 실패)
 IMG = ["'self'", "data:", "blob:", "https://jsbars.goatcounter.com", "https://*.kakaocdn.net", "https://*.daumcdn.net"]
 
 INLINE = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", re.S | re.I)
