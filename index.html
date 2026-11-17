@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="google-site-verification" content="mXhv_scKD5wdjCWAi8QH5hj8-lQRUvxkQl6kPn_nAb8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>if (window.top !== window.self) { try { window.top.location.replace(window.self.location.href); } catch (e) { document.documentElement.style.display = "none"; } }   // 다른 사이트가 이 페이지를 몰래 겹쳐 띄워 로그인·탈퇴 버튼을 누르게 하는 것(클릭재킹) 막기</script>
 <meta name="description" content="사고 싶은 집 가격과 내 연봉·현금만 넣으면 살 수 있는지, 모자란 금액, 필요한 연봉을 바로 계산합니다. 분양 계약금·중도금·잔금과 입주 전 업체 일정도 한 곳에서 관리하세요.">
 <meta property="og:title" content="내 연봉으로 이 집 살 수 있을까? — 우리집 열쇠가 내 손에">
 <meta property="og:description" content="찜한 집, 내 연봉이랑 모은 돈으로 열쇠까지 얼마 남았는지 계산해요. 수도권 실거래·분양가 자동 검색.">
@@ -15,7 +17,7 @@
 <link rel="canonical" href="https://jsbarsss-code.github.io/jsbars-calc/">
 <title>내 연봉으로 살 수 있는 집 계산기 · 주담대 한도·필요 현금 | 우리집 열쇠가 내 손에</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" integrity="sha384-GIdEBaqGN9mNkDkMkzMHW8EKUqtpPIe/sLj1X7DIrnc9uPtLROJgmuDlh+3rBw0j" crossorigin="anonymous">
 <style>
 /* 레이아웃: 폰 기준 한 줄 흐름 — ① 사고 싶은 집 → ② 내 돈 → 답 한 문장 → 접힌 상세 */
 :root {
@@ -71,6 +73,7 @@ header p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
 .hmenu button:hover, .hmenu button:focus-visible { background: var(--bg); outline: none; }
 .hmenu button[data-hm="logout"] { color: var(--muted); border-top: 1px solid var(--line); border-radius: 0 0 6px 6px; margin-top: 4px; padding-top: 12px; }
 .hmenu small { color: var(--muted); font-size: 14px; }
+#acctManage .btns { flex-direction: column; align-items: flex-start; gap: 0; }
 .card { background: var(--paper); border: 0; border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
 .step { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 19px; font-weight: 700; }
 .step .no { font-size: 19px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -378,6 +381,18 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 .perks b { font-size: 16.5px; }
 .perks span { font-size: 14.5px; color: var(--muted); }
 .candbtn { justify-self: start; margin-top: 8px; }
+.sfind { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+.sfind label.f { color: var(--ink); font-weight: 700; font-size: 16px; }
+.sfind .inrow .btn { flex: none; }
+.cnews { grid-column: 1 / -1; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+.cnews .tag { vertical-align: 1px; }
+.mnext { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 16px; }
+.mnext span { font-size: 14px; color: var(--muted); }
+.mnext .txtbtn { padding: 0 2px; color: var(--accent); }
+details.hmore { border-top: 1px solid var(--line); padding-top: 10px; }
+details.hmore summary { cursor: pointer; font-size: 15.5px; font-weight: 600; color: var(--accent); }
+details.hmore summary small { color: var(--muted); font-weight: 400; }
+details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 .candn { font-size: 15px; font-weight: 700; color: var(--muted); margin-left: 4px; }
 .clist { display: grid; }
 .crow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: start; }
@@ -387,6 +402,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 .cmain span { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .cst { font-size: 15px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cst small { display: block; font-size: 13.5px; font-weight: 500; color: var(--muted); }
+.cst:not(.ok):not(.no) { color: var(--muted); font-weight: 500; font-size: 13.5px; white-space: normal; max-width: 8.5em; }
 .cst.ok { color: var(--accent); }
 .cst.no { color: var(--bad); }
 .cact { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; margin-left: -6px; }
@@ -418,7 +434,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     return location.pathname + (src ? "#from-" + src + "-page" : linked ? "#from-blog-link" : "");
   } };
 </script>
-<script data-goatcounter="https://jsbars.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script data-goatcounter="https://jsbars.goatcounter.com/count" async src="https://gc.zgo.at/count.v4.js" integrity="sha384-nRw6qfbWyJha9LhsOtSb2YJDyZdKvvCFh0fJYlkquSFjUxp9FVNugbfy8q1jdxI+" crossorigin="anonymous"></script>
 </head>
 <body>
 <script>
@@ -446,6 +462,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   <div id="restoreBanner" class="banner warn" hidden></div>
   <div id="inappBanner" class="banner warn" hidden></div>
   <div id="nudgeTop" class="nudge top" hidden></div>
+  <div id="candNewsTop" class="nudge top" hidden></div>
 
   <div class="view" id="viewMap" role="tabpanel" aria-labelledby="tabMap">
     <section class="card start" id="startHero" hidden aria-labelledby="startTitle">
@@ -460,7 +477,13 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       </div>
       <label class="check" for="sFirst"><input type="checkbox" id="sFirst"> <span>생애 첫 집이에요</span></label>
       <div class="sans" id="sAnswer" aria-live="polite"></div>
-      <div class="btns"><button type="button" class="btn" id="sToCalc">어떻게 나온 숫자인지 보기</button><button type="button" class="btn ghost" id="sToMap">열쇠까지 남은 단계 보기</button></div>
+      <div class="sfind">
+        <label class="f" for="sQ">이 가격 안에서 살 수 있는 단지 찾기
+          <span class="inrow"><input type="search" id="sQ" maxlength="40" placeholder="동네나 역 (예: 운정중앙역, 동탄)" autocomplete="off" enterkeyhint="search"><button type="button" class="btn" id="sFind">찾기</button></span>
+        </label>
+        <span class="hint">마음에 드는 집은 <b>우리집 후보에 담기</b>로 모아 두고 나란히 비교할 수 있어요.</span>
+      </div>
+      <div class="btns"><button type="button" class="btn ghost" id="sToCalc">어떻게 나온 숫자인지 보기</button><button type="button" class="btn ghost" id="sToMap">열쇠까지 남은 단계 보기</button></div>
       <ul class="proof">
         <li>운영자가 직접 지나온 길이에요. 분양가 5억 4,810만 원 집을 모은 돈 5천만 원으로 시작해 2026년 11월 열쇠를 받았어요.</li>
         <li id="sData">국토교통부 실거래가와 청약홈 분양가를 매주 반영해요.</li>
@@ -472,12 +495,12 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     <div class="mapgrid" id="mapGrid"><div class="msteps" id="mapSteps"></div><div class="mdetail" id="mapDetail" hidden></div></div>
     <section class="card" id="saveCard">
       <h2 class="step">내 진행 저장·보내기</h2>
-      <p class="hint" style="margin:0">지도와 일정표는 지금 이 기기의 브라우저에 있어요. 다른 휴대폰·PC에서 이어 하거나 잃어버리지 않으려면 저장해 두세요. 가입하지 않아도 다 쓸 수 있고, 로그인하지 않으면 운영자 서버에 아무것도 남지 않아요.</p>
+      <p class="hint" style="margin:0">지도와 일정은 이 기기에 저장돼 있어요. 로그인하지 않으면 서버에 아무것도 남지 않아요.</p>
       <div class="btns">
         <button type="button" class="btn" id="saveKakao">카카오톡으로 보내기</button>
         <button type="button" class="btn ghost" id="saveImage">요약 이미지 저장</button>
       </div>
-      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면, 어느 기기에서든 메시지의 <b>이어서 하기</b>를 눌러 보낸 화면 그대로 이어서 할 수 있어요. 입력한 연봉·현금과 일정·금액이 담기니 나에게만 보내 주세요(가족에게는 입주까지 일정의 <b>보기 전용</b> 보내기를 써 주세요).</p>
+      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면 다른 기기에서 <b>이어서 하기</b>로 열 수 있어요. 연봉·현금도 담기니 나에게만 보내 주세요.</p>
       <details class="more"><summary>예전에 저장한 백업 파일 불러오기</summary><div class="inner"><div class="btns">
         <button type="button" class="btn small ghost" id="saveFile" hidden>백업 파일 저장</button>
         <label class="btn small ghost" for="loadFile" style="display:inline-block">백업 파일 고르기</label>
@@ -496,7 +519,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </div>
 
   <div class="view" id="viewCalc" role="tabpanel" aria-labelledby="tabCalc" hidden>
-  <div class="vhead"><h2>우리집 열쇠 갖기 전략 짜기</h2><p>연봉과 꺼낼 수 있는 현금으로 지금 우리집 후보 가격, 모자란 돈, 필요한 연봉을 계산해요. 입력한 숫자는 이 화면에서만 계산하고 어디에도 저장하지 않아요.</p></div>
+  <div class="vhead"><h2>우리집 열쇠 갖기 전략 짜기</h2><p>내 돈으로 살 수 있는 집값, 모자란 돈, 필요한 연봉을 계산해요. 넣은 연봉·현금은 저장하지 않아요.</p></div>
 
   <form id="form" autocomplete="off" style="display:grid; gap:16px;">
     <section class="card">
@@ -518,7 +541,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
     <section class="card">
       <h2 class="step"><span class="no">2</span>우리집 후보 검색하기</h2>
-      <label class="f" for="q">살고 싶은 동네의 역이나 단지 이름을 넣어 보세요. 역으로 찾으면 역세권 순, 내 예산 안 단지만 골라 보여 드려요
+      <label class="f" for="q">역이나 단지 이름을 넣으면 내 예산 안 단지를 골라 보여 드려요
         <input type="search" id="q" maxlength="40" placeholder="단지명 또는 역 이름 (예: 운정중앙역, 헬리오시티)" autocomplete="off">
       </label>
       <div id="results" class="results" hidden></div>
@@ -533,7 +556,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
           <li><span class="tchk" aria-hidden="true">✓</span>한국부동산원 청약홈 분양정보 <small>(입주자모집공고 분양가)</small></li>
         </ul>
         </details>
-        <span class="hint">단지를 고르면 그 단지의 최근 실거래가나 분양가가 자동으로 채워져요. 마음에 둔 집이 없으면 아래에 직접 넣으세요.</span>
+        <span class="hint">단지를 고르면 가격이 자동으로 채워져요. 없으면 아래에 직접 넣으세요.</span>
       </div>
       <label class="f" for="name">우리집 후보 별명 (선택)
         <input type="text" id="name" maxlength="40" placeholder="예: 정릉풍림아이원 59㎡, 우리 첫 집">
@@ -617,7 +640,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </form>
     <section class="card">
       <h2 class="step">다음에 이어서 하려면</h2>
-      <p class="hint" style="margin:0">지금 입력과 지도·일정을 카톡 <b>나와의 채팅</b>에 보내 두면, 다른 휴대폰·PC에서 <b>이 화면 그대로</b> 이어서 할 수 있어요. 링크에 연봉·현금도 담기니 나에게만 보내 주세요.</p>
+      <p class="hint" style="margin:0">카톡 <b>나와의 채팅</b>으로 보내 두면 다른 기기에서 이 화면 그대로 이어져요. 연봉·현금도 담기니 나에게만 보내 주세요.</p>
       <div class="btns savebar"><button type="button" class="btn" data-save="Kakao" data-from="calc">카카오톡으로 보내기</button><button type="button" class="btn ghost" data-save="Image" data-from="calc">요약 이미지 저장</button></div>
     </section>
   </div>
@@ -625,7 +648,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   <div class="view" id="viewPlan" role="tabpanel" aria-labelledby="tabPlan" hidden>
   <div class="vhead"><h2>계약부터 입주까지 일정 챙기기</h2></div>
   <div id="nudgePlan" class="nudge card" hidden></div>
-  <p class="hint pintro">엑셀과 휴대폰 일정표에 따로 적던 납입일·실측·시공·배송 일정을 여기 한 곳에 모아요. 날짜를 바꾸면 순서가 꼬였는지 알려 드려요. 이 탭에 넣은 내용은 <b>이 기기의 브라우저에 저장</b>돼요. 로그인한 경우에만 내 계정에도 저장돼요.</p>
+  <p class="hint pintro">납입일과 실측·시공·배송 일정을 한 곳에 모아요. 날짜 순서가 꼬이면 알려 드려요.</p>
   <div id="sharedBanner" class="banner warn" hidden>
     <span>가족이 보낸 <b>보기 전용 일정</b>이에요.<span id="sharedAt"></span> 고치려면 내 일정으로 가져오세요(지금 이 기기에 있던 일정은 바뀝니다).</span>
     <div class="btns"><button type="button" class="btn small" id="importShared">내 일정으로 가져오기</button><button type="button" class="btn small ghost" id="myPlan">내 일정 보기</button></div>
@@ -661,6 +684,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         <input type="date" id="hMovein">
       </label>
     </div>
+    <details class="hmore" id="houseMore"><summary>납입 비율·회차·세금 자세히 <small>(기본값으로 채워져 있어요)</small></summary><div class="inner">
     <div class="row3">
       <label class="f" for="hDep">계약금 %
         <input type="number" id="hDep" min="0" max="100" step="5" inputmode="numeric">
@@ -705,6 +729,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     <p class="hint sl" hidden>2025년 10·15 대책 기준 서울 전역과 경기 12곳(분당·과천·광명 등)이 2026년 말까지 지정돼 있어요. 지정은 바뀔 수 있으니 <a href="https://www.eum.go.kr" target="_blank" rel="noopener" style="color:var(--accent)">토지이음</a>이나 구청에서 확인해 주세요.</p>
     <p class="hint sl" hidden>취득세·중개보수는 계산기와 같은 기준(1주택 기본세율+지방교육세, 법정 상한)으로 자동으로 채워져요. 직접 고치면 그 값을 써요.</p>
     <p class="hint" id="splitLine"></p>
+    </div></details>
     <div class="btns"><button type="button" class="btn" id="genPay">납입 일정 만들기</button><button type="button" class="btn ghost" id="loadExample">예시 일정 보기</button></div>
   </section>
 
@@ -829,7 +854,8 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   </section>
   <section class="card" id="acctManage" hidden>
     <h2 class="step">계정 관리</h2>
-    <div class="btns"><button type="button" class="txtbtn" id="logout">로그아웃</button><button type="button" class="txtbtn" id="withdraw">탈퇴하고 저장 내용 지우기</button></div>
+    <div class="btns"><button type="button" class="txtbtn" id="logout">로그아웃</button><button type="button" class="txtbtn" id="logoutAll">모든 기기에서 로그아웃</button><button type="button" class="txtbtn" id="logoutWipe">로그아웃하고 이 기기 기록 지우기 (공용 PC)</button><button type="button" class="txtbtn" id="withdraw">탈퇴하고 저장 내용 지우기</button></div>
+    <p class="hint" style="margin:0">휴대폰을 잃어버렸거나 다른 사람 PC에서 로그인했다면 <b>모든 기기에서 로그아웃</b>을 눌러 주세요. 그 기기들은 다시 로그인해야 해요.</p>
     <p class="hint" style="margin:0">로그아웃하거나 탈퇴해도 이 기기의 지도·일정은 그대로 남아요. <a href="terms.html#privacy" target="_blank" rel="noopener">개인정보 처리방침</a></p>
   </section>
   </div>
@@ -986,7 +1012,30 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   // ---- 우리집 후보 담기: 여러 집을 담아 두고 지금 내 돈으로 되는지 나란히 본다 ----
   function candList() { var j = window.ujkJourney ? window.ujkJourney() : null; return j && Array.isArray(j.cands) ? j.cands : []; }
   function candSave(list) { if (!window.ujkJourney) return; var j = window.ujkJourney(); j.cands = list.slice(0, 20); window.ujkJourneyReplace(j); }
-  function candCur() { var p = read(); return p.price > 0 ? { name: p.name && p.name.indexOf("예시") !== 0 ? p.name : "", price: p.price, region: p.region, ps: pickedPs || null } : null; }
+  function candCur() { var p = read(); return p.price > 0 ? { name: p.name && p.name.indexOf("예시") !== 0 ? p.name : "", price: p.price, region: p.region, ps: pickedPs || null, ref: pickedRef || null } : null; }
+  var newsWait = {};
+  function md2(d) { var m = String(d || "").match(/\d{4}-(\d{2})-(\d{2})/); return m ? (+m[1]) + "/" + (+m[2]) : ""; }
+  function dday(d) { var t = new Date(); t.setHours(0, 0, 0, 0); var x = new Date(d + "T00:00:00"); var n = Math.round((x - t) / 864e5); return n === 0 ? "오늘" : "D-" + n; }
+  function candNews(c) {   // 담은 뒤 생긴 일: 매매 단지 = 새 실거래, 분양 = 다가오는 청약·계약 일정. 데이터가 아직 없으면 불러온 뒤 다시 그린다
+    var r = c.ref; if (!r) return null;
+    if (r.k === "apt") {
+      var cache = sggCache[r.sgg];
+      if (!cache) { if (!newsWait[r.sgg]) { newsWait[r.sgg] = 1; getSgg(r.sgg).then(function () { candRender(); if (window.ujkAccountRender && !$("viewAcct").hidden) window.ujkAccountRender(); }); } return null; }
+      var cx = cache[r.id], a = cx && cx.a.filter(function (z) { return z[0] === r.ar; })[0];
+      if (!a || a[2] <= r.d) return null;
+      var diff = a[1] - (+c.price);
+      return { k: "trade", date: a[2], price: a[1], fresh: a[2] > (r.seen || r.d),
+        txt: "<span class='tag new'>새 거래</span>" + md2(a[2]) + " " + won(a[1]) + (Math.abs(diff) >= 100 ? ", 담을 때보다 " + won(Math.abs(diff)) + (diff < 0 ? " 내림" : " 오름") : "") };
+    }
+    if (r.k === "ps") {
+      if (!presale.length) { if (!newsWait.ps) { newsWait.ps = 1; getJSON("data/presale.json").then(function (d) { if (d && !presale.length) presale = d; candRender(); if (window.ujkAccountRender && !$("viewAcct").hidden) window.ujkAccountRender(); }); } return null; }
+      var ps = presale.filter(function (z) { return z.no === r.no; })[0]; if (!ps) return null;
+      var today = new Date().toISOString().slice(0, 10);
+      var ev = [["청약 접수", ps.rcpt], ["당첨 발표", ps.win], ["계약", ps.cntrct && ps.cntrct[0]]].filter(function (e) { return e[1] && e[1] >= today; })[0];
+      return ev ? { k: "sched", date: ev[1], fresh: false, txt: "<span class='tag'>일정</span>" + ev[0] + " " + md2(ev[1]) + " (" + dday(ev[1]) + ")" } : null;
+    }
+    return null;
+  }
   function candIdx(list, c) { for (var i = 0; i < list.length; i++) if (+list[i].price === +c.price && (list[i].name || "") === (c.name || "") && list[i].region === c.region) return i; return -1; }
   function candStatus(c) {
     if (!calcTouched) return { cls: "", txt: "연봉·현금을 넣으면 보여요" };
@@ -1003,16 +1052,24 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     $("candCard").hidden = !list.length; $("candN").textContent = list.length ? list.length + "곳" : "";
     $("candList").innerHTML = list.map(function (c, i) {
       var st = candStatus(c);
+      var nw = candNews(c);
       return "<div class='crow'><div class='cmain'><b>" + esc(c.name || "이름 없는 집") + "</b><span>" + won(+c.price) + ", " + esc(REGION_NAME[c.region] || "") + "</span></div>"
         + "<span class='cst " + st.cls + "'>" + st.txt + "</span>"
+        + (nw ? "<span class='cnews'>" + nw.txt + "</span>" : "")
         + "<div class='cact'><button type='button' class='txtbtn' data-cand-open='" + i + "'>이 집 다시 계산</button><button type='button' class='txtbtn' data-cand-del='" + i + "'>빼기</button></div></div>";
     }).join("");
   }
-  window.ujkCands = function () { return candList().map(function (c, i) { var st = candStatus(c); return { i: i, name: c.name || "이름 없는 집", price: won(+c.price), region: REGION_NAME[c.region] || "", status: st.txt, cls: st.cls }; }); };
+  window.ujkCands = function () { return candList().map(function (c, i) { var st = candStatus(c), nw = candNews(c); return { i: i, name: c.name || "이름 없는 집", price: won(+c.price), region: REGION_NAME[c.region] || "", status: st.txt, cls: st.cls, news: nw ? nw.txt : "" }; }); };
   window.ujkCandOpen = function (i) {
     var c = candList()[i]; if (!c) return;
     if (window.ujkShowTab) window.ujkShowTab("calc");
-    fill(c.name || "", +c.price, c.region, "담아 둔 우리집 후보를 다시 계산했어요.", c.ps);
+    var nw = candNews(c);
+    pickedRef = c.ref || null;
+    if (nw && nw.k === "trade") {   // 새 실거래가 있으면 그 가격으로 다시 계산하고, 후보도 새 가격으로 갱신
+      var list = candList().slice(); list[i] = Object.assign({}, c, { price: nw.price, ref: Object.assign({}, c.ref, { d: nw.date, seen: nw.date }) }); candSave(list);
+      pickedRef = list[i].ref;
+      fill(c.name || "", nw.price, c.region, "담아 둔 집의 새 실거래가(" + md2(nw.date) + ")로 다시 계산했어요.", c.ps);
+    } else fill(c.name || "", +c.price, c.region, "담아 둔 우리집 후보를 다시 계산했어요.", c.ps);
   };
   window.ujkCandRender = function () { try { candRender(); } catch (e) {} };
   function render() {
@@ -1116,7 +1173,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     CALC_KEYS.forEach(function (k) { if (o[k] != null && o[k] !== "") $(k).value = o[k]; });
     if (o.name != null) $("name").value = String(o.name).slice(0, 40);
     if (LTV_TABLE[o.region]) $("region").value = o.region;
-    $("first").checked = !!o.first; $("baby").checked = !!o.baby; pickedPs = o.ps || null; houseExample = false; houseAuto = false;
+    $("first").checked = !!o.first; $("baby").checked = !!o.baby; pickedPs = /^\d{1,20}$/.test(o.ps) ? o.ps : null; houseExample = false; houseAuto = false;
     ltvTouched = false; stressTouched = false; syncAuto(); calcTouched = true;
     $("exampleNote").textContent = "이어하기 링크로 지난번 입력을 불러왔어요.";
     render();
@@ -1138,7 +1195,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     render();
   };
   $("form").addEventListener("input", function (ev) {
-    if (ev && ev.target && /^(price|name|region)$/.test(ev.target.id)) { houseExample = false; houseAuto = false; }
+    if (ev && ev.target && /^(price|name|region)$/.test(ev.target.id)) { houseExample = false; houseAuto = false; pickedRef = null; }
     calcTouched = true;
     render();
     if (!usedSent && window.goatcounter && window.goatcounter.count) {   // 입력을 처음 바꾼 순간 1회만 "계산해 봄" 이벤트
@@ -1154,7 +1211,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function regionForSgg(code) { return /^11/.test(code) || REG_SGG[code] ? "reg" : "capital"; }
   function norm(s) { return String(s || "").replace(/[\s()·\-]/g, "").toLowerCase(); }
   function track(path) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: path, title: path, event: true }); } catch (err) {} }
-  var idx = [], presale = [], loading = null, sggCache = {}, pickedPs = null;
+  var idx = [], presale = [], loading = null, sggCache = {}, pickedPs = null, pickedRef = null;   // pickedRef: 고른 단지(실거래 단지 id·면적·거래일 / 분양 공고번호) — 담은 집의 새 소식에 쓴다
   setTimeout(function () { getJSON("data/meta.json").then(function (m) { if (m && !loading) showMeta(m); }); }, 0);
   $("candBtn").addEventListener("click", function () {
     var list = candList().slice(), cur = candCur(); if (!cur) return;
@@ -1169,7 +1226,24 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     if (o) { track("cand-open"); window.ujkCandOpen(+o.getAttribute("data-cand-open")); }
     if (d) { var list = candList().slice(); list.splice(+d.getAttribute("data-cand-del"), 1); candSave(list); candRender(); track("cand-del"); }
   });
-  window.addEventListener("load", function () { candRender(); });
+  window.addEventListener("load", function () { candRender(); setTimeout(candBanner, 1500); });
+  function candBanner() {   // 담은 집에 아직 안 본 새 거래가 있으면 맨 위에 한 줄
+    try { if (sessionStorage.getItem("ujk-candnews")) return; } catch (e) {}
+    var list = candList(); if (!list.length) return;
+    var waiting = list.some(function (c) { return c.ref && c.ref.k === "apt" && !sggCache[c.ref.sgg]; });
+    list.forEach(function (c) { candNews(c); });
+    if (waiting) { setTimeout(candBanner, 1500); return; }
+    var hits = list.map(function (c) { return { c: c, n: candNews(c) }; }).filter(function (h) { return h.n && h.n.fresh; });
+    if (!hits.length) return;
+    var el = $("candNewsTop"), h = hits[0];
+    el.innerHTML = "<p><b>담아 둔 집에 새 소식</b> " + esc(h.c.name || "이름 없는 집") + " " + h.n.txt.replace(/<span class='tag new'>새 거래<\/span>/, "새 실거래 ") + (hits.length > 1 ? " 외 " + (hits.length - 1) + "곳" : "") + "</p>"
+      + "<div class='btns'><button type='button' class='btn small' data-cn='go'>우리집 후보 보기</button><button type='button' class='txtbtn' data-cn='ok'>확인</button></div>";
+    el.hidden = false; track("candnews-view");
+    try { sessionStorage.setItem("ujk-candnews", "1"); } catch (e) {}
+    var seen = function () { var l = candList().map(function (c) { var n = candNews(c); return n && n.fresh ? Object.assign({}, c, { ref: Object.assign({}, c.ref, { seen: n.date }) }) : c; }); candSave(l); el.hidden = true; };
+    el.querySelector("[data-cn='go']").addEventListener("click", function () { track("candnews-click"); seen(); if (window.ujkShowTab) window.ujkShowTab("calc", true); setTimeout(function () { var c = $("candCard"); if (c && !c.hidden) window.scrollTo(0, c.getBoundingClientRect().top + window.pageYOffset - 70); }, 80); });
+    el.querySelector("[data-cn='ok']").addEventListener("click", function () { track("candnews-ok"); seen(); });
+  }
   $("toMap").addEventListener("click", function () { track("calc-to-map"); if (window.ujkShowTab) window.ujkShowTab("map", true); });
   $("toPlan").addEventListener("click", function () {   // 같은 페이지의 입주까지 일정 탭으로: 집 이름·가격(+분양 공고번호)만 넘긴다
     track("go-plan"); var p = read(), e = evaluate(p);   // 연봉·현금은 넘기지 않는다. 가격·대출 예상액·생애최초만
@@ -1326,6 +1400,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       if (!cx) { showPicked(esc(x[1]), "거래 정보를 불러오지 못했어요.", []); return; }
       var chips = cx.a.map(function (a) {   // [전용㎡, 최근가, 최근일, 층, 건수, 최근5건 중간값, 12개월 최고]
         return chip(esc(pyeong(a[0], 0, "")) + " · 전용 " + a[0] + "㎡ · " + rooms(a[0], cx.y) + " <b>" + won(a[1]) + "</b><small>" + a[2] + " · " + esc(a[3]) + "층 · 최근 12개월 " + a[4] + "건</small>", function () {
+          pickedRef = { k: "apt", id: x[0], sgg: code, ar: a[0], d: a[2] };
           fill(cx.n + " " + pyeong(a[0], 0, "").replace("약 ", "") + "(" + a[0] + "㎡)", a[1], regionForSgg(code),
             "최근 거래가(" + a[2] + ")로 채웠어요. 최근 5건 중간값 " + won(a[5]) + " · 12개월 최고 " + won(a[6]) + ". 규제지역 여부는 직접 확인해 주세요.");
         });
@@ -1340,6 +1415,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     var region = (p.spec || p.adj || p.area === "서울") ? "reg" : (p.area ? "capital" : "local");
     var chips = (p.t || []).map(function (t) {   // [주택형, 전용㎡, 분양가 최고가, 공급세대]
       return chip(esc(pyeong(t[1], t[4] || 0, t[0])) + " · 전용 " + t[1] + "㎡ · " + rooms(t[1], String(p.mvn || "").slice(0, 4)) + " <b>" + won(t[2]) + "</b><small>" + esc(tyName(t[0])) + "타입 분양가(최고가) · " + t[3] + "세대</small>", function () {
+        pickedRef = { k: "ps", no: p.no };
         fill(p.n + " " + pyeong(t[1], t[4] || 0, t[0]), t[2], region, "분양가(주택형 최고가)로 채웠어요. 잔금대출은 감정가 기준이라 실제 한도는 달라질 수 있어요.", p.no);
       });
     });
@@ -1969,7 +2045,28 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     state = { v: 1, house: Object.assign({}, DEF_HOUSE), items: [], seq: 1, created: Date.now().toString(36) }; save(); houseToForm(); clearForm(); render();
   });
   function normalize(s) {
-    var o = { v: 1, icsMap: s.icsMap && typeof s.icsMap === "object" ? s.icsMap : null, icsAt: +s.icsAt || 0, house: Object.assign({}, DEF_HOUSE, s.house || {}), items: (s.items || []).filter(function (it) { return it && it.id && it.title; }).slice(0, 300), seq: +s.seq || 1, created: s.created || Date.now().toString(36) };
+    s = s && typeof s === "object" ? s : {};
+    var D8 = /^\d{4}-\d{2}-\d{2}$/, sh = s.house && typeof s.house === "object" ? s.house : {}, h = Object.assign({}, DEF_HOUSE);
+    Object.keys(DEF_HOUSE).forEach(function (k) {   // 공유 링크(보기 전용)·백업·계정에서 온 값도 화면에 끼워 넣기 전에 형태를 고정한다(XSS 방지)
+      var d = DEF_HOUSE[k], v = sh[k]; if (v === undefined || v === null) return;
+      if (typeof d === "number") h[k] = isFinite(+v) ? +v : d;
+      else if (typeof d === "boolean") h[k] = !!v;
+      else if (k === "mode") h[k] = v === "sale" ? "sale" : "presale";
+      else if (k === "contract" || k === "movein" || k === "midDate") h[k] = D8.test(v) ? v : "";
+      else h[k] = String(v).slice(0, 40);
+    });
+    var items = (Array.isArray(s.items) ? s.items : []).filter(function (it) { return it && typeof it === "object" && it.title; }).slice(0, 300);
+    var o = { v: 1, icsMap: s.icsMap && typeof s.icsMap === "object" && !Array.isArray(s.icsMap) ? s.icsMap : null, icsAt: +s.icsAt || 0, house: h, items: items, seq: +s.seq || 1, created: /^[a-z0-9]{1,16}$/.test(s.created) ? s.created : Date.now().toString(36) };
+    var used = {};
+    items.forEach(function (it, n) {
+      if (!/^i\d{1,6}$/.test(it.id) || used[it.id]) it.id = "i" + (9000 + n); used[it.id] = 1;
+      ["amt", "dep", "bal"].forEach(function (k) { if (it[k] != null) it[k] = isFinite(+it[k]) ? +it[k] : 0; });
+      if (it.stage != null && !STAGE[it.stage]) it.stage = "etc";
+      if (it.who != null && !WHO[it.who]) it.who = "cash";
+      if (it.pair != null && !/^i\d{1,6}$/.test(it.pair)) delete it.pair;
+      it.hist = (Array.isArray(it.hist) ? it.hist : []).filter(function (x) { return x && D8.test(x.f) && D8.test(x.t); }).slice(-20).map(function (x) { return { f: x.f, t: x.t }; });
+      ["est", "depPaid", "auto", "done", "flagged"].forEach(function (k) { if (it[k] != null) it[k] = !!it[k]; });
+    });
     o.items.forEach(function (it) { it.title = String(it.title).slice(0, 40); if (it.vendor) it.vendor = String(it.vendor).slice(0, 30); if (!/^\d{4}-\d{2}-\d{2}$/.test(it.date || "")) it.date = ""; if (!STATUS[it.status]) it.status = "todo"; if (!Array.isArray(it.hist)) it.hist = []; if (it.note) it.note = String(it.note).slice(0, 200); if (["pay", "work", "task"].indexOf(it.kind) < 0) it.kind = "work"; if (it.key && it.key !== "permit") delete it.key; var n = parseInt(String(it.id).slice(1), 10); if (n >= o.seq) o.seq = n + 1; });
     return o;
   }
@@ -2095,11 +2192,32 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   var KEY = "ujk-journey-v1";
-  var J = { route: "", checks: {}, save: { target: 0, have: 0, monthly: 0 }, banks: [], open: -1, crit: { min: 0, cap: 0, station: false }, debt: -1 };
-  try { var s0 = JSON.parse(localStorage.getItem(KEY) || "null"); if (s0 && typeof s0 === "object") J = Object.assign(J, s0); } catch (e) {}
-  if (!Array.isArray(J.banks)) J.banks = [];
-  if (!J.crit || typeof J.crit !== "object") J.crit = { min: 0, cap: 0, station: false };
-  J.banks.forEach(function (b) { if (!b.note && (b.early || b.extra)) b.note = [b.early, b.extra].filter(Boolean).join(", "); });
+  function cnum(v, d) { v = +v; return isFinite(v) ? v : (d === undefined ? 0 : d); }
+  function cstr(v, n) { return v == null ? "" : String(v).slice(0, n); }
+  var CDATE = /^\d{4}-\d{2}-\d{2}$/;
+  function clean(o) {   // 공유 링크·계정·이 기기 저장에서 온 지도 데이터를 숫자·날짜·정해진 값으로만 받는다(화면에 그대로 끼워 넣는 값이 있어 XSS 방지)
+    o = o && typeof o === "object" ? o : {};
+    var c = { route: o.route === "presale" || o.route === "sale" ? o.route : "", checks: {}, open: Math.round(cnum(o.open, -1)), debt: cnum(o.debt, -1) };
+    if (o.checks && typeof o.checks === "object") Object.keys(o.checks).slice(0, 200).forEach(function (k) { if (/^[A-Za-z0-9_-]{1,24}$/.test(k) && o.checks[k]) c.checks[k] = true; });
+    var sv = o.save && typeof o.save === "object" ? o.save : {}; c.save = { target: cnum(sv.target), have: cnum(sv.have), monthly: cnum(sv.monthly) };
+    var cr = o.crit && typeof o.crit === "object" ? o.crit : {}; c.crit = { min: cnum(cr.min), cap: cnum(cr.cap), station: !!cr.station };
+    c.banks = (Array.isArray(o.banks) ? o.banks : []).slice(0, 12).map(function (b) {
+      b = b && typeof b === "object" ? b : {};
+      return { name: cstr(b.name, 20), apr: cstr(b.apr, 12), lim: cstr(b.lim, 12), rate: cstr(b.rate, 20), note: cstr(b.note || [b.early, b.extra].filter(Boolean).join(", "), 40), pick: !!b.pick };
+    });
+    if (o.last && typeof o.last === "object") c.last = { maxReg: cnum(o.last.maxReg), maxCap: cnum(o.last.maxCap), at: CDATE.test(o.last.at) ? o.last.at : "" };
+    if (o.loanMsg) c.loanMsg = cstr(o.loanMsg, 40);
+    c.cands = (Array.isArray(o.cands) ? o.cands : []).slice(0, 20).map(function (x) {
+      x = x && typeof x === "object" ? x : {};
+      var r = x.ref && typeof x.ref === "object" ? x.ref : null, ref = null;
+      if (r && r.k === "apt" && /^\d{5}-\d{1,6}$/.test(r.id) && /^\d{5}$/.test(r.sgg)) ref = { k: "apt", id: r.id, sgg: r.sgg, ar: cnum(r.ar), d: CDATE.test(r.d) ? r.d : "", seen: CDATE.test(r.seen) ? r.seen : "" };
+      else if (r && r.k === "ps" && /^\d{1,20}$/.test(r.no)) ref = { k: "ps", no: r.no };
+      return { name: cstr(x.name, 40), price: cnum(x.price), region: { reg: 1, capital: 1, local: 1 }[x.region] ? x.region : "capital", ps: /^\d{1,20}$/.test(x.ps) ? x.ps : null, ref: ref, at: cnum(x.at) };
+    }).filter(function (x) { return x.price > 0; });
+    return c;
+  }
+  var J = clean(null);
+  try { var s0 = JSON.parse(localStorage.getItem(KEY) || "null"); if (s0 && typeof s0 === "object") J = clean(s0); } catch (e) {}
   function numOf(s) { var m = String(s || "").replace(/,/g, "").match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : NaN; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(J)); } catch (e) {} }
   function track(p) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} }
@@ -2294,14 +2412,18 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     var wide = window.matchMedia && window.matchMedia("(min-width: 960px)").matches;
     $("mapHead").innerHTML = "<div class='mtitle'>" + (left ? "열쇠까지 <b>" + left + "단계</b> 남았어요" : "열쇠를 받았어요. 축하해요!") + "</div>"
       + "<div class='mbarwrap" + (left ? "" : " full") + "'><div class='mbar' role='progressbar' aria-label='진행' aria-valuemin='0' aria-valuemax='8' aria-valuenow='" + done + "'><span style='width:" + Math.max(3, Math.round(done / STEPS.length * 100)) + "%'></span></div>" + KEY + "</div>"
-      + "<div class='hint' style='margin:0'>" + (J.route ? (J.route === "presale" ? "분양(청약) 길" : "매매 길") + "로 가는 중이에요. " : "") + "단계를 누르면 할 일과 내 숫자가 나와요.</div>";
+      + (function () {   // 다음 할 일 하나만 (체크 개수 대신)
+        if (cur < 0) return "";
+        var nx = visibleChecks(cur).filter(function (c) { return !isDone(c, sn, pl); })[0];
+        return "<div class='mnext'><span>다음 할 일</span><b>" + esc(nx ? nx[1] : STEPS[cur].t) + "</b><button type='button' class='txtbtn' data-open='" + cur + "'>바로 하기</button></div>";
+      })();
     var open = J.open >= 0 ? J.open : (J.open === -2 && !wide ? -1 : cur);
     if (wide && open < 0) open = cur < 0 ? STEPS.length - 1 : cur;
     $("mapGrid").className = "mapgrid" + (wide ? " wide" : "");
     var detail = "";
     $("mapSteps").innerHTML = STEPS.map(function (s, i) {
       var st = stats[i], state = st.full ? "done" : i === cur ? "now" : "todo";
-      var badge = st.passed ? "지나옴" : st.full ? "완료" : i === cur ? "지금 여기" : st.done + "/" + st.total;
+      var badge = st.passed ? "지나옴" : st.full ? "완료" : i === cur ? "지금 여기" : "";
       var body = "";
       if (i === open) {
         body = "<div class='mbody'>" + (wide ? "<h2>" + i + ". " + esc(s.t) + "</h2>" : "") + "<p class='feel'>“" + esc(s.feel) + "”</p><ul class='lines'>" + s.lines.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") + "</ul>"
@@ -2331,8 +2453,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     window.ujkJourneyReplace({}); if (window.ujkPlanReset) window.ujkPlanReset(); try { window.scrollTo(0, 0); } catch (e) {} track("map-reset-all");
   });
   window.ujkJourneyReplace = function (o) {
-    J = Object.assign({ route: "", checks: {}, save: { target: 0, have: 0, monthly: 0 }, banks: [], open: -1, crit: { min: 0, cap: 0, station: false }, debt: -1 }, o || {});
-    if (!Array.isArray(J.banks)) J.banks = []; save(); render();
+    J = clean(o); save(); render();
   };
   window.ujkJourneySummary = function () {   // 저장·공유·이미지에 쓰는 요약
     var sn = snap(), pl = plan(), done = 0, cur = -1;
@@ -2459,7 +2580,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function loadKakaoSdk() {
     if (window.Kakao) return Promise.resolve(true);   // Kakao.Share는 init 뒤에 생긴다
     return new Promise(function (res) {
-      var s = document.createElement("script"); s.src = KAKAO_SDK; s.async = true;
+      var s = document.createElement("script"); s.src = KAKAO_SDK; s.async = true; s.integrity = "sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"; s.crossOrigin = "anonymous";   // 버전 고정 + 무결성 해시(카카오 공식 값)
       s.onload = function () { res(!!window.Kakao); }; s.onerror = function () { res(false); };
       document.head.appendChild(s); setTimeout(function () { res(!!window.Kakao); }, 6000);
     });
@@ -2705,7 +2826,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     var cs = window.ujkCands ? window.ujkCands() : [];
     $("acctCands").hidden = !cs.length;
     $("acctCands").innerHTML = cs.map(function (c) {
-      return "<div class='crow'><div class='cmain'><b>" + esc(c.name) + "</b><span>" + c.price + ", " + esc(c.region) + "</span></div><span class='cst " + c.cls + "'>" + c.status + "</span>"
+      return "<div class='crow'><div class='cmain'><b>" + esc(c.name) + "</b><span>" + c.price + ", " + esc(c.region) + "</span></div><span class='cst " + c.cls + "'>" + c.status + "</span>" + (c.news ? "<span class='cnews'>" + c.news + "</span>" : "")
         + "<div class='cact'><button type='button' class='txtbtn' data-cand-open='" + c.i + "'>이 집 다시 계산</button></div></div>";
     }).join("");
   }
@@ -2844,6 +2965,17 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     if (!sb) return;
     sb.auth.signOut().finally(function () { user = null; writeMeta(null); show(); toast("로그아웃했어요. 이 기기의 지도·일정은 그대로 있어요"); track("logout"); });
   });
+  $("logoutAll").addEventListener("click", function () {   // 다른 기기의 로그인까지 끊는다(저장된 갱신 토큰 무효화)
+    if (!sb || !confirm("이 기기를 포함해 로그인한 모든 기기에서 로그아웃할까요? 각 기기의 지도·일정은 그대로 남아요.")) return;
+    sb.auth.signOut({ scope: "global" }).finally(function () { user = null; writeMeta(null); show(); toast("모든 기기에서 로그아웃했어요"); track("logout-all"); });
+  });
+  $("logoutWipe").addEventListener("click", function () {   // 공용 PC: 로그아웃하고 이 브라우저에 남은 지도·일정·담은 집까지 지운다(계정 사본은 그대로)
+    if (!sb || !confirm("로그아웃하고 이 기기의 지도·일정·담아 둔 집을 지울까요? 계정에 저장된 내용은 그대로라 다시 로그인하면 불러올 수 있어요.")) return;
+    sb.auth.signOut().finally(function () {
+      try { Object.keys(localStorage).filter(function (k) { return /^ujk-/.test(k); }).forEach(function (k) { localStorage.removeItem(k); }); sessionStorage.clear(); } catch (e) {}
+      track("logout-wipe"); location.replace(location.pathname);
+    });
+  });
   $("withdraw").addEventListener("click", function () {
     if (!sb || !user) return;
     if (!confirm("탈퇴하면 계정과 저장 내용이 바로 지워지고 되돌릴 수 없어요.\n이 기기의 지도·일정은 그대로 남아요.\n\n탈퇴할까요?")) return;
@@ -2934,6 +3066,17 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   $("sCash").addEventListener("input", function () { pass(this, "cash"); });
   $("sFirst").addEventListener("change", function () { pass(this, "first", true); });
   $("sToCalc").addEventListener("click", function () { track("hero-to-calc"); if (window.ujkUseMax) window.ujkUseMax("capital"); if (window.ujkShowTab) window.ujkShowTab("calc", true); });
+  function find() {
+    var t = $("sQ").value.trim();
+    if (t.length < 2) { $("sQ").focus(); $("sQ").placeholder = "동네나 역 이름을 두 글자 이상 넣어 주세요"; return; }
+    track("hero-find");
+    if (window.ujkUseMax) window.ujkUseMax("capital");
+    if (window.ujkShowTab) window.ujkShowTab("calc", true);
+    var q = $("q"); q.value = t; q.dispatchEvent(new Event("input", { bubbles: true }));
+    setTimeout(function () { try { var y = q.getBoundingClientRect().top + window.pageYOffset - 70; window.scrollTo(0, y); } catch (e) {} }, 80);
+  }
+  $("sFind").addEventListener("click", find);
+  $("sQ").addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); find(); } });
   $("sToMap").addEventListener("click", function () { track("hero-to-map"); try { $("mapHead").scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} });
   fetch("data/meta.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
     if (m && m.complexes) $("sData").textContent = "국토교통부 실거래가와 청약홈 분양가를 매주 반영해요. 단지 " + (+m.complexes).toLocaleString("ko-KR") + "곳, 분양 공고 " + (+m.presale || 0).toLocaleString("ko-KR") + "건.";

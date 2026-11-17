@@ -33,6 +33,7 @@ jobs:
         run: |
           cp index.html terms.html plan.html og.png site/
           python3 build_pages.py site
+          python3 tools/add_csp.py site/index.html site/terms.html site/plan.html   # 콘텐츠 보안 정책: 페이지 안 스크립트 해시 + 허용 호스트
           touch site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
