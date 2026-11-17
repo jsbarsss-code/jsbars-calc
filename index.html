@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="google-site-verification" content="mXhv_scKD5wdjCWAi8QH5hj8-lQRUvxkQl6kPn_nAb8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23155c45%22/%3E%3Ccircle cx=%2222%22 cy=%2232%22 r=%2210%22 fill=%22none%22 stroke=%22%23f3c35a%22 stroke-width=%226%22/%3E%3Cpath d=%22M32 32h22M46 32v9M53 32v7%22 stroke=%22%23f3c35a%22 stroke-width=%226%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script>if (window.top !== window.self) { try { window.top.location.replace(window.self.location.href); } catch (e) { document.documentElement.style.display = "none"; } }   // 다른 사이트가 이 페이지를 몰래 겹쳐 띄워 로그인·탈퇴 버튼을 누르게 하는 것(클릭재킹) 막기</script>
 <meta name="description" content="사고 싶은 집 가격과 내 연봉·현금만 넣으면 살 수 있는지, 모자란 금액, 필요한 연봉을 바로 계산합니다. 분양 계약금·중도금·잔금과 입주 전 업체 일정도 한 곳에서 관리하세요.">
@@ -1012,7 +1013,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   // ---- 우리집 후보 담기: 여러 집을 담아 두고 지금 내 돈으로 되는지 나란히 본다 ----
   function candList() { var j = window.ujkJourney ? window.ujkJourney() : null; return j && Array.isArray(j.cands) ? j.cands : []; }
   function candSave(list) { if (!window.ujkJourney) return; var j = window.ujkJourney(); j.cands = list.slice(0, 20); window.ujkJourneyReplace(j); }
-  function candCur() { var p = read(); return p.price > 0 ? { name: p.name && p.name.indexOf("예시") !== 0 ? p.name : "", price: p.price, region: p.region, ps: pickedPs || null, ref: pickedRef || null } : null; }
+  var NONAME = "직접 넣은 집", pickPending = false;   // pickPending: 단지는 골랐는데 면적을 아직 안 고름 → 담기 숨김
+  function candCur() { var p = read(); return p.price > 0 ? { name: p.name && p.name.indexOf("예시") !== 0 ? p.name : NONAME, price: p.price, region: p.region, ps: pickedPs || null, ref: pickedRef || null } : null; }
   var newsWait = {};
   function md2(d) { var m = String(d || "").match(/\d{4}-(\d{2})-(\d{2})/); return m ? (+m[1]) + "/" + (+m[2]) : ""; }
   function dday(d) { var t = new Date(); t.setHours(0, 0, 0, 0); var x = new Date(d + "T00:00:00"); var n = Math.round((x - t) / 864e5); return n === 0 ? "오늘" : "D-" + n; }
@@ -1036,7 +1038,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     }
     return null;
   }
-  function candIdx(list, c) { for (var i = 0; i < list.length; i++) if (+list[i].price === +c.price && (list[i].name || "") === (c.name || "") && list[i].region === c.region) return i; return -1; }
+  function candIdx(list, c) { for (var i = 0; i < list.length; i++) if (+list[i].price === +c.price && (list[i].name || NONAME) === (c.name || NONAME) && list[i].region === c.region) return i; return -1; }
   function candStatus(c) {
     if (!calcTouched) return { cls: "", txt: "연봉·현금을 넣으면 보여요" };
     var g = budgetGap(+c.price, c.region);
@@ -1046,20 +1048,21 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     var list = candList(), cur = candCur(), btn = $("candBtn");
     if (btn) {
       var at = cur ? candIdx(list, cur) : -1;
-      btn.hidden = !cur; btn.className = at >= 0 ? "btn ghost candbtn" : "btn candbtn";
+      btn.hidden = !cur || (at < 0 && (houseAuto || houseExample || pickPending));   // 예시·자동 최고가·면적 고르기 전엔 담지 않는다(이미 담긴 집 빼기는 그대로)
+      btn.className = at >= 0 ? "btn ghost candbtn" : "btn candbtn";
       btn.textContent = at >= 0 ? "우리집 후보에 담겨 있어요 (빼기)" : "우리집 후보에 담기" + (list.length ? " (지금 " + list.length + "곳)" : "");
     }
     $("candCard").hidden = !list.length; $("candN").textContent = list.length ? list.length + "곳" : "";
     $("candList").innerHTML = list.map(function (c, i) {
       var st = candStatus(c);
       var nw = candNews(c);
-      return "<div class='crow'><div class='cmain'><b>" + esc(c.name || "이름 없는 집") + "</b><span>" + won(+c.price) + ", " + esc(REGION_NAME[c.region] || "") + "</span></div>"
+      return "<div class='crow'><div class='cmain'><b>" + esc(c.name || NONAME) + "</b><span>" + won(+c.price) + ", " + esc(REGION_NAME[c.region] || "") + "</span></div>"
         + "<span class='cst " + st.cls + "'>" + st.txt + "</span>"
         + (nw ? "<span class='cnews'>" + nw.txt + "</span>" : "")
         + "<div class='cact'><button type='button' class='txtbtn' data-cand-open='" + i + "'>이 집 다시 계산</button><button type='button' class='txtbtn' data-cand-del='" + i + "'>빼기</button></div></div>";
     }).join("");
   }
-  window.ujkCands = function () { return candList().map(function (c, i) { var st = candStatus(c), nw = candNews(c); return { i: i, name: c.name || "이름 없는 집", price: won(+c.price), region: REGION_NAME[c.region] || "", status: st.txt, cls: st.cls, news: nw ? nw.txt : "" }; }); };
+  window.ujkCands = function () { return candList().map(function (c, i) { var st = candStatus(c), nw = candNews(c); return { i: i, name: c.name || NONAME, price: won(+c.price), region: REGION_NAME[c.region] || "", status: st.txt, cls: st.cls, news: nw ? nw.txt : "" }; }); };
   window.ujkCandOpen = function (i) {
     var c = candList()[i]; if (!c) return;
     if (window.ujkShowTab) window.ujkShowTab("calc");
@@ -1195,7 +1198,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     render();
   };
   $("form").addEventListener("input", function (ev) {
-    if (ev && ev.target && /^(price|name|region)$/.test(ev.target.id)) { houseExample = false; houseAuto = false; pickedRef = null; }
+    if (ev && ev.target && /^(price|name|region)$/.test(ev.target.id)) { houseExample = false; houseAuto = false; pickedRef = null; pickPending = false; }
     calcTouched = true;
     render();
     if (!usedSent && window.goatcounter && window.goatcounter.count) {   // 입력을 처음 바꾼 순간 1회만 "계산해 봄" 이벤트
@@ -1236,7 +1239,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     var hits = list.map(function (c) { return { c: c, n: candNews(c) }; }).filter(function (h) { return h.n && h.n.fresh; });
     if (!hits.length) return;
     var el = $("candNewsTop"), h = hits[0];
-    el.innerHTML = "<p><b>담아 둔 집에 새 소식</b> " + esc(h.c.name || "이름 없는 집") + " " + h.n.txt.replace(/<span class='tag new'>새 거래<\/span>/, "새 실거래 ") + (hits.length > 1 ? " 외 " + (hits.length - 1) + "곳" : "") + "</p>"
+    el.innerHTML = "<p><b>담아 둔 집에 새 소식</b> " + esc(h.c.name || NONAME) + " " + h.n.txt.replace(/<span class='tag new'>새 거래<\/span>/, "새 실거래 ") + (hits.length > 1 ? " 외 " + (hits.length - 1) + "곳" : "") + "</p>"
       + "<div class='btns'><button type='button' class='btn small' data-cn='go'>우리집 후보 보기</button><button type='button' class='txtbtn' data-cn='ok'>확인</button></div>";
     el.hidden = false; track("candnews-view");
     try { sessionStorage.setItem("ujk-candnews", "1"); } catch (e) {}
@@ -1270,7 +1273,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     b.addEventListener("click", onClick); return b;
   }
   function fill(name, price, region, note, ps) {
-    houseExample = false; houseAuto = false;
+    houseExample = false; houseAuto = false; pickPending = false;
     pickedPs = ps || null;   // 분양 단지면 청약홈 공고번호 — 입주까지 일정로 넘겨 계약일·입주월을 채운다
     $("name").value = name.slice(0, 40); $("price").value = price;
     $("region").value = region; ltvTouched = false; stressTouched = false; syncAuto();
@@ -1381,6 +1384,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     var pk = $("picked"); pk.innerHTML = '<p class="pk-title">' + title + "</p>" + (sub ? '<p class="hint">' + sub + "</p>" : "");
     var row = document.createElement("div"); row.className = "chips"; chips.forEach(function (c) { row.appendChild(c); });
     pk.appendChild(row); pk.hidden = false;
+    pickPending = chips.length > 0; candRender();
     collapseResults();
   }
   function collapseResults() {
