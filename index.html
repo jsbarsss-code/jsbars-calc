@@ -251,7 +251,6 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--key); vertical-alig
 /* 처음 온 사람(값 없는 주소 + 이 기기 저장 없음)의 첫 화면: 답을 스크롤 없이, 저장·초기화는 숨김 */
 .fresh header h1 { font-size: 22px; }
 .fresh header p, .fresh #saveCard, .fresh #mapReset { display: none; }
-.fresh.showacct #saveCard { display: grid; }
 .start { gap: 14px; }
 .start h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(23px, 6.2vw, 30px); line-height: 1.35; letter-spacing: -0.01em; text-wrap: balance; }
 .start .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -364,7 +363,19 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 .acct h3 { margin: 0; font-size: 16.5px; color: var(--ink); }
 .acctb { display: grid; gap: 10px; }
 .acct .check a { color: var(--accent); text-underline-offset: 3px; }
-.acctwho { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.acctwho { margin: 0; font-weight: 700; font-size: 18px; overflow-wrap: anywhere; }
+.acctcta { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.perks { list-style: none; margin: 0; padding: 0; display: grid; }
+.perks li { display: grid; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.perks li:first-child { padding-top: 0; }
+.perks b { font-size: 16.5px; }
+.perks span { font-size: 14.5px; color: var(--muted); }
+.nudge { display: grid; gap: 10px; }
+.nudge p { margin: 0; font-size: 16px; }
+.nudge p b { white-space: nowrap; }
+.nudge.top { background: var(--paper); border-radius: 10px; padding: 12px 14px; gap: 8px; }
+.nudge.top p { font-size: 15px; }
+.nudge .btns { gap: 6px; }
 .btn.kakao, .btn.google { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
 .btn.kakao { background: #fee500; border-color: #fee500; color: rgba(0, 0, 0, 0.85); }
 .btn.google { background: #ffffff; border-color: #747775; color: #1f1f1f; }
@@ -413,6 +424,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   <div id="restoreBanner" class="banner warn" hidden></div>
   <div id="inappBanner" class="banner warn" hidden></div>
+  <div id="nudgeTop" class="nudge top" hidden></div>
 
   <div class="view" id="viewMap" role="tabpanel" aria-labelledby="tabMap">
     <section class="card start" id="startHero" hidden aria-labelledby="startTitle">
@@ -435,6 +447,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       </ul>
     </section>
     <section class="card maphero" id="mapHead"></section>
+    <div id="nudgeMap" class="nudge card" hidden></div>
     <div class="mapgrid" id="mapGrid"><div class="msteps" id="mapSteps"></div><div class="mdetail" id="mapDetail" hidden></div></div>
     <section class="card" id="saveCard">
       <h2 class="step">내 진행 저장·보내기</h2>
@@ -449,18 +462,9 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         <label class="btn small ghost" for="loadFile" style="display:inline-block">백업 불러오기</label>
         <input type="file" id="loadFile" accept=".json,application/json" hidden>
       </div></div></details>
-      <div class="acct" id="acct">
-        <h3>로그인하고 내 기록 지키기 (선택)</h3>
-        <div id="acctOut" class="acctb">
-          <p class="hint" style="margin:0">로그인하면 지도 체크·저축 목표·은행 비교 메모·입주까지 일정이 내 계정에 자동으로 저장돼요. 휴대폰을 바꾸거나 브라우저 기록을 지워도 그대로고, PC에서 로그인하면 이어서 볼 수 있어요. 연봉·현금·모은 돈은 저장하지 않아요.</p>
-          <label class="check small" for="acctAgree"><input type="checkbox" id="acctAgree"> <span>만 14세 이상이에요. <a href="terms.html#privacy" target="_blank" rel="noopener">개인정보 처리방침</a>(로그인 ID·닉네임·이메일·지도와 일정 저장, 탈퇴하면 바로 삭제)에 동의해요.</span></label>
-          <div class="btns"><button type="button" class="btn kakao" id="loginKakao"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.6c-5.1 0-9.2 3.2-9.2 7.2 0 2.6 1.7 4.8 4.3 6.1l-1.1 3.9c-.1.3.3.6.6.4l4.6-3.1c.3 0 .5.1.8.1 5.1 0 9.2-3.2 9.2-7.3S17.1 3.6 12 3.6z"/></svg>카카오 로그인</button><button type="button" class="btn google" id="loginGoogle"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.9-6.9C35.9 2.4 30.4 0 24 0 14.6 0 6.6 5.4 2.6 13.3l8 6.2C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 7l7.5 5.8c4.3-4 6.8-10 6.8-17.3z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-8-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.3 2.3-6.2 0-11.5-4.2-13.4-9.9l-8 6.2C6.6 42.6 14.6 48 24 48z"/></svg>Google 계정으로 로그인</button></div>
-        </div>
-        <div id="acctIn" class="acctb" hidden>
-          <p class="acctwho" id="acctWho"></p>
-          <p class="hint" style="margin:0" id="acctState"></p>
-          <div class="btns"><button type="button" class="btn small ghost" id="syncNow">지금 저장·불러오기</button><button type="button" class="txtbtn" id="logout">로그아웃</button><button type="button" class="txtbtn" id="withdraw">탈퇴하고 저장 내용 지우기</button></div>
-        </div>
+      <div class="acctcta" id="acctCta">
+        <p class="hint" style="margin:0">매번 보내지 않아도, 로그인하면 내 계정에 자동으로 저장돼요.</p>
+        <div class="btns"><button type="button" class="btn small ghost" data-acct="save">로그인하고 내 기록 지키기</button></div>
       </div>
     </section>
     <details class="more" id="mapReset"><summary>처음부터 다시 하기</summary><div class="inner">
@@ -592,6 +596,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   <div class="view" id="viewPlan" role="tabpanel" aria-labelledby="tabPlan" hidden>
   <div class="vhead"><h2>계약부터 입주까지 일정 챙기기</h2></div>
+  <div id="nudgePlan" class="nudge card" hidden></div>
   <p class="hint pintro">엑셀과 휴대폰 일정표에 따로 적던 납입일·실측·시공·배송 일정을 여기 한 곳에 모아요. 날짜를 바꾸면 순서가 꼬였는지 알려 드려요. 이 탭에 넣은 내용은 <b>이 기기의 브라우저에 저장</b>돼요. 로그인한 경우에만 내 계정에도 저장돼요.</p>
   <div id="sharedBanner" class="banner warn" hidden>
     <span>가족이 보낸 <b>보기 전용 일정</b>이에요.<span id="sharedAt"></span> 고치려면 내 일정으로 가져오세요(지금 이 기기에 있던 일정은 바뀝니다).</span>
@@ -738,6 +743,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <button type="button" class="btn ghost" id="exportChanged" hidden>바뀐 일정만 다시 넣기</button>
       <button type="button" class="btn ghost" id="shareLink">가족에게 카톡으로 보내기 (보기 전용)</button>
     </div>
+    <p class="hint" style="margin:0">준비 중: 납입일 7일 전·하루 전 알림 <button type="button" class="txtbtn" data-interest="alert-plan">알림 받고 싶어요</button></p>
     <p class="hint" style="margin:0"><b>다른 기기에서 이어서 하기</b>: 일정과 지도를 통째로 카톡 나와의 채팅에 보내 두세요.</p>
     <div class="btns savebar"><button type="button" class="btn" data-save="Kakao" data-from="plan">카카오톡으로 보내기</button><button type="button" class="btn ghost" data-save="Image" data-from="plan">요약 이미지 저장</button></div>
     <p class="hint" id="calHint"></p>
@@ -760,6 +766,44 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   <p class="foot">납입 일정 초안은 입력한 비율로 나눈 추정이에요. 실제 회차 날짜·금액은 분양 계약서와 공고문을 따라 주세요. 매매 기한 기준: 토지거래허가 처리 15일(부동산거래신고법 시행령 제8조), 허가 주택 2년 실거주(같은 법·지자체 안내), 전입신고 14일(주민등록법).</p>
   </div>
 
+  <div class="view" id="viewAcct" hidden>
+  <div class="vhead"><h2>내 계정</h2><p id="acctLead">가입하지 않아도 모든 기능을 쓸 수 있어요. 로그인하면 내 기록을 계정에 자동으로 저장해 지켜요.</p></div>
+  <section class="card" id="acct">
+    <div id="acctOut" class="acctb">
+      <h2 class="step">로그인하면 이렇게 달라져요</h2>
+      <ul class="perks">
+        <li><b>휴대폰을 바꾸거나 브라우저 기록을 지워도 그대로</b><span>로그인하지 않으면 이 기기 브라우저에만 저장돼요.</span></li>
+        <li><b>휴대폰에서 체크하고 PC에서 일정 정리</b><span>같은 계정으로 로그인하면 어느 기기에서든 이어져요.</span></li>
+        <li><b>연봉·현금은 저장하지 않아요</b><span>지도 체크, 저축 목표, 은행 비교 메모, 입주까지 일정만 저장해요.</span></li>
+        <li><b>비밀번호 없이 카카오·Google로</b><span>탈퇴하면 저장 내용을 바로 지워요.</span></li>
+      </ul>
+      <label class="check small" for="acctAgree"><input type="checkbox" id="acctAgree"> <span>만 14세 이상이에요. <a href="terms.html#privacy" target="_blank" rel="noopener">개인정보 처리방침</a>(로그인 ID·닉네임·이메일·지도와 일정 저장, 탈퇴하면 바로 삭제)에 동의해요.</span></label>
+      <div class="btns"><button type="button" class="btn kakao" id="loginKakao"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.6c-5.1 0-9.2 3.2-9.2 7.2 0 2.6 1.7 4.8 4.3 6.1l-1.1 3.9c-.1.3.3.6.6.4l4.6-3.1c.3 0 .5.1.8.1 5.1 0 9.2-3.2 9.2-7.3S17.1 3.6 12 3.6z"/></svg>카카오 로그인</button><button type="button" class="btn google" id="loginGoogle"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.9-6.9C35.9 2.4 30.4 0 24 0 14.6 0 6.6 5.4 2.6 13.3l8 6.2C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 7l7.5 5.8c4.3-4 6.8-10 6.8-17.3z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-8-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.3 2.3-6.2 0-11.5-4.2-13.4-9.9l-8 6.2C6.6 42.6 14.6 48 24 48z"/></svg>Google 계정으로 로그인</button></div>
+      <p class="hint" style="margin:0">준비 중: 납입일 알림, 배우자와 일정 함께 고치기, 관심 단지 새 거래 알림. 로그인 회원부터 열어요.</p>
+    </div>
+    <div id="acctIn" class="acctb" hidden>
+      <p class="acctwho" id="acctWho"></p>
+      <p class="hint" style="margin:0" id="acctMeta"></p>
+    </div>
+  </section>
+  <section class="card" id="acctRec" hidden>
+    <h2 class="step">내 기록</h2>
+    <div class="facts" id="acctFacts"></div>
+    <p class="hint" style="margin:0" id="acctState"></p>
+    <p class="hint" style="margin:0">연봉·현금·모은 돈은 계정에 저장하지 않고 이 기기에만 둬요.</p>
+    <div class="btns"><button type="button" class="btn small ghost" id="syncNow">지금 저장·불러오기</button><button type="button" class="btn small ghost" id="acctBackup">백업 파일 내려받기</button></div>
+  </section>
+  <section class="card" id="acctAlert" hidden>
+    <h2 class="step">알림 (준비 중)</h2>
+    <p class="hint" style="margin:0">계약금·중도금·잔금 날짜 7일 전과 하루 전에 알려 드리는 기능을 준비하고 있어요. 받고 싶으면 눌러 주세요. 원하는 분이 많으면 먼저 만들어요.</p>
+    <div class="btns"><button type="button" class="btn small ghost" data-interest="alert-acct">납입일 알림 받고 싶어요</button></div>
+  </section>
+  <section class="card" id="acctManage" hidden>
+    <h2 class="step">계정 관리</h2>
+    <div class="btns"><button type="button" class="txtbtn" id="logout">로그아웃</button><button type="button" class="txtbtn" id="withdraw">탈퇴하고 저장 내용 지우기</button></div>
+    <p class="hint" style="margin:0">로그아웃하거나 탈퇴해도 이 기기의 지도·일정은 그대로 남아요. <a href="terms.html#privacy" target="_blank" rel="noopener">개인정보 처리방침</a></p>
+  </section>
+  </div>
 
   <footer class="sitefoot">
     <p class="foot"><b>참고용 추정치예요.</b> 실제 대출 한도와 금리는 은행 심사로 정해져요.</p>
@@ -1396,25 +1440,27 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 <div class="toast" id="toast" hidden></div>
 <script>
 (function () {   // 탭: 기본 = 열쇠까지 지도. #calc·블로그 계산 링크(?salary=…) = 계산기, #plan·공유 링크(#v=)·옛 plan.html(?to=plan) = 일정표.
-  var NAMES = ["map", "calc", "plan"];
-  var views = { map: document.getElementById("viewMap"), calc: document.getElementById("viewCalc"), plan: document.getElementById("viewPlan") };
-  var tabs = { map: document.getElementById("tabMap"), calc: document.getElementById("tabCalc"), plan: document.getElementById("tabPlan") };
+  var NAMES = ["map", "calc", "plan", "acct"];   // acct = 내 계정(탭 없이 제목 옆 버튼으로 연다)
+  var views = { map: document.getElementById("viewMap"), calc: document.getElementById("viewCalc"), plan: document.getElementById("viewPlan"), acct: document.getElementById("viewAcct") };
+  var tabs = { map: document.getElementById("tabMap"), calc: document.getElementById("tabCalc"), plan: document.getElementById("tabPlan"), acct: null };
   function set(name) {
-    NAMES.forEach(function (k) { views[k].hidden = k !== name; tabs[k].setAttribute("aria-selected", k === name ? "true" : "false"); });
+    NAMES.forEach(function (k) { views[k].hidden = k !== name; if (tabs[k]) tabs[k].setAttribute("aria-selected", k === name ? "true" : "false"); });
     if (name === "map" && window.ujkJourneyRender) window.ujkJourneyRender();
+    if (name === "acct" && window.ujkAccountRender) window.ujkAccountRender();
   }
   function show(name, scroll) {
     var was = NAMES.filter(function (k) { return !views[k].hidden; })[0];
     set(name);
-    var url = location.pathname + location.search + (name === "plan" ? "#plan" : name === "calc" ? "#calc" : "");
+    var url = location.pathname + location.search + (name === "plan" ? "#plan" : name === "calc" ? "#calc" : name === "acct" ? "#account" : "");
     if (!/^#[vr]=/.test(location.hash)) { if (was && was !== name) history.pushState({ tab: name }, "", url); else history.replaceState({ tab: name }, "", url); }
     if (scroll) try { window.scrollTo(0, 0); } catch (e) {}
     try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "tab-" + name, title: "tab-" + name, event: true }); } catch (e) {}
   }
   window.ujkShowTab = show;
-  NAMES.forEach(function (k) { tabs[k].addEventListener("click", function () { show(k); }); });
+  NAMES.forEach(function (k) { if (tabs[k]) tabs[k].addEventListener("click", function () { show(k); }); });
   function fromUrl() {
     if (/^#(plan|v=)/.test(location.hash) || /[?&]to=plan/.test(location.search)) return "plan";
+    if (location.hash === "#account") return "acct";
     if (location.hash === "#calc" || /[?&](salary|cash|price)=/.test(location.search)) return "calc";
     return "map";
   }
@@ -2555,15 +2601,37 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   }
 
   // ---- 화면 ----
-  function setState(t) { $("acctState").textContent = t; }
-  function goAcct() {   // 어느 화면·처음 방문이든 지도 탭의 로그인 상자로
-    document.documentElement.classList.add("showacct");
-    if (window.ujkShowTab) window.ujkShowTab("map");
-    setTimeout(function () { try { $("acct").scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} if (!user) try { $("acctAgree").focus({ preventScroll: true }); } catch (e) {} }, 60);
-    track(user ? "hlogin-account" : "hlogin-open");
+  function setState(t) { $("acctState").textContent = t; if (user && !$("viewAcct").hidden) try { renderAcct(); } catch (e) {} }
+  function goAcct(src) {   // 내 계정 화면으로 (어느 탭·처음 방문이든). src = 어디서 눌렀는지(로그인 성공까지 따라가며 센다)
+    try { sessionStorage.setItem("ujk-login-src", src || "header"); } catch (e) {}
+    if (window.ujkShowTab) window.ujkShowTab("acct", true);
+    track((user ? "account-open-" : "login-open-") + (src || "header"));
   }
+  window.ujkGoAccount = goAcct;
+  function cnt(o) { return o ? Object.keys(o).filter(function (k) { return o[k]; }).length : 0; }
+  function md(t) { var d = new Date(t); return isNaN(d) ? "" : (d.getMonth() + 1) + "월 " + d.getDate() + "일"; }
+  function renderAcct() {   // 내 계정: 로그인 정보·내 기록 요약
+    show();
+    if (!user) return;
+    $("acctMeta").textContent = (user.created_at ? md(user.created_at) + "에 가입했어요." : "") + (user.last_sign_in_at ? " 마지막 로그인 " + when(user.last_sign_in_at) : "");
+    var j = window.ujkJourney ? window.ujkJourney() : {}, sm = window.ujkJourneySummary ? window.ujkJourneySummary() : null;
+    var pl = null; try { pl = JSON.parse(localStorage.getItem("ujk-plan-v1") || "null"); } catch (e) {}
+    var items = pl && pl.items ? pl.items : [], today = new Date().toISOString().slice(0, 10);
+    var nx = items.filter(function (it) { return it.date && it.date >= today && it.status !== "done"; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
+    var banks = (j.banks || []).filter(function (b) { return b.name; }).length, meta = readMeta();
+    var row = function (k, v) { return "<div class='fact'><span class='k'>" + k + "</span><span class='v'>" + v + "</span></div>"; };
+    var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+    $("acctFacts").innerHTML = row("열쇠까지 지도", sm ? (8 - sm.left) + "/8단계<small>" + (sm.now ? "지금 단계: " + esc(sm.now) + ", " : "") + "체크 " + cnt(j.checks) + "개</small>" : "체크 " + cnt(j.checks) + "개")
+      + row("입주까지 일정", items.length ? "일정 " + items.length + "개" + (nx ? "<small>다음: " + (+nx.date.slice(5, 7)) + "/" + (+nx.date.slice(8, 10)) + " " + esc(nx.title || "") + "</small>" : "") : "아직 없음")
+      + row("은행 비교", banks ? banks + "곳" : "아직 없음")
+      + row("마지막 저장", meta && meta.uid === user.id && meta.at ? when(meta.at) : "확인 중");
+  }
+  window.ujkAccountRender = renderAcct;
   function show() {
     $("acctOut").hidden = !!user; $("acctIn").hidden = !user;
+    ["acctRec", "acctAlert", "acctManage"].forEach(function (id) { $(id).hidden = !user; });
+    $("acctCta").hidden = !!user;
+    $("acctLead").textContent = user ? "내 기록이 계정에 자동으로 저장되고 있어요. 다른 기기에서 같은 계정으로 로그인하면 그대로 이어져요." : "가입하지 않아도 모든 기능을 쓸 수 있어요. 로그인하면 내 기록을 계정에 자동으로 저장해 지켜요.";
     $("hLogin").textContent = user ? "내 계정" : "로그인";
     if (!user) return;
     var m = user.user_metadata || {}, prov = (user.app_metadata && user.app_metadata.provider) || "";
@@ -2619,7 +2687,12 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   }
   function signedIn(u, fresh) {
     user = u; show(); watch();
-    if (fresh) { track("login-" + ((u.app_metadata && u.app_metadata.provider) || "x")); toast("로그인했어요. 내 계정에 저장하고 있어요"); }
+    if (fresh) {
+      var src = "direct"; try { src = sessionStorage.getItem("ujk-login-src") || "direct"; sessionStorage.removeItem("ujk-login-src"); } catch (e) {}
+      track("login-" + ((u.app_metadata && u.app_metadata.provider) || "x")); track("login-ok-from-" + src);
+      toast("로그인했어요. 내 계정에 저장하고 있어요");
+      if (window.ujkShowTab) window.ujkShowTab("acct", true);
+    }
     setState("내 계정의 저장 내용을 확인하고 있어요…");
     return sync();
   }
@@ -2654,7 +2727,12 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       return c.auth.signInWithOAuth({ provider: provider, options: { redirectTo: location.origin + location.pathname } });
     }).then(function (r) { if (r && r.error) throw r.error; }).catch(function () { b.disabled = false; toast("로그인 창을 열지 못했어요. 잠시 뒤 다시 눌러 주세요"); });
   }
-  $("hLogin").addEventListener("click", goAcct);
+  $("hLogin").addEventListener("click", function () { goAcct("header"); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-acct]"), function (b) { b.addEventListener("click", function () { goAcct(b.getAttribute("data-acct")); }); });
+  $("acctBackup").addEventListener("click", function () { var f = $("saveFile"); if (f) f.click(); track("account-backup"); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-interest]"), function (b) {   // 준비 중 기능 관심 표시(이벤트만 센다)
+    b.addEventListener("click", function () { track("interest-" + b.getAttribute("data-interest")); b.disabled = true; b.textContent = "알려 주셔서 고마워요"; toast("알려 주셔서 고마워요. 준비되면 내 계정 화면에서 켤 수 있어요"); });
+  });
   $("loginKakao").addEventListener("click", function () { login("kakao"); });
   $("loginGoogle").addEventListener("click", function () { login("google"); });
   $("syncNow").addEventListener("click", function () { setState("확인하는 중…"); sync(true); });
@@ -2671,8 +2749,50 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     }).then(function () { user = null; writeMeta(null); show(); toast("탈퇴했어요. 계정과 저장 내용을 지웠어요"); track("withdraw"); })
       .catch(function () { toast("탈퇴하지 못했어요. 잠시 뒤 다시 시도하거나 jskey2026@gmail.com으로 알려 주세요"); });
   });
-  window.ujkAccount = { sync: sync, payload: payload, canon: canon, isEmpty: isEmpty, applyServer: applyServer };   // 시험용
+  window.ujkAccount = { sync: sync, payload: payload, canon: canon, isEmpty: isEmpty, applyServer: applyServer, isIn: function () { return !!user; } };
   start();
+})();
+</script>
+<script>
+(function () {   // 로그인 권하기: 먼저 쓰게 하고, 잃을 게 생긴 순간에 한 번. 방문당 하나, '나중에'는 7일 쉼. 로그인한 사람·처음 화면에는 안 띄운다.
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var SNOOZE = "ujk-nudge-snooze", SHOWN = "ujk-nudge-shown", VISITS = "ujk-visits", TOKEN = "sb-wovdntrjkguewxhhccxy-auth-token";
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } }
+  function track(p) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} }
+  function loggedIn() { return (window.ujkAccount && window.ujkAccount.isIn && window.ujkAccount.isIn()) || !!ls(TOKEN); }
+  function blocked() { return loggedIn() || ss(SHOWN) || Date.now() < (+ls(SNOOZE) || 0); }
+  function counts() {
+    var j = window.ujkJourney ? window.ujkJourney() : {}, pl = null; try { pl = JSON.parse(ls("ujk-plan-v1") || "null"); } catch (e) {}
+    var c = j.checks ? Object.keys(j.checks).filter(function (k) { return j.checks[k]; }).length : 0;
+    return { checks: c, items: pl && pl.items ? pl.items.length : 0 };
+  }
+  if (!ss("ujk-visit-counted")) { ss("ujk-visit-counted", "1"); ls(VISITS, String((+ls(VISITS) || 0) + 1)); }
+  var fresh = document.documentElement.classList.contains("fresh"), base = counts(), timer = null;
+
+  function show(id, box, text) {
+    if (blocked()) return false;
+    var el = $(box); if (!el) return false;
+    el.innerHTML = "<p>" + text + "</p><div class='btns'><button type='button' class='btn small' data-nudge='go'>로그인하고 내 기록 지키기</button><button type='button' class='txtbtn' data-nudge='later'>나중에</button></div>";
+    el.hidden = false; ss(SHOWN, id); track("nudge-view-" + id);
+    el.querySelector("[data-nudge='go']").addEventListener("click", function () { track("nudge-click-" + id); el.hidden = true; if (window.ujkGoAccount) window.ujkGoAccount("nudge-" + id); });
+    el.querySelector("[data-nudge='later']").addEventListener("click", function () { track("nudge-later-" + id); ls(SNOOZE, String(Date.now() + 7 * 864e5)); el.hidden = true; });
+    if (timer) { clearInterval(timer); timer = null; }
+    return true;
+  }
+  // ④ 다시 온 사람: 기록이 이 기기에만 있다는 사실을 맨 위에 한 줄
+  if (!fresh && (+ls(VISITS) || 0) >= 2 && (base.checks || base.items)) {
+    var parts = []; if (base.checks) parts.push("체크 " + base.checks + "개"); if (base.items) parts.push("일정 " + base.items + "개");
+    show("top", "nudgeTop", "지난번 기록(" + parts.join(", ") + ")이 이 기기에만 있어요. 로그인해 두면 휴대폰을 바꾸거나 기록을 지워도 그대로예요.");
+  }
+  // ② 지도 체크가 3개를 넘은 순간, ③ 일정표에 첫 일정이 생긴 순간
+  if (!ss(SHOWN)) timer = setInterval(function () {
+    if (blocked()) { clearInterval(timer); timer = null; return; }
+    var c = counts();
+    if (c.checks >= 3 && c.checks > base.checks) show("map", "nudgeMap", "체크 <b>" + c.checks + "개</b>가 이 기기에만 저장돼 있어요. 로그인해 두면 휴대폰을 바꾸거나 기록을 지워도 그대로예요.");
+    else if (c.items > 0 && base.items === 0) show("plan", "nudgePlan", "일정 <b>" + c.items + "개</b>를 만들었어요. 로그인하면 PC에서도 이어서 고칠 수 있고, 휴대폰을 바꿔도 그대로예요.");
+  }, 2500);
 })();
 </script>
 <script>
