@@ -241,6 +241,20 @@ details.past[open] summary { color: var(--accent); }
 .tabs button { font-size: 15px; padding: 10px 4px; }
 header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-align: -0.06em; margin-left: 6px; }
 .maphero { gap: 10px; }
+/* 처음 온 사람(값 없는 주소 + 이 기기 저장 없음)의 첫 화면: 답을 스크롤 없이, 저장·초기화는 숨김 */
+.fresh header h1 { font-size: 22px; }
+.fresh header p, .fresh #saveCard, .fresh #mapReset { display: none; }
+.start { gap: 14px; }
+.start h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(23px, 6.2vw, 30px); line-height: 1.35; letter-spacing: -0.01em; text-wrap: balance; }
+.start .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.start label.f { font-size: 15px; }
+.sans { background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
+.sans .sl { font-size: 14.5px; color: var(--muted); }
+.sans .sb { font-family: var(--font-display); font-weight: 800; font-size: clamp(24px, 7vw, 32px); line-height: 1.3; color: var(--accent); }
+.sans .ss { font-size: 15.5px; }
+.sans b { white-space: nowrap; }
+.proof { list-style: none; margin: 0; padding: 0; display: grid; }
+.proof li { font-size: 14.5px; color: var(--muted); padding: 8px 0; border-top: 1px solid var(--line); }
 .mtitle { font-size: clamp(21px, 5.6vw, 26px); font-weight: 800; letter-spacing: -0.01em; line-height: 1.35; }
 .mtitle b { color: inherit; }
 .mbarwrap { display: flex; align-items: center; gap: 10px; }
@@ -341,6 +355,14 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 <script data-goatcounter="https://jsbars.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
+<script>
+// 처음 온 사람 판별(그리기 전에): 주소에 계산 값·화면 지정(#…)이 없고 이 기기에 지도·일정 저장이 없으면 html.fresh
+(function () {
+  var fresh = !location.hash && !/[?&](salary|cash|price|name|to)=/.test(location.search);
+  if (fresh) try { fresh = !localStorage.getItem("ujk-journey-v1") && !localStorage.getItem("ujk-plan-v1"); } catch (e) {}
+  if (fresh) document.documentElement.classList.add("fresh");
+})();
+</script>
 
 
 <div class="wrap">
@@ -359,6 +381,25 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   <div id="inappBanner" class="banner warn" hidden></div>
 
   <div class="view" id="viewMap" role="tabpanel" aria-labelledby="tabMap">
+    <section class="card start" id="startHero" hidden aria-labelledby="startTitle">
+      <h2 id="startTitle">연봉과 모은 돈만 넣으면,<br>지금 닿는 집값이 바로 나와요</h2>
+      <div class="row2">
+        <label class="f" for="sSalary">연봉 (세전)
+          <span class="inrow"><input type="number" id="sSalary" min="0" step="100" inputmode="numeric"><span class="unit">만원</span></span>
+        </label>
+        <label class="f" for="sCash">꺼낼 수 있는 현금
+          <span class="inrow"><input type="number" id="sCash" min="0" step="500" inputmode="numeric"><span class="unit">만원</span></span>
+        </label>
+      </div>
+      <label class="check" for="sFirst"><input type="checkbox" id="sFirst"> <span>생애 첫 집이에요</span></label>
+      <div class="sans" id="sAnswer" aria-live="polite"></div>
+      <div class="btns"><button type="button" class="btn" id="sToCalc">어떻게 나온 숫자인지 보기</button><button type="button" class="btn ghost" id="sToMap">열쇠까지 남은 단계 보기</button></div>
+      <ul class="proof">
+        <li>운영자가 직접 지나온 길이에요. 분양가 5억 4,810만 원 집을 모은 돈 5천만 원으로 시작해 2026년 11월 열쇠를 받았어요.</li>
+        <li id="sData">국토교통부 실거래가와 청약홈 분양가를 매주 반영해요.</li>
+        <li>회원가입이 없고, 넣은 숫자는 서버에 남지 않아요.</li>
+      </ul>
+    </section>
     <section class="card maphero" id="mapHead"></section>
     <div class="mapgrid" id="mapGrid"><div class="msteps" id="mapSteps"></div><div class="mdetail" id="mapDetail" hidden></div></div>
     <section class="card" id="saveCard">
@@ -2358,6 +2399,46 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       $("restoreNo").addEventListener("click", function () { history.replaceState(null, "", location.pathname); bn.hidden = true; });
     }).catch(function () { toast("이어하기 링크가 잘렸거나 잘못됐어요"); });
   }
+})();
+</script>
+<script>
+(function () {   // 처음 온 사람의 첫 화면(#startHero): 연봉·현금 → 닿는 집값을 지도 탭 맨 위에서 바로. 값은 계산기 입력칸으로 넘겨 같은 공식으로 계산한다(저장·전송 없음).
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  if (!document.documentElement.classList.contains("fresh")) return;
+  var hero = $("startHero"); hero.hidden = false;
+  function track(p) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} }
+  function won(man) {
+    man = Math.round(+man || 0); var eok = Math.floor(man / 10000), rest = man % 10000;
+    return eok && rest ? eok + "억 " + rest.toLocaleString("ko-KR") + "만원" : eok ? eok + "억원" : rest.toLocaleString("ko-KR") + "만원";
+  }
+  var used = false;
+  $("sSalary").value = $("salary").value; $("sCash").value = $("cash").value; $("sFirst").checked = $("first").checked;
+  function answer() {
+    var s = window.ujkCalcSnapshot ? window.ujkCalcSnapshot() : null; if (!s) return;
+    var r = Math.floor(s.maxReg / 100) * 100, c = Math.floor(s.maxCap / 100) * 100;
+    $("sAnswer").innerHTML = "<span class='sl'>" + (used ? "지금 내 돈으로 닿는 집값 (은행 대출 포함)" : "예시 값이에요. 내 숫자로 바꿔 보세요") + "</span>"
+      + "<span class='sb'>" + won(c) + "까지</span>"
+      + "<span class='ss'>" + (r === c ? "수도권 어디든, 서울·경기 규제지역도 같아요." : "그 밖 수도권 기준이에요. 서울·경기 규제지역은 <b>" + won(r) + "</b>까지예요.") + "</span>";
+  }
+  function pass(src, dst, ev) {
+    if (src.type === "checkbox") $(dst).checked = src.checked; else $(dst).value = src.value;
+    $(dst).dispatchEvent(new Event("input", { bubbles: true }));
+    if (ev) $(dst).dispatchEvent(new Event("change", { bubbles: true }));
+    if (!used) { used = true; track("hero-used"); }
+    answer();
+    if (window.ujkJourneyRender) window.ujkJourneyRender();
+  }
+  $("sSalary").addEventListener("input", function () { pass(this, "salary"); });
+  $("sCash").addEventListener("input", function () { pass(this, "cash"); });
+  $("sFirst").addEventListener("change", function () { pass(this, "first", true); });
+  $("sToCalc").addEventListener("click", function () { track("hero-to-calc"); if (window.ujkShowTab) window.ujkShowTab("calc", true); });
+  $("sToMap").addEventListener("click", function () { track("hero-to-map"); try { $("mapHead").scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} });
+  fetch("data/meta.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
+    if (m && m.complexes) $("sData").textContent = "국토교통부 실거래가와 청약홈 분양가를 매주 반영해요. 단지 " + (+m.complexes).toLocaleString("ko-KR") + "곳, 분양 공고 " + (+m.presale || 0).toLocaleString("ko-KR") + "건.";
+  }).catch(function () {});
+  answer();
+  track("hero-view");
 })();
 </script>
 </body>
