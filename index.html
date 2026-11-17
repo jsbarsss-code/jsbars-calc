@@ -1976,7 +1976,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   function mine(i, sn, pl) {
     var p = sn && sn.touched ? sn : null;
     if (i === 0) return p ? "<div class='mfact'>연봉 <b>" + won(p.salary) + "</b> · 현금 <b>" + won(p.cash) + "</b>이면<br>규제지역 <b>" + won(p.maxReg) + "</b>, 그 밖 수도권 <b>" + won(p.maxCap) + "</b>까지가 지금 우리집 후보예요.</div>"
-      : J.last ? "<div class='mfact'>지난번 계산(" + md(J.last.at) + "): 규제지역 <b>" + won(J.last.maxReg) + "</b>, 그 밖 수도권 <b>" + won(J.last.maxCap) + "</b>까지 닿았어요. 숫자가 바뀌었으면 다시 계산해 보세요.</div>"
+      : J.last ? "<div class='mfact'>지난번 계산(" + md(J.last.at) + "): 규제지역 <b>" + won(J.last.maxReg) + "</b>, 그 밖 수도권 <b>" + won(J.last.maxCap) + "</b>까지가 우리집 후보였어요. 숫자가 바뀌었으면 다시 계산해 보세요.</div>"
       : "<div class='mfact'>아직 계산 전이에요. 연봉과 현금만 넣어 보세요.</div>";
     if (i === 1) {
       var price = p ? (p.price > 0 ? p.price : p.maxReg) : 0;
