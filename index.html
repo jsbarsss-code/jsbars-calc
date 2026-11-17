@@ -2595,7 +2595,13 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       document.head.appendChild(s); setTimeout(function () { res(!!window.Kakao); }, 6000);
     });
   }
+  function webShareOrCopy(text, url, ev) {
+    if (navigator.share) navigator.share({ title: "우리집 열쇠", text: text, url: url }).then(function () { track(ev + "-webshare"); }, function () {});
+    else copy(url, "카카오톡 공유를 열 수 없어 링크를 복사했어요. 카톡에 붙여 넣어 주세요");
+  }
+  var KAKAO_URL_MAX = 2500;   // 카카오 공유는 링크를 webUrl·mobileWebUrl 두 번 실어 모바일 10K 제한(오류 4002)에 걸린다 → 기록이 많아 긴 링크는 휴대폰 공유창으로
   function kakaoSend(text, url, button, ev) {   // 카카오톡 공유 → 안 되면 휴대폰 공유창 → 링크 복사 (긴 링크는 화면에 보이지 않게)
+    if (String(url).length > KAKAO_URL_MAX) { webShareOrCopy(text, url, ev + "-long"); return; }
     loadKakaoSdk().then(function (ok) {
       try {
         if (!ok) throw new Error("sdk");
@@ -2603,10 +2609,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
         if (!window.Kakao.Share) throw new Error("share");
         window.Kakao.Share.sendDefault({ objectType: "text", text: String(text).slice(0, 190), link: { webUrl: url, mobileWebUrl: url }, buttonTitle: button });
         track(ev);
-      } catch (e) {
-        if (navigator.share) navigator.share({ title: "우리집 열쇠", text: text, url: url }).then(function () { track(ev + "-webshare"); }, function () {});
-        else copy(url, "카카오톡 공유를 열 수 없어 링크를 복사했어요. 카톡에 붙여 넣어 주세요");
-      }
+      } catch (e) { webShareOrCopy(text, url, ev); }
     });
   }
   window.ujkKakaoSend = kakaoSend; window.ujkPack = pack; window.ujkUnpack = unpack;
