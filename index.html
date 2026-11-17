@@ -1000,6 +1000,12 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   }
   function limitText(p, mp) {   // 최고가를 막는 것이 무엇인지 쉬운 말로 + 무엇을 늘리면 얼마나 오르는지
     var e = evaluate(Object.assign({}, p, { price: mp }));
+    if (e.bind === "ltv" || e.bind === "dsr") {   // 연봉·현금 한도에 동시에 걸리면 한쪽만 늘려도 거의 안 오른다 → 둘 다 한계로 안내
+      var gOne = maxPrice(Object.assign({}, p, e.bind === "ltv" ? { cash: p.cash + 1000 } : { salary: p.salary + 1000 })) - mp;
+      var gBoth = maxPrice(Object.assign({}, p, { cash: p.cash + 1000, salary: p.salary + 1000 })) - mp;
+      if (gOne < 1000 && gBoth > gOne * 2) return "지금은 <b>연봉과 현금</b>이 함께 한계예요. 한쪽만 늘리면 집값이 거의 안 오르고, 연봉과 현금이 1,000만원씩 함께 늘면 약 <b>"
+        + won(gBoth) + "</b> 더 비싼 집까지 볼 수 있어요.";
+    }
     if (e.bind === "ltv") return "지금은 <b>현금</b>이 한계예요. 은행은 집값의 " + pct(p.ltv) + "까지만 빌려줘서, 현금이 1,000만원 늘면 약 <b>"
       + won(maxPrice(Object.assign({}, p, { cash: p.cash + 1000 })) - mp) + "</b> 더 비싼 집까지 볼 수 있어요.";
     if (e.bind === "dsr") return "지금은 <b>연봉</b>이 한계예요. 은행은 연봉으로 갚을 수 있는 만큼만 빌려줘서, 연봉(부부 합산 가능)이 1,000만원 늘면 약 <b>"
