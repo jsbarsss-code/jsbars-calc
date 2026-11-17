@@ -1,0 +1,26 @@
+name: 로그인 서버 깨우기·차단 점검
+
+# Supabase 무료 프로젝트는 7일 동안 활동이 없으면 일시정지된다. 주 2회 공개용 키로 데이터베이스에 조회를 한 번 보낸다.
+# 공개용(publishable) 키는 원래 웹페이지에 들어 있는 값이다. 로그인 안 한 요청은 표에 권한이 없어 401이어야 정상이고,
+# 200이 나오면 누구나 사본을 읽을 수 있다는 뜻이라 이 작업이 실패로 알린다(주간 보안 점검을 겸한다).
+on:
+  schedule:
+    - cron: "17 21 * * 0,3"   # 매주 월·목 06:17 (KST)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: 데이터베이스 조회 1회 + 비로그인 차단 확인
+        run: |
+          code=$(curl -s -o body.txt -w "%{http_code}" --max-time 30 \
+            "https://wovdntrjkguewxhhccxy.supabase.co/rest/v1/ujk_sync?select=user_id&limit=1" \
+            -H "apikey: sb_publishable_aplXoU70agTnsyCFhChZXQ_7uoObpSG")
+          echo "rest: $code"; head -c 300 body.txt; echo
+          if [ "$code" = "200" ]; then echo "::error::로그인 안 한 요청이 사본 표를 읽을 수 있어요. RLS·권한을 확인하세요."; exit 1; fi
+          test "$code" = "401"
