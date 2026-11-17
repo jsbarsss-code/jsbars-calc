@@ -19,13 +19,14 @@
 <style>
 /* 레이아웃: 폰 기준 한 줄 흐름 — ① 사고 싶은 집 → ② 내 돈 → 답 한 문장 → 접힌 상세 */
 :root {
-  --bg: #f3f5f2;
+  --bg: #eaede9;
   --paper: #ffffff;
-  --ink: #17251f;
-  --muted: #4a5751;
-  --line: #d6ddd8;
-  --accent: #1f6b4f;
-  --accent-soft: #e2efe8;
+  --ink: #1a201d;
+  --muted: #4e5852;
+  --line: #d3d9d4;
+  --accent: #155c45;
+  --accent-soft: #e3ece7;
+  --key: #8f6418;
   --warn: #9a5b00;
   --warn-soft: #fbefdc;
   --bad: #a3312a;
@@ -35,14 +36,14 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101814; --paper: #17221d; --ink: #eef4f0; --muted: #b3c2ba; --line: #2c3a33;
-    --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15;
+    --bg: #0e1411; --paper: #18201c; --ink: #edf2ee; --muted: #b0bdb5; --line: #2e3a34;
+    --accent: #5fc39a; --accent-soft: #1d3a2e; --key: #dcae5a; --warn: #e2a64a; --warn-soft: #3a2c15;
     --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #101814; --paper: #17221d; --ink: #eef4f0; --muted: #b3c2ba; --line: #2c3a33;
-  --accent: #5fc39a; --accent-soft: #1d3a2e; --warn: #e2a64a; --warn-soft: #3a2c15;
+  --bg: #0e1411; --paper: #18201c; --ink: #edf2ee; --muted: #b0bdb5; --line: #2e3a34;
+  --accent: #5fc39a; --accent-soft: #1d3a2e; --key: #dcae5a; --warn: #e2a64a; --warn-soft: #3a2c15;
   --bad: #f08a80; --bad-soft: #3d1f1c; color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -58,9 +59,10 @@ body {
 .wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
 header h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 40px); margin: 0; letter-spacing: -0.01em; line-height: 1.3; text-wrap: balance; }
 header p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
-.card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.card { background: var(--paper); border: 0; border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
 .step { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 19px; font-weight: 700; }
-.step .no { font-size: 14px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 1px 9px; letter-spacing: 0.04em; }
+.step .no { font-size: 19px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.step .no::after { content: "."; }
 .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 @media (max-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
 label.f { display: grid; gap: 6px; font-size: 15.5px; font-weight: 500; color: var(--muted); min-width: 0; }
@@ -79,11 +81,11 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
 .check input { margin-top: 5px; accent-color: var(--accent); width: 20px; height: 20px; }
 .example { font-size: 14.5px; color: var(--muted); }
 
-.answer { border-radius: 12px; padding: 20px; display: grid; gap: 6px; border: 1px solid var(--line); background: var(--paper); }
-.answer.ok { background: var(--accent-soft); border-color: transparent; }
-.answer.short { background: var(--paper); border-color: var(--line); border-left: 4px solid var(--bad); border-radius: 0 12px 12px 0; }
+.answer { border-radius: 10px; padding: 20px 18px; display: grid; gap: 6px; border: 0; background: var(--paper); }
+.answer.ok { background: var(--paper); }
+.answer.short { background: var(--paper); }
 .answer .house { font-size: 16px; color: var(--muted); font-weight: 500; overflow-wrap: anywhere; }
-.answer .yes { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 40px); letter-spacing: -0.01em; line-height: 1.3; }
+.answer .yes { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8vw, 40px); letter-spacing: -0.02em; line-height: 1.3; }
 .answer.ok .yes { color: var(--accent); }
 .answer.short .yes { color: var(--ink); }
 .answer .sub { font-size: 17px; font-variant-numeric: tabular-nums; }
@@ -94,7 +96,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
 .fact .v { font-weight: 700; text-align: right; font-size: 18px; }
 .fact .v small { display: block; font-weight: 400; font-size: 14px; color: var(--muted); }
 
-details.more { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+details.more { background: var(--paper); border: 0; border-radius: 10px; padding: 14px 18px; }
 details.more summary { cursor: pointer; font-size: 16.5px; font-weight: 500; color: var(--accent); }
 details.more .inner { display: grid; gap: 12px; margin-top: 14px; }
 .tablebox { overflow-x: auto; }
@@ -102,11 +104,11 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
 td.n { text-align: right; white-space: nowrap; }
 tr.bind td { font-weight: 700; }
-.pill { display: inline-block; font-size: 13px; padding: 1px 8px; border-radius: 99px; background: var(--warn-soft); color: var(--warn); font-weight: 700; margin-left: 6px; white-space: nowrap; }
+.pill { display: inline-block; font-size: 13px; padding: 1px 6px; border-radius: 4px; background: var(--warn-soft); color: var(--warn); font-weight: 700; margin-left: 6px; white-space: nowrap; }
 tr.total td { font-weight: 700; border-top: 2px solid var(--ink); }
-h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04em; }
-.flag { font-size: 16px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
-.flag b { color: var(--accent); }
+h3 { font-size: 15.5px; color: var(--ink); margin: 6px 0 0; }
+.flag { font-size: 16px; padding: 10px 12px; border-radius: 6px; background: var(--bg); }
+.flag b { color: var(--ink); }
 .foot { font-size: 14.5px; color: var(--muted); }
 .sitefoot { display: grid; gap: 12px; margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--line); }
 .sitefoot .foot { margin: 0; }
@@ -119,42 +121,42 @@ h3 { font-size: 15px; color: var(--muted); margin: 6px 0 0; letter-spacing: 0.04
 .sitefoot .fine { font-size: 13px; }
 .results, .picked { display: grid; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { font: inherit; word-break: keep-all; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
-  border-radius: 8px; padding: 11px 14px; display: grid; gap: 3px; font-size: 16.5px; min-width: 0; max-width: 100%; }
+.chip { font: inherit; word-break: keep-all; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  border-radius: 6px; padding: 11px 14px; display: grid; gap: 3px; font-size: 16.5px; min-width: 0; max-width: 100%; }
 .chip:hover { border-color: var(--accent); }
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chip small { color: var(--muted); font-size: 14px; }
 .chip b { color: var(--accent); font-variant-numeric: tabular-nums; }
-.tag { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 0 7px; border-radius: 99px; margin-right: 6px; background: var(--accent-soft); color: var(--accent); }
+.tag { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 0 5px; border-radius: 4px; margin-right: 6px; background: var(--accent-soft); color: var(--accent); }
 .tag.new { background: var(--warn-soft); color: var(--warn); }
 .pk-title { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .picked .hint { margin: 0; }
-.kicker { margin: 4px 0 0 !important; font-size: 17px; font-weight: 700; color: var(--accent) !important; letter-spacing: 0.04em; }
+.kicker { margin: 4px 0 0 !important; font-size: 17px; font-weight: 700; color: var(--accent) !important; }
 .tag.st1 { background: var(--accent); color: var(--paper); }
 .tag.st2 { background: var(--accent-soft); color: var(--accent); }
 .tag.st3 { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
 .near { margin: 0; }
-.linkbtn { font: inherit; word-break: keep-all; font-size: 15.5px; font-weight: 500; color: var(--accent); background: none; border: 1px dashed var(--accent);
+.linkbtn { font: inherit; word-break: keep-all; font-size: 15.5px; font-weight: 500; color: var(--accent); background: none; border: 1px solid var(--accent);
   border-radius: 8px; padding: 9px 12px; cursor: pointer; text-align: left; }
 .linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.budget { font-size: 16px; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); }
-.budget b { color: var(--accent); font-variant-numeric: tabular-nums; }
-.bud { display: inline-block; margin-top: 4px; font-size: 13.5px; font-weight: 700; padding: 1px 8px; border-radius: 99px; font-variant-numeric: tabular-nums; }
+.budget { font-size: 16px; padding: 12px 0 0; border-top: 1px solid var(--line); color: var(--ink); }
+.budget b { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bud { display: inline-block; margin-top: 4px; font-size: 13.5px; font-weight: 700; padding: 1px 6px; border-radius: 4px; font-variant-numeric: tabular-nums; }
 .bud.ok { background: var(--accent-soft); color: var(--accent); }
 .bud.no { background: var(--bad-soft); color: var(--bad); }
 .check.small { font-size: 15px; }
 select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
 .hint.note { font-size: 13.5px; margin: -4px 0 0; }
 /* 신뢰 표시: 공공데이터 출처·규모·갱신일 (DESIGN.md — 사실은 accent, 장식 없음) */
-.trust { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--bg); }
+.trust { display: grid; gap: 8px; padding: 12px 14px; border: 0; border-radius: 6px; background: var(--bg); }
 .trow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 16px; }
 .trow b { color: var(--ink); }
-.tbadge { font-size: 12.5px; font-weight: 800; padding: 2px 9px; border-radius: 99px; background: var(--accent); color: var(--paper); letter-spacing: 0.02em; }
+.tbadge { font-size: 16px; font-weight: 800; color: var(--accent); }
 .tsrc { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 15px; font-weight: 600; }
 .tsrc small { font-weight: 400; color: var(--muted); font-size: 13.5px; }
-.tchk { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 6px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 900; vertical-align: 1px; }
+.tchk { margin-right: 6px; color: var(--accent); font-weight: 800; }
 .tmeta { font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.6; }
-.tmeta b { color: var(--accent); }
+.tmeta b { color: var(--ink); }
 .trust .hint { font-size: 14px; }
 .tsrcd summary { cursor: pointer; font-size: 14.5px; font-weight: 600; color: var(--accent); }
 .tsrcd[open] summary { margin-bottom: 6px; }
@@ -163,9 +165,9 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
 .toplan { display: block; margin-top: 8px; text-decoration: none; background: var(--paper); }
 
 /* ---- 탭 (DESIGN.md: 세그먼트) ---- */
-.tabs { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
-.tabs button { font: inherit; font-size: 16px; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-radius: 9px; padding: 10px 8px; cursor: pointer; }
-.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+.tabs { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: var(--bg); }
+.tabs button { font: inherit; font-size: 16px; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 0; padding: 12px 8px 9px; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--ink); font-weight: 800; border-bottom-color: var(--accent); }
 .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .view { display: grid; gap: 16px; }
 .vhead { display: grid; gap: 4px; }
@@ -175,7 +177,7 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 
 .seg button { font: inherit; font-size: 15.5px; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 9px 6px; cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--paper); color: var(--accent); font-weight: 800; box-shadow: 0 0 0 1px var(--line); }
 .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.tag.task { background: var(--bg); color: var(--muted); border: 1px dashed var(--line); }
+.tag.task { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
 /* ---- 입주까지 일정 탭 (#viewPlan 안에서만) ---- */
 #viewPlan .hint { margin: 0; }
 .pintro { font-size: 16px !important; }
@@ -190,9 +192,9 @@ input[type=date] { -webkit-appearance: none; appearance: none; font: inherit; fo
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btns { display: flex; flex-wrap: wrap; gap: 8px; }
 #viewPlan .chips { gap: 6px; }
-.tchip { font: inherit; font-size: 15px; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 99px; padding: 6px 12px; }
+.tchip { font: inherit; font-size: 15px; cursor: pointer; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 6px; padding: 6px 11px; }
 .tchip:hover { border-color: var(--accent); }
-.banner { border-radius: 10px; padding: 12px 14px; font-size: 15.5px; background: var(--accent-soft); display: grid; gap: 8px; }
+.banner { border-radius: 6px; padding: 12px 14px; font-size: 15.5px; background: var(--paper); display: grid; gap: 8px; }
 .banner.warn { background: var(--warn-soft); }
 #viewPlan .fact { padding: 10px 0; }
 #viewPlan .fact .k { font-size: 15.5px; }
@@ -225,7 +227,7 @@ input[type=date] { -webkit-appearance: none; appearance: none; font: inherit; fo
 details.past { border-bottom: 1px solid var(--line); padding: 4px 0 10px; }
 details.past summary { cursor: pointer; font-size: 15px; font-weight: 600; color: var(--muted); padding: 6px 0; }
 details.past[open] summary { color: var(--accent); }
-.tag { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 0 7px; border-radius: 99px; margin-right: 6px; vertical-align: 2px; }
+.tag { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 0 5px; border-radius: 4px; margin-right: 6px; vertical-align: 2px; }
 .tag.pay { background: var(--accent-soft); color: var(--accent); }
 .tag.work { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
 .tag.est, .tag.wk { background: var(--warn-soft); color: var(--warn); }
@@ -234,12 +236,12 @@ details.past[open] summary { color: var(--accent); }
 .tag.work { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
 .tag.est, .tag.wk { background: var(--warn-soft); color: var(--warn); }
 .empty { color: var(--muted); font-size: 15.5px; }
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 99px; font-size: 15px; max-width: calc(100% - 32px); z-index: 10; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 8px; font-size: 15px; max-width: calc(100% - 32px); z-index: 10; }
 
 /* ---- 열쇠까지 지도 (DESIGN.md: 열쇠를 향한 길 — 단계는 세로 선으로 이어진 하나의 길, 지나온 단계=accent 채움, 지금=accent 테두리) ---- */
 .tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.tabs button { font-size: 15px; padding: 10px 4px; }
-header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-align: -0.06em; margin-left: 6px; }
+.tabs button { font-size: 15px; padding: 12px 4px 9px; }
+header h1 .key { width: 0.82em; height: 0.82em; color: var(--key); vertical-align: -0.06em; margin-left: 6px; }
 .maphero { gap: 10px; }
 /* 처음 온 사람(값 없는 주소 + 이 기기 저장 없음)의 첫 화면: 답을 스크롤 없이, 저장·초기화는 숨김 */
 .fresh header h1 { font-size: 22px; }
@@ -248,23 +250,21 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 .start h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(23px, 6.2vw, 30px); line-height: 1.35; letter-spacing: -0.01em; text-wrap: balance; }
 .start .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .start label.f { font-size: 15px; }
-.sans { background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
+.sans { border-top: 1px solid var(--line); padding: 14px 0 0; display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
 .sans .sl { font-size: 14.5px; color: var(--muted); }
-.sans .sb { font-family: var(--font-display); font-weight: 800; font-size: clamp(24px, 7vw, 32px); line-height: 1.3; color: var(--accent); }
+.sans .sb { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 8.6vw, 40px); line-height: 1.2; letter-spacing: -0.02em; color: var(--ink); }
 .sans .ss { font-size: 15.5px; }
 .sans b { white-space: nowrap; }
 /* 집값 = 은행 대출(회색) + 내 현금(accent) + 모자란 돈(bad). 첫 화면·결과 상자·지도 0단계 공통 */
-.lbar { display: flex; gap: 2px; height: 14px; border-radius: 99px; overflow: hidden; margin: 8px 0 6px; }
+.lbar { display: flex; gap: 2px; height: 16px; border-radius: 3px; overflow: hidden; margin: 10px 0 6px; }
 .lbar span { display: block; height: 100%; min-width: 3px; }
-.lbar .bk, .lleg i.bk { background: var(--line); }
-.sans .lbar .bk, .sans .lleg i.bk, .answer.ok .lbar .bk, .answer.ok .lleg i.bk { background: var(--paper); }
-.lleg i.bk { outline: 1px solid var(--muted); outline-offset: -1px; }
+.lbar .bk, .lleg i.bk { background: var(--line); background: color-mix(in srgb, var(--muted) 38%, var(--paper)); }
 .lbar .mine, .lleg i.mine { background: var(--accent); }
 .lbar .miss, .lleg i.miss { background: var(--bad); }
 .lleg { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .lleg span { white-space: nowrap; }
 .lleg b, .mfact .lleg b { color: var(--ink); font-weight: 700; }
-.lleg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.lleg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .lex { display: block; font-size: 14px; color: var(--muted); margin-top: 2px; }
 .lim { margin: 8px 0 2px; font-size: 15.5px; line-height: 1.5; }
 .lim b, .mfact .lim b { color: var(--ink); }
@@ -275,12 +275,12 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 .mtitle { font-size: clamp(21px, 5.6vw, 26px); font-weight: 800; letter-spacing: -0.01em; line-height: 1.35; }
 .mtitle b { color: inherit; }
 .mbarwrap { display: flex; align-items: center; gap: 10px; }
-.mbar { flex: 1; height: 10px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
-.mbar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+.mbar { flex: 1; height: 8px; border-radius: 2px; background: var(--bg); overflow: hidden; }
+.mbar span { display: block; height: 100%; background: var(--accent); border-radius: 0; transition: width .4s ease; }
 .mbarwrap .key { width: 26px; height: 26px; color: var(--muted); flex: none; }
-.mbarwrap.full .key { color: var(--accent); }
+.mbarwrap.full .key { color: var(--key); }
 .mapgrid { display: grid; gap: 16px; }
-.msteps { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; }
+.msteps { background: var(--paper); border: 0; border-radius: 10px; padding: 8px 14px; }
 .mstep { position: relative; }
 .mstep::before { content: ""; position: absolute; left: 17px; top: 0; bottom: 0; width: 2px; background: var(--line); }
 .mstep:first-child::before { top: 26px; }
@@ -291,22 +291,22 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 .mno { width: 36px; height: 36px; border-radius: 99px; display: grid; place-items: center; font-weight: 800; font-size: 15px; background: var(--paper); border: 2px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
 .mno .key { width: 18px; height: 18px; }
 .mstep.done .mno { background: var(--accent); border-color: var(--accent); color: var(--paper); }
-.mstep.now .mno { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.mstep.now .mno { border-color: var(--key); color: var(--key); background: var(--paper); }
 .mt { font-weight: 700; font-size: 16.5px; overflow-wrap: anywhere; }
 .mstep.todo .mt { color: var(--muted); font-weight: 600; }
-.mb { font-size: 13px; font-weight: 700; padding: 1px 9px; border-radius: 99px; background: var(--bg); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.mstep.now .mb { background: var(--accent); color: var(--paper); }
-.mstep.done .mb { background: var(--accent-soft); color: var(--accent); }
+.mb { font-size: 13.5px; font-weight: 600; padding: 0; background: none; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mstep.now .mb { color: var(--key); font-weight: 800; }
+.mstep.done .mb { color: var(--accent); }
 .mstep.open .mt { color: var(--ink); }
 .mbody { margin-left: 48px; padding: 2px 0 18px; display: grid; gap: 12px; }
 .feel { margin: 0; font-size: 17px; font-weight: 700; color: var(--accent); }
 .lines { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15.5px; color: var(--ink); }
 .mine { display: grid; gap: 10px; }
-.mfact { font-size: 15.5px; padding: 11px 13px; border-radius: 8px; background: var(--bg); font-variant-numeric: tabular-nums; }
-.mfact b { color: var(--accent); }
+.mfact { font-size: 15.5px; padding: 11px 13px; border-radius: 6px; background: var(--bg); font-variant-numeric: tabular-nums; }
+.mfact b { color: var(--ink); }
 .mfact b.bad { color: var(--bad); }
-.exp { display: grid; gap: 4px; padding: 11px 13px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; font-size: 15px; }
-.exp b { color: var(--accent); }
+.exp { display: grid; gap: 4px; padding: 11px 13px; background: var(--bg); border-radius: 6px; font-size: 15px; }
+.exp b { color: var(--ink); }
 .crit { align-items: end; }
 .crit input { font-size: 16px !important; padding: 9px 11px !important; }
 .dsr { display: grid; gap: 8px; padding-top: 4px; }
@@ -316,8 +316,8 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 @media (max-width: 560px) { .bmob { display: block; } }
 .brow.best input[data-bf=name] { border-color: var(--accent); color: var(--accent); font-weight: 800; }
 .cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-.cmp > div { display: grid; gap: 6px; align-content: start; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14.5px; }
-.cmp > div > b { font-size: 16px; color: var(--accent); }
+.cmp > div { display: grid; gap: 6px; align-content: start; padding: 12px; background: var(--bg); border-radius: 6px; font-size: 14.5px; }
+.cmp > div > b { font-size: 16px; color: var(--ink); }
 .cmp span b { color: var(--ink); }
 .cmp span.ok, .cmp span.no { font-weight: 700; font-size: 14px; padding: 4px 8px; border-radius: 6px; }
 .cmp span.ok { background: var(--accent-soft); color: var(--accent); }
@@ -331,7 +331,7 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 .links a { color: var(--accent); font-weight: 600; }
 .next { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 15.5px; }
 .next li { padding: 8px 0; border-bottom: 1px solid var(--line); }
-.next li b { color: var(--accent); display: inline-block; min-width: 46px; font-variant-numeric: tabular-nums; }
+.next li b { color: var(--ink); display: inline-block; min-width: 46px; font-variant-numeric: tabular-nums; }
 .sv input { font-size: 16px !important; padding: 9px 11px !important; }
 .banks { display: grid; gap: 6px; }
 .bhead, .brow { display: grid; grid-template-columns: 1fr 0.9fr 0.9fr 0.75fr 1.1fr 30px; gap: 6px; align-items: center; }
@@ -350,7 +350,7 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--accent); vertical-a
 }
 details.docs summary { cursor: pointer; font-size: 15px; font-weight: 600; color: var(--accent); }
 details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display: grid; gap: 4px; }
-.mdetail { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.mdetail { background: var(--paper); border: 0; border-radius: 10px; padding: 20px; }
 .mdetail .mbody { margin-left: 0; padding: 0; }
 .mdetail h2 { margin: 0 0 4px; font-size: 21px; }
 /* 넓은 웹 화면: 왼쪽 길(단계), 오른쪽 내용 */
@@ -358,7 +358,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   .wrap { max-width: 800px; }
   .mapgrid.wide { grid-template-columns: 270px minmax(0, 1fr); align-items: start; }
   .mapgrid.wide .msteps { position: sticky; top: 76px; }
-  .mapgrid.wide .mstep.open .mhead { background: var(--accent-soft); border-radius: 10px; }
+  .mapgrid.wide .mstep.open .mhead { background: var(--bg); border-radius: 6px; }
   .mapgrid.wide .mt { font-size: 15.5px; }
 }
 </style>
@@ -470,7 +470,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       <button type="button" id="again" class="linkbtn" hidden></button>
       <div id="picked" class="picked" hidden></div>
       <div class="trust" aria-label="데이터 출처">
-        <div class="trow"><span class="tbadge">공공데이터</span><b>실제 거래·분양 정보로 계산해요</b></div>
+        <div class="trow"><b>실제 거래가와 분양가(공공데이터)로 계산해요</b></div>
         <div class="tmeta" id="dataMeta">매주 자동 반영</div>
         <details class="tsrcd"><summary>출처 2곳 보기</summary>
         <ul class="tsrc">
@@ -886,7 +886,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     $("salaryEcho").textContent = p.salary ? "= " + won(p.salary) : "";
     $("cashEcho").textContent = p.cash ? "= " + won(p.cash) : "";
 
-    var a = $("answer"), house = (p.name || (houseAuto && p.price ? "지금 우리집 후보 최고가" : "이 집")) + (p.price ? " · " + won(p.price) : "");
+    var a = $("answer"), house = (p.name || (houseAuto && p.price ? "지금 우리집 후보 최고가" : "이 집")) + (p.price ? " (" + won(p.price) + ")" : "");
     $("aHouse").textContent = house;
     var tp = $("toPlan");   // 입주까지 일정로: 집 이름·가격(+분양 공고번호)만 넘긴다. 연봉·현금은 넘기지 않는다
     tp.hidden = p.price <= 0;
@@ -915,7 +915,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     }
     var why = { ltv: "집값의 " + pct(p.ltv) + "까지만 빌려줘요", cap: "지역 대출 상한이에요", dsr: "연봉으로 갚을 수 있는 만큼만 빌려줘요" }[e.bind];
     $("fLoan").innerHTML = won(e.loan) + "<small>" + why + "</small>";
-    $("fMonthly").innerHTML = won(e.monthly) + "<small>금리 " + pct(p.rate) + " · " + p.years + "년</small>";
+    $("fMonthly").innerHTML = won(e.monthly) + "<small>금리 " + pct(p.rate) + ", " + p.years + "년 만기</small>";
     $("fMax").innerHTML = won(mpHere) + "<small>" + esc(REGION_NAME[p.region]) + " 기준</small>";
     var mr = maxFor("reg"), mc = maxFor("capital");
     $("budgetLine").innerHTML = (p.cash > 0 || p.salary > 0)
@@ -2029,7 +2029,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
 
   function critBlock(p) {   // 만든 사람의 실제 기준 + 내 기준 3가지
     var c = J.crit, capPh = p ? Math.floor(p.maxReg / 1000) * 1000 : 50000;
-    var mine = c.min > 0 && c.cap > 0 ? "<div class='mfact'>우리 기준: 회사까지 차로 <b>" + c.min + "분</b> 이내 · <b>" + won(c.cap) + "</b> 이하" + (c.station ? " · <b>역 근처</b>" : "") + "</div>" : "";
+    var mine = c.min > 0 && c.cap > 0 ? "<div class='mfact'>우리 기준: 회사까지 차로 <b>" + c.min + "분</b> 이내, <b>" + won(c.cap) + "</b> 이하" + (c.station ? ", <b>역 근처</b>" : "") + "</div>" : "";
     return "<div class='exp'><b>만든 사람은 이렇게 골랐어요</b><span>① 회사에서 차로 50분 이내 ② 분양가 5억 이하(그때 기준) ③ 역 근처. 이 기준에 맞는 분양 단지를 사전청약으로 먼저 잡았어요.</span></div>"
       + "<div class='row3 crit'><label class='f'>회사까지 (차로)<span class='inrow'><input type='number' min='0' step='5' inputmode='numeric' data-cr='min' value='" + (c.min || "") + "' placeholder='50'><span class='unit'>분 이내</span></span></label>"
       + "<label class='f'>가격 상한<span class='inrow'><input type='number' min='0' step='1000' inputmode='numeric' data-cr='cap' value='" + (c.cap || "") + "' placeholder='" + capPh + "'><span class='unit'>만원</span></span></label>"
@@ -2039,7 +2039,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
   // ---- 단계별 '내 숫자' ----
   function mine(i, sn, pl) {
     var p = sn && sn.touched ? sn : null;
-    if (i === 0) return p ? "<div class='mfact'>연봉 <b>" + won(p.salary) + "</b> · 현금 <b>" + won(p.cash) + "</b>이면<br>그 밖 수도권 <b>" + won(p.maxCap) + "</b>, 서울·경기 규제지역 <b>" + won(p.maxReg) + "</b>까지가 지금 우리집 후보예요."
+    if (i === 0) return p ? "<div class='mfact'>연봉 <b>" + won(p.salary) + "</b>, 현금 <b>" + won(p.cash) + "</b>이면<br>그 밖 수도권 <b>" + won(p.maxCap) + "</b>, 서울·경기 규제지역 <b>" + won(p.maxReg) + "</b>까지가 지금 우리집 후보예요."
         + (window.ujkMaxBreak && p.maxCap > 0 ? "<div class='mlbar'>" + window.ujkMaxBreak("capital").html + "</div>" : "") + "</div>"
       : J.last ? "<div class='mfact'>지난번 계산(" + md(J.last.at) + "): 그 밖 수도권 <b>" + won(J.last.maxCap) + "</b>, 서울·경기 규제지역 <b>" + won(J.last.maxReg) + "</b>까지가 우리집 후보였어요. 숫자가 바뀌었으면 다시 계산해 보세요.</div>"
       : "<div class='mfact'>아직 계산 전이에요. 연봉과 현금만 넣어 보세요.</div>";
@@ -2077,7 +2077,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       var info = "";
       if (pl && pl.house.price) {
         var loanNeed = 0; pl.items.forEach(function (it) { if (it.kind === "pay" && it.who === "loan" && it.status !== "done") loanNeed += it.amt || 0; });
-        if (loanNeed) info = "<div class='mfact'>일정표 기준 대출로 낼 돈 <b>" + won(loanNeed) + "</b>" + (pl.house.loan ? " · 대출 예상 <b>" + won(pl.house.loan) + "</b> → " + (pl.house.loan >= loanNeed ? "여유 <b>" + won(pl.house.loan - loanNeed) + "</b>" : "<b class='bad'>" + won(loanNeed - pl.house.loan) + " 모자라요</b>") : "") + "</div>";
+        if (loanNeed) info = "<div class='mfact'>일정표 기준 대출로 낼 돈 <b>" + won(loanNeed) + "</b>" + (pl.house.loan ? ", 대출 예상 <b>" + won(pl.house.loan) + "</b> → " + (pl.house.loan >= loanNeed ? "여유 <b>" + won(pl.house.loan - loanNeed) + "</b>" : "<b class='bad'>" + won(loanNeed - pl.house.loan) + " 모자라요</b>") : "") + "</div>";
       }
       var exp = "<div class='exp'><b>만든 사람은 이렇게 은행을 골랐어요</b><span>① 최대 대출 금액(목표 6억) ② 가장 낮은 금리 ③ 연봉 기준 한도(DSR): 기존 대출을 먼저 갚고, 연봉이 어떻게 잡히는지 확인.</span>"
         + "<span>같은 아파트인데 은행마다 감정가가 6억 5천~7억 8천으로 갈렸어요. 그래서 한도도 은행마다 달랐어요.</span></div>";
@@ -2085,7 +2085,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
       var named = rows.map(function (b, k) { return { k: k, b: b, lim: numOf(b.lim), rate: numOf(b.rate) }; }).filter(function (x) { return x.b.name; });
       var best = null;
       named.forEach(function (x) { if (isNaN(x.lim)) return; if (!best || x.lim > best.lim || (x.lim === best.lim && !isNaN(x.rate) && (isNaN(best.rate) || x.rate < best.rate))) best = x; });
-      var table = "<div class='banks'><div class='bmob'>칸 순서: 은행 · 감정가 · 최대 한도(만원) · 금리(%) · 중도상환·우대 조건</div><div class='bhead'><span>은행</span><span>감정가</span><span>최대 한도</span><span>금리</span><span>중도상환·우대</span><span>고름</span></div>"
+      var table = "<div class='banks'><div class='bmob'>칸 순서: 은행, 감정가, 최대 한도(만원), 금리(%), 중도상환·우대 조건</div><div class='bhead'><span>은행</span><span>감정가</span><span>최대 한도</span><span>금리</span><span>중도상환·우대</span><span>고름</span></div>"
         + rows.map(function (b, k) {
           return "<div class='brow" + (best && best.k === k ? " best" : "") + "' data-bk='" + k + "'><input type='text' maxlength='20' placeholder='○○은행' aria-label='은행' data-bf='name' value='" + esc(b.name || "") + "'>"
             + "<input type='text' maxlength='12' inputmode='numeric' placeholder='감정가(만원)' aria-label='감정가' data-bf='apr' value='" + esc(b.apr || "") + "'>"
@@ -2104,7 +2104,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
         var why = a0.bind === "dsr" ? "연봉 기준" : a0.bind === "ltv" ? "집값 비율" : "지역 금액";
         dsr = "<div class='dsr'><b>기존 대출을 갚으면 한도가 얼마나 늘까?</b>"
           + "<label class='f'>기존 대출 1년 원리금 (신용대출·차 할부 등)<span class='inrow'><input type='number' min='0' step='10' inputmode='numeric' data-debt='1' value='" + (debt || "") + "' placeholder='0'><span class='unit'>만원/년</span></span></label>"
-          + "<div class='mfact'>" + won(price5) + " 집 기준 · 지금 은행이 보태 줄 돈 <b>" + won(a1.loan) + "</b>"
+          + "<div class='mfact'>" + won(price5) + " 집 기준으로 지금 은행이 보태 줄 돈 <b>" + won(a1.loan) + "</b>"
           + (debt > 0 ? (a0.loan > a1.loan ? " → 다 갚으면 <b>" + won(a0.loan) + "</b> (<b>+" + won(a0.loan - a1.loan) + "</b>)" : " → 다 갚아도 같아요(" + why + " 상한에 먼저 걸려요)") : "") + "</div>"
           + "<span class='hint'>연봉은 소득 증빙(원천징수영수증·소득금액증명) 기준으로 잡혀요. 부부 소득을 합칠 수 있는지는 은행·상품마다 달라서 상담 때 꼭 물어보세요. 월 상환액을 모르면 대출 앱의 월 상환액 × 12로 넣어요.</span></div>";
       } else dsr = "<div class='mfact'>0단계에서 연봉·현금과 집 가격을 넣으면, 기존 대출을 갚았을 때 한도가 얼마나 느는지 계산해 드려요.</div>";
@@ -2187,7 +2187,7 @@ details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display:
     STEPS.forEach(function (s, i) { var st = stepStat(i, sn, pl); if (st.full) done++; else if (cur < 0) cur = i; });
     var p = sn && sn.touched ? sn : null, lines = [];
     lines.push(["지금 단계", cur < 0 ? "열쇠 받기 완료" : cur + ". " + STEPS[cur].t]);
-    var lm = p || J.last; if (lm) lines.push(["지금 우리집 후보", "그 밖 수도권 " + won(lm.maxCap) + " · 규제지역 " + won(lm.maxReg)]);
+    var lm = p || J.last; if (lm) lines.push(["지금 우리집 후보", "그 밖 수도권 " + won(lm.maxCap) + ", 규제지역 " + won(lm.maxReg)]);
     if (J.route) lines.push(["고른 길", J.route === "presale" ? "분양(청약)" : "매매"]);
     var sv = J.save; if (sv.target) { var left = Math.max(0, sv.target - sv.have), m = sv.monthly > 0 ? Math.ceil(left / sv.monthly) : 0; lines.push(["첫 목돈", left ? "목표 " + won(sv.target) + " 중 " + won(left) + " 남음" + (m ? " · 약 " + m + "개월" : "") : "목표 " + won(sv.target) + " 모음"]); }
     var pick = J.banks.filter(function (b) { return b.pick && b.name; })[0];
