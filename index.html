@@ -313,7 +313,14 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--key); vertical-alig
 .mb { font-size: 13.5px; font-weight: 600; padding: 0; background: none; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .mstep.now .mb { color: var(--key); font-weight: 800; }
 .mstep.done .mb { color: var(--accent); }
-.mstep.open .mt { color: var(--ink); }
+.mstep.open .mt { color: var(--ink); font-weight: 800; }
+.mstep.open .mno { border-color: var(--accent); box-shadow: 0 0 0 3px var(--bg); }
+.mstep.todo.open .mno { color: var(--accent); }
+.mwhere { margin: 0; font-size: 14px; color: var(--muted); font-weight: 600; }
+.mwhere.now { color: var(--key); font-weight: 800; }
+.mwhere .txtbtn { font-size: 14px; padding: 0; color: var(--accent); }
+.mnav { display: flex; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: 1px solid var(--line); }
+.mnav .txtbtn { padding: 10px 0 0; }
 .mbody { margin-left: 48px; padding: 2px 0 18px; display: grid; gap: 12px; }
 .feel { margin: 0; font-size: 17px; font-weight: 700; color: var(--accent); }
 .lines { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15.5px; color: var(--ink); }
@@ -429,7 +436,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   .wrap { max-width: 800px; }
   .mapgrid.wide { grid-template-columns: 270px minmax(0, 1fr); align-items: start; }
   .mapgrid.wide .msteps { position: sticky; top: 76px; }
-  .mapgrid.wide .mstep.open .mhead { background: var(--bg); border-radius: 6px; }
+  .mapgrid.wide .mstep.open .mhead { background: var(--bg); border-radius: 6px; box-shadow: inset 3px 0 0 var(--accent); }
   .mapgrid.wide .mt { font-size: 15.5px; }
 }
 </style>
@@ -2398,16 +2405,17 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     if (i === 0) return p ? "<div class='mfact'>연봉 <b>" + won(p.salary) + "</b>, 현금 <b>" + won(p.cash) + "</b>이면<br>그 밖 수도권 <b>" + won(p.maxCap) + "</b>, 서울·경기 규제지역 <b>" + won(p.maxReg) + "</b>까지가 지금 우리집 후보예요."
         + (window.ujkMaxBreak && p.maxCap > 0 ? "<div class='mlbar'>" + window.ujkMaxBreak("capital").html + "</div>" : "") + "</div>"
       : J.last ? "<div class='mfact'>지난번 계산(" + md(J.last.at) + "): 그 밖 수도권 <b>" + won(J.last.maxCap) + "</b>, 서울·경기 규제지역 <b>" + won(J.last.maxReg) + "</b>까지가 우리집 후보였어요. 숫자가 바뀌었으면 다시 계산해 보세요.</div>"
-      : "<div class='mfact'>아직 계산 전이에요. 연봉과 현금만 넣어 보세요.</div>";
+      : "<div class='mfact'>아직 <b>내 숫자</b>로 계산하지 않았어요. 처음 보이는 금액은 예시 값이에요. 연봉과 현금 두 칸만 넣으면 이 단계 첫 체크가 저절로 돼요.</div>";
     if (i === 1) {
       var price = p ? (p.price > 0 ? p.price : p.maxReg) : 0;
-      if (!price) return "<div class='mfact'>0단계에서 계산하면, 그 가격으로 두 길을 나란히 보여 드려요.</div>" + critBlock(p);
+      var routeBtns = "<div class='btns'><button type='button' class='btn small" + (J.route === "presale" ? "" : " ghost") + "' data-route='presale'>분양으로 갈래요</button><button type='button' class='btn small" + (J.route === "sale" ? "" : " ghost") + "' data-route='sale'>매매로 갈래요</button></div>";
+      if (!price) return "<div class='mfact'>내 연봉·현금을 넣으면, 그 가격으로 두 길에 필요한 돈을 나란히 보여 드려요. <button type='button' class='txtbtn' data-mynum='1'>내 숫자 넣기</button></div>" + routeBtns + critBlock(p);
       var dep20 = price * 0.2, sale = p.saleNeed(price);
       var vs = function (need) { var g = p.cash - need; return "<span class='" + (g >= 0 ? "ok" : "no") + "'>" + (g >= 0 ? "지금 현금으로 가능 (남는 돈 " + won(g) + ")" : "지금 현금보다 " + won(-g) + " 부족") + "</span>"; };
       return "<div class='mfact'><b>" + won(price) + "</b> 집이라면</div><div class='cmp'>"
         + "<div><b>분양</b><span>계약할 때 <b>" + won(dep20) + "</b><br>(분양가 20% 가정, 공고마다 10~20%)</span>" + vs(dep20) + "<span>중도금은 보통 대출, 2~3년 뒤 입주 때 잔금</span><span>잔금 대출은 감정가 기준</span></div>"
         + "<div><b>매매</b><span>2~3개월 안에 내 현금 <b>" + won(sale.need) + "</b><br>(대출 " + won(sale.loan) + " 빼고, 세금·중개보수 포함)</span>" + vs(sale.need) + "<span>계약 후 바로 대출 신청</span><span>들어가 살 수 있는 시점이 빨라요</span></div></div>"
-        + "<div class='btns'><button type='button' class='btn small" + (J.route === "presale" ? "" : " ghost") + "' data-route='presale'>분양으로 갈래요</button><button type='button' class='btn small" + (J.route === "sale" ? "" : " ghost") + "' data-route='sale'>매매로 갈래요</button></div>" + critBlock(p);
+        + routeBtns + critBlock(p);
     }
     if (i === 2) return "<div class='mfact'>" + (J.route === "presale" ? "분양 길: 청약 자격부터 확인해요." : J.route === "sale" ? "매매 길: 대출 규제와 토지거래허가부터 확인해요." : "길을 고르면 확인할 것이 그 길에 맞게 줄어요.") + "</div>"
       + "<div class='links'>" + STEPS[2].links.map(function (l) { return "<a href='" + l[1] + "' target='_blank' rel='noopener'>" + esc(l[0]) + " ↗</a>"; }).join("") + "</div>";
@@ -2501,7 +2509,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       + (function () {   // 다음 할 일 하나만 (체크 개수 대신)
         if (cur < 0) return "";
         var nx = visibleChecks(cur).filter(function (c) { return !isDone(c, sn, pl); })[0];
-        return "<div class='mnext'><span>다음 할 일</span><b>" + esc(nx ? nx[1] : STEPS[cur].t) + "</b><button type='button' class='txtbtn' data-open='" + cur + "'>바로 하기</button></div>";
+        var k = nx && nx[3] || "", act = k === "calc" ? "data-mynum='1'" : k === "house" || k === "cands3" ? "data-go='calc'" : /^(works|pmove|pp:|pd:)/.test(k) ? "data-go='plan'" : "data-open='" + cur + "'";   // 그 일을 하는 곳으로 바로
+        return "<div class='mnext'><span>다음 할 일 (" + cur + "단계)</span><b>" + esc(nx ? nx[1] : STEPS[cur].t) + "</b><button type='button' class='txtbtn' " + act + ">바로 하기</button></div>";
       })();
     var open = J.open >= 0 ? J.open : (J.open === -2 && !wide ? -1 : cur);
     if (wide && open < 0) open = cur < 0 ? STEPS.length - 1 : cur;
@@ -2509,21 +2518,26 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     var detail = "";
     $("mapSteps").innerHTML = STEPS.map(function (s, i) {
       var st = stats[i], state = st.full ? "done" : i === cur ? "now" : "todo";
-      var badge = st.passed ? "지나옴" : st.full ? "완료" : i === cur ? "지금 여기" : "";
+      var prog = st.total ? st.done + "/" + st.total : "";   // 단계마다 체크 진행(예: 1/3)
+      var badge = st.passed ? "지나옴" : st.full ? "완료" : i === cur ? "지금 여기" + (st.done ? " · " + prog : "") : st.done ? prog : "";
       var body = "";
       if (i === open) {
-        body = "<div class='mbody'>" + (wide ? "<h2>" + i + ". " + esc(s.t) + "</h2>" : "") + "<p class='feel'>“" + esc(s.feel) + "”</p><ul class='lines'>" + s.lines.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") + "</ul>"
+        var where = i === cur ? "<p class='mwhere now'>지금 여기예요 · 체크 " + prog + "</p>"
+          : st.full ? "<p class='mwhere'>" + (st.passed ? "지나온 단계예요" : "끝낸 단계예요") + "</p>"
+          : cur >= 0 ? "<p class='mwhere'>미리 보는 단계예요 · 체크 " + prog + " · 지금 여기는 <button type='button' class='txtbtn' data-open='" + cur + "'>" + cur + ". " + esc(STEPS[cur].t) + "</button></p>" : "";
+        body = "<div class='mbody'>" + (wide ? "<h2>" + i + ". " + esc(s.t) + "</h2>" : "") + where + "<p class='feel'>“" + esc(s.feel) + "”</p><ul class='lines'>" + s.lines.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") + "</ul>"
           + "<div class='mine'>" + mine(i, sn, pl) + "</div>"
           + "<div class='mchecks'>" + visibleChecks(i).map(function (c) {
             var d = isDone(c, sn, pl), auto = c[3] && autoDone(c[3], sn, pl);
             return "<label class='check'><input type='checkbox' data-ck='" + c[0] + "'" + (d ? " checked" : "") + (auto ? " disabled" : "") + "> <span>" + esc(c[1]) + (auto ? " <small>(자동 확인)</small>" : "") + "</span></label>";
           }).join("") + "</div>"
-          + (i === 0 ? "<div class='btns'><button type='button' class='btn small' data-go='calc'>열쇠 갖기 전략 열기</button></div>" : "")
-          + (i < STEPS.length - 1 ? "<button type='button' class='txtbtn' data-open='" + (i + 1) + "'>다음 단계 보기</button>" : "") + "</div>";
+          + (i === 0 ? "<div class='btns'>" + (sn && sn.touched ? "" : "<button type='button' class='btn small' data-mynum='1'>내 연봉·현금 넣기</button>") + "<button type='button' class='btn small" + (sn && sn.touched ? "" : " ghost") + "' data-go='calc'>단지 찾고 후보 담기</button></div>" : "")
+          + "<div class='mnav'>" + (i > 0 ? "<button type='button' class='txtbtn' data-open='" + (i - 1) + "'>← 이전 단계</button>" : "<span></span>")
+          + (i < STEPS.length - 1 ? "<button type='button' class='txtbtn strong' data-open='" + (i + 1) + "'>" + (st.full ? "다음 단계로 →" : "다음 단계 미리 보기 →") + "</button>" : "") + "</div></div>";
         if (wide) { detail = body; body = ""; }
       }
       var no = st.full ? "✓" : i === STEPS.length - 1 ? KEY : String(i);
-      return "<section class='mstep " + state + (i === open ? " open" : "") + "'><button type='button' class='mhead' data-open='" + i + "' aria-expanded='" + (i === open) + "'><span class='mno'>" + no + "</span><span class='mt'>" + esc(s.t) + "</span><span class='mb'>" + badge + "</span></button>" + body + "</section>";
+      return "<section class='mstep " + state + (i === open ? " open" : "") + "'><button type='button' class='mhead' data-open='" + i + "' aria-expanded='" + (i === open) + "'" + (i === open ? " aria-current='step'" : "") + "><span class='mno'>" + no + "</span><span class='mt'>" + esc(s.t) + "</span><span class='mb'>" + badge + "</span></button>" + body + "</section>";
     }).join("");
     $("mapDetail").hidden = !wide; $("mapDetail").innerHTML = wide ? detail : "";
   }
@@ -2566,6 +2580,11 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       var el = wideNow ? $("mapDetail") : view.querySelector(".mstep.open"); if (el && (wideNow || !b.classList.contains("mhead"))) try { el.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {} return; }
     if (b.hasAttribute("data-route")) { J.route = b.getAttribute("data-route"); J.checks.c1a = true; save(); if (window.ujkPlanSetMode) window.ujkPlanSetMode(J.route); render(); track("map-route-" + J.route); return; }
     if (b.hasAttribute("data-go")) { go(b.getAttribute("data-go")); return; }
+    if (b.hasAttribute("data-mynum")) {   // 첫 화면 입력칸이 있으면 거기로, 없으면 계산 탭 연봉 칸으로
+      var hs = $("startHero"), tgt = hs && !hs.hidden ? $("sSalary") : null;
+      if (!tgt) { go("calc"); tgt = $("salary"); }
+      setTimeout(function () { if (tgt) { try { tgt.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} tgt.focus(); try { tgt.select(); } catch (e) {} } }, 60);
+      track("map-mynum"); return; }
     if (b.hasAttribute("data-gen")) {   // 일정표에 집 가격이 없으면 계산기에서 고른 집으로 채운 뒤 만든다
       var pl0 = plan(), sn0 = snap();
       if (pl0 && !pl0.house.price && sn0 && sn0.touched && sn0.price > 0 && window.ujkPlanApply) {
