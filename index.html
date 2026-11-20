@@ -406,6 +406,11 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 .cst:not(.ok):not(.no) { color: var(--muted); font-weight: 500; font-size: 13.5px; white-space: normal; max-width: 8.5em; }
 .cst.ok { color: var(--accent); }
 .cst.no { color: var(--bad); }
+.csig { grid-column: 1 / -1; font-size: 14.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.txtbtn.strong { color: var(--accent); }
+.sortbar { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 2px 0 4px; }
+.sortbar button { font: inherit; font-size: 14.5px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 6px 0; cursor: pointer; border-bottom: 2px solid transparent; }
+.sortbar button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--accent); }
 .cact { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; margin-left: -6px; }
 #acctCands { border-top: 1px solid var(--line); }
 .nudge { display: grid; gap: 10px; }
@@ -597,6 +602,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     <section class="card" id="candCard" hidden>
       <h2 class="step">담아 둔 우리집 후보 <span class="candn" id="candN"></span></h2>
       <p class="hint" style="margin:0">지금 넣은 연봉·현금으로 집마다 되는지 나란히 보여 드려요. 연봉·현금을 바꾸면 바로 다시 계산해요.</p>
+      <p class="hint" id="candTip" style="margin:0"></p>
       <div class="clist" id="candList"></div>
     </section>
 
@@ -1059,14 +1065,49 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       btn.textContent = at >= 0 ? "우리집 후보에 담겨 있어요 (빼기)" : "우리집 후보에 담기" + (list.length ? " (지금 " + list.length + "곳)" : "");
     }
     $("candCard").hidden = !list.length; $("candN").textContent = list.length ? list.length + "곳" : "";
+    $("candTip").innerHTML = list.length && list.length < 3
+      ? "후보는 <b>3곳 이상</b>이 좋아요. 한 곳이 오르거나 거래가 몰려도 바로 다음 집으로 옮겨 볼 수 있어요. 지금 사는 동네와 비슷한 동네 2~3곳에서 더 담아 보세요."
+      : "예산을 넘은 집은 <b>다음 선택지</b>를 눌러 보세요. 같은 동네에서 지금 예산 안에 드는 비슷한 면적 단지를 찾아 드려요.";
     $("candList").innerHTML = list.map(function (c, i) {
       var st = candStatus(c);
-      var nw = candNews(c);
+      var nw = candNews(c), sg = candSig(c);
+      var over = calcTouched && c.ref && c.ref.k === "apt" && budgetGap(nw && nw.k === "trade" ? nw.price : +c.price, c.region) < 0;
       return "<div class='crow'><div class='cmain'><b>" + esc(c.name || NONAME) + "</b><span>" + won(+c.price) + ", " + esc(REGION_NAME[c.region] || "") + "</span></div>"
         + "<span class='cst " + st.cls + "'>" + st.txt + "</span>"
+        + (sg ? "<span class='csig'>" + esc(sg) + "</span>" : "")
         + (nw ? "<span class='cnews'>" + nw.txt + "</span>" : "")
-        + "<div class='cact'><button type='button' class='txtbtn' data-cand-open='" + i + "'>이 집 다시 계산</button><button type='button' class='txtbtn' data-cand-del='" + i + "'>빼기</button></div></div>";
+        + "<div class='cact'>" + (over ? "<button type='button' class='txtbtn strong' data-cand-next='" + i + "'>다음 선택지</button>" : "")
+        + "<button type='button' class='txtbtn' data-cand-open='" + i + "'>이 집 다시 계산</button><button type='button' class='txtbtn' data-cand-del='" + i + "'>빼기</button></div></div>";
     }).join("");
+  }
+  function candSig(c) {   // 담은 실거래 단지의 연식·최근 30일 거래·가격 흐름 (데이터는 candNews가 불러온다)
+    var r = c.ref; if (!r || r.k !== "apt") return "";
+    var cx = (sggCache[r.sgg] || {})[r.id]; if (!cx) return "";
+    var a = cx.a.filter(function (z) { return z[0] === r.ar; })[0];
+    return [ageTxt(cx.y), areaSig(a)].filter(Boolean).join(" · ");
+  }
+  function nextChoices(i) {   // 예산을 넘은 집 → 같은 시군구, 비슷한 면적(전용 ±12㎡), 지금 예산 안 단지. 같은 동네 → 새 집 → 넓은 집 순
+    var c = candList()[i]; if (!c || !c.ref || c.ref.k !== "apt") return;
+    track("cand-next");
+    var r = c.ref;
+    Promise.all([loadData(), getSgg(r.sgg)]).then(function () {
+      var cache = sggCache[r.sgg] || {}, me = cache[r.id] || {}, pick = [];
+      Object.keys(cache).forEach(function (cid) {
+        if (cid === r.id) return;
+        var cx = cache[cid], best = null;
+        cx.a.forEach(function (a) { if (Math.abs(a[0] - r.ar) <= 12 && budgetGap(a[1], c.region) >= 0 && (!best || a[0] > best[0])) best = a; });
+        if (best) pick.push({ cid: cid, cx: cx, a: best, same: cx.u === me.u ? 1 : 0, y: parseInt(cx.y, 10) || 0 });
+      });
+      pick.sort(function (a, b) { return b.same - a.same || b.y - a.y || b.a[0] - a.a[0]; });
+      var byId = {}; idx.forEach(function (x) { byId[x[0]] = x; });
+      var rows = pick.slice(0, 20).map(function (p) { return byId[p.cid] ? { m: { apt: byId[p.cid] } } : null; }).filter(Boolean);
+      if (window.ujkShowTab) window.ujkShowTab("calc");
+      sortBy = "dist";
+      $("picked").hidden = true; pickPending = false;   // 앞서 본 단지의 면적 칸은 닫는다(다음 선택지 목록과 섞이지 않게)
+      showCandidates(rows, "<b>" + esc(c.name || NONAME) + "</b> 대신 · " + esc((me.u || "같은 동네")) + "부터, 지금 예산 안에 드는 비슷한 면적(전용 " + r.ar + "㎡ ±12) 단지 " + rows.length + "곳", null);
+      if (!rows.length) $("results").insertAdjacentHTML("beforeend", '<p class="hint">같은 시군구에는 지금 예산 안 비슷한 면적 단지가 없어요. 이웃 동네의 역 이름으로 찾아보세요.</p>');
+      try { $("results").scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err) {}
+    });
   }
   window.ujkCands = function () { return candList().map(function (c, i) { var st = candStatus(c), nw = candNews(c); return { i: i, name: c.name || NONAME, price: won(+c.price), region: REGION_NAME[c.region] || "", status: st.txt, cls: st.cls, news: nw ? nw.txt : "" }; }); };
   window.ujkCandOpen = function (i) {
@@ -1231,7 +1272,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     if (at < 0) try { $("candCard").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
   });
   $("candList").addEventListener("click", function (ev) {
-    var o = ev.target.closest("[data-cand-open]"), d = ev.target.closest("[data-cand-del]");
+    var o = ev.target.closest("[data-cand-open]"), d = ev.target.closest("[data-cand-del]"), nx = ev.target.closest("[data-cand-next]");
+    if (nx) nextChoices(+nx.getAttribute("data-cand-next"));
     if (o) { track("cand-open"); window.ujkCandOpen(+o.getAttribute("data-cand-open")); }
     if (d) { var list = candList().slice(); list.splice(+d.getAttribute("data-cand-del"), 1); candSave(list); candRender(); track("cand-del"); }
   });
@@ -1330,6 +1372,27 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     return f.ok ? '<span class="bud ok">예산 안 · ' + esc(f.o.label) + " " + won(f.o.price) + "</span>"
                 : '<span class="bud no">' + won(-f.o.gap) + " 부족 · " + esc(f.o.label) + " " + won(f.o.price) + "</span>";
   }
+  // ---- 단지 신호: '사라/말라' 판정 없이 사실만 보여 준다 (연식·최근 30일 거래·가격 흐름) ----
+  function ageTxt(y) {
+    y = parseInt(y, 10); if (!y) return "";
+    var n = new Date().getFullYear() - y;
+    return y + "년 준공" + (n <= 5 ? " · 신축" : n <= 10 ? " · 준신축" : " · 구축");
+  }
+  function cxN30(cx) { var n = 0; (cx && cx.a || []).forEach(function (a) { n += a[7] || 0; }); return n; }   // a[7] = 최근 30일 거래 수
+  function flowTxt(a) {   // a[8] 최근 3개월 중간값 vs a[9] 4~12개월 전 중간값
+    if (!a || !(a[8] > 0) || !(a[9] > 0)) return "";
+    var r = (a[8] - a[9]) / a[9] * 100;
+    return Math.abs(r) < 1 ? "가격 흐름 보합" : "최근 3개월 " + (r > 0 ? "+" : "−") + Math.abs(r).toFixed(0) + "%";
+  }
+  function areaSig(a) { return [a && a[7] ? "최근 30일 " + a[7] + "건" : "", flowTxt(a)].filter(Boolean).join(" · "); }
+  var sortBy = "dist";
+  function rowYear(r) { return r.m && r.m.apt ? parseInt(r.m.apt[5], 10) || 0 : r.m && r.m.ps ? 9999 : 0; }   // 분양 단지 = 가장 새 집
+  function sortRows(list) {
+    var s = list.slice();
+    if (sortBy === "new") s.sort(function (a, b) { return rowYear(b) - rowYear(a) || (a.d || 0) - (b.d || 0); });
+    else if (sortBy === "price") s.sort(function (a, b) { return (a.f ? a.f.o.price : 1e12) - (b.f ? b.f.o.price : 1e12); });
+    return s;   // dist = 받은 순서(역 검색은 가까운 순, 다음 선택지는 같은 동네 먼저)
+  }
   var lastRows = null, lastHead = "", lastStation = null, fitOnly = true;
   function showCandidates(rows, head, station) {
     lastRows = rows; lastHead = head; lastStation = station || null;
@@ -1343,7 +1406,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     rows.forEach(function (r) { r.f = fitOf(r); });
     var fits = rows.filter(function (r) { return r.f && r.f.ok; });
     var useFilter = fitOnly && fits.length > 0;
-    var list = useFilter ? fits : rows;
+    var list = sortRows(useFilter ? fits : rows);
     box.innerHTML = '<p class="hint">' + lastHead + " · 내 예산 안 <b>" + fits.length + "곳</b></p>"
       + '<p class="hint note">평형은 분양 단지는 공고 공급면적, 매매 단지는 전용면적으로 본 추정이에요. 방·욕실 수는 같은 면적대의 보통 구성(추정)이라 실제와 다를 수 있어요.</p>';
     var tg = document.createElement("label"); tg.className = "check small"; tg.htmlFor = "fitOnly";
@@ -1351,13 +1414,23 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     box.appendChild(tg);
     tg.querySelector("input").addEventListener("change", function (ev) { ev.stopPropagation(); fitOnly = this.checked; renderCandidates(); });
     tg.querySelector("input").addEventListener("input", function (ev) { ev.stopPropagation(); });
+    if (rows.length > 1) {
+      var sb = document.createElement("div"); sb.className = "sortbar"; sb.setAttribute("role", "group"); sb.setAttribute("aria-label", "정렬");
+      [["dist", lastStation ? "가까운 순" : "기본 순"], ["new", "새 아파트 순"], ["price", "낮은 가격 순"]].forEach(function (o) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = o[1]; b.setAttribute("aria-pressed", sortBy === o[0] ? "true" : "false");
+        b.addEventListener("click", function () { sortBy = o[0]; track("sort-" + o[0]); renderCandidates(); });
+        sb.appendChild(b);
+      });
+      box.appendChild(sb);
+    }
     if (fitOnly && !fits.length && rows.length) box.insertAdjacentHTML("beforeend", '<p class="hint">지금 군자금으로는 우리집 후보가 없어 전체를 보여 드려요. 아래 "열쇠에 필요한 연봉"으로 전략을 짜 보세요.</p>');
     if (!rows.length) { box.insertAdjacentHTML("beforeend", '<p class="hint">찾은 단지가 없어요. 가격을 직접 넣어 주세요.</p>'); }
     lastList = (lastStation ? lastStation.split(" ")[0] : "검색") + " 후보 " + rows.length + "곳";
     list.slice(0, 30).forEach(function (r, i) {
       var nm = r.m ? (r.m.apt ? r.m.apt[1] : r.m.ps.n) : r.p.place_name.replace(/\s*\d+동\s*$/, "");
       var tag = r.m && r.m.ps ? '<span class="tag new">분양</span>' : (lastStation ? "" : '<span class="tag">실거래</span>');
-      var where = r.m && r.m.apt ? esc(r.m.apt[3] + " " + r.m.apt[2]) + (r.m.apt[5] ? " · " + esc(r.m.apt[5]) + "년" : "")
+      var rcx = r.m && r.m.apt ? (sggCache[r.m.apt[4]] || {})[r.m.apt[0]] : null, n30 = cxN30(rcx);
+      var where = r.m && r.m.apt ? esc(r.m.apt[3] + " " + r.m.apt[2]) + (r.m.apt[5] ? " · " + esc(ageTxt(r.m.apt[5])) : "") + (n30 ? " · 최근 30일 거래 " + n30 + "건" : "")
         : r.m && r.m.ps ? esc(r.m.ps.area || "") + " · 입주 예정 " + fmtYM(r.m.ps.mvn) : "최근 거래·분양 정보 없음, 가격은 직접 입력";
       var sub = (r.d != null ? "직선 " + meters(r.d) + " · " : "") + where;
       box.appendChild(chip((r.d != null ? stationGrade(r.d) : "") + tag + esc(nm) + "<small>" + sub + "</small>" + fitBadge(r.f), function () {
@@ -1409,14 +1482,16 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       var cx = d && d[x[0]];
       if (!cx) { showPicked(esc(x[1]), "거래 정보를 불러오지 못했어요.", []); return; }
       var chips = cx.a.map(function (a) {   // [전용㎡, 최근가, 최근일, 층, 건수, 최근5건 중간값, 12개월 최고]
-        return chip(esc(pyeong(a[0], 0, "")) + " · 전용 " + a[0] + "㎡ · " + rooms(a[0], cx.y) + " <b>" + won(a[1]) + "</b><small>" + a[2] + " · " + esc(a[3]) + "층 · 최근 12개월 " + a[4] + "건</small>", function () {
+        var sig = areaSig(a);
+        return chip(esc(pyeong(a[0], 0, "")) + " · 전용 " + a[0] + "㎡ · " + rooms(a[0], cx.y) + " <b>" + won(a[1]) + "</b><small>" + a[2] + " · " + esc(a[3]) + "층 · 최근 12개월 " + a[4] + "건" + (sig ? " · " + sig : "") + "</small>", function () {
           pickedRef = { k: "apt", id: x[0], sgg: code, ar: a[0], d: a[2] };
           fill(cx.n + " " + pyeong(a[0], 0, "").replace("약 ", "") + "(" + a[0] + "㎡)", a[1], regionForSgg(code),
-            "최근 거래가(" + a[2] + ")로 채웠어요. 최근 5건 중간값 " + won(a[5]) + " · 12개월 최고 " + won(a[6]) + ". 규제지역 여부는 직접 확인해 주세요.");
+            "최근 거래가(" + a[2] + ")로 채웠어요. 최근 5건 중간값 " + won(a[5]) + " · 12개월 최고 " + won(a[6]) + (sig ? " · " + sig : "") + ". 규제지역 여부는 직접 확인해 주세요.");
         });
       });
       var stTxt = st ? stationGrade(st.d) + esc(st.name) + " 직선 " + meters(st.d) + " · " : "";
-      showPicked(esc(cx.n), stTxt + esc(x[3] + " " + cx.u) + (cx.y ? " · " + esc(cx.y) + "년 준공" : "") + " · 면적을 고르면 가격이 채워져요", chips);
+      var n30 = cxN30(cx);
+      showPicked(esc(cx.n), stTxt + esc(x[3] + " " + cx.u) + (cx.y ? " · " + esc(ageTxt(cx.y)) : "") + (n30 ? " · 단지 전체 최근 30일 거래 " + n30 + "건" : "") + " · 면적을 고르면 가격이 채워져요", chips);
       if (!st && x[6]) { var near = document.createElement("p"); near.className = "hint near"; $("picked").insertBefore(near, $("picked").children[1] || null); nearestStations(x, near); }
     });
   }
@@ -2249,8 +2324,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   var R_ALL = "", R_PS = "presale", R_SL = "sale";
   var STEPS = [
     { t: "지금 우리집 후보", feel: "우리도 살 수 있긴 할까?",
-      lines: ["연봉과 꺼낼 수 있는 현금만 넣으면, 은행 대출까지 더해 지금 우리집 후보 최고가가 나와요.", "그 가격 안에 있는 단지를 역이나 동네 이름으로 찾아볼 수 있어요.", "숫자는 참고용이고, 실제 한도는 은행 심사로 정해져요."],
-      checks: [["c0a", "연봉·현금 넣고 '지금 우리집 후보 최고가' 보기", R_ALL, "calc"], ["c0b", "관심 단지나 동네 하나 계산해 보기", R_ALL, "house"]] },
+      lines: ["연봉과 꺼낼 수 있는 현금만 넣으면, 은행 대출까지 더해 지금 우리집 후보 최고가가 나와요.", "지금 사는 동네와 비슷한 동네 2~3곳에서 후보를 3곳 이상 담아 두세요. 한 곳이 오르면 바로 다음 집으로 옮겨 볼 수 있어요.", "숫자는 참고용이고, 실제 한도는 은행 심사로 정해져요."],
+      checks: [["c0a", "연봉·현금 넣고 '지금 우리집 후보 최고가' 보기", R_ALL, "calc"], ["c0b", "관심 단지나 동네 하나 계산해 보기", R_ALL, "house"], ["c0c", "동네 2~3곳에서 우리집 후보 3곳 이상 담기 (권장)", R_ALL, "cands3", 1]] },
     { t: "분양? 매매? 길 고르기", feel: "청약을 기다릴까, 지금 살까?",
       lines: ["분양(새 아파트 청약)은 계약금(보통 10~20%)을 먼저 내고, 2~3년 뒤 입주할 때 잔금을 내요. 중도금은 보통 대출로 내요.", "매매(기존 집)는 계약 후 2~3개월 안에 잔금까지 다 내요. 대신 바로 들어가 살 수 있어요.", "같은 예산으로 두 길에 필요한 돈이 언제 얼마인지 나란히 비교해 보세요."],
       checks: [["c1a", "분양과 매매 차이 비교해 보기", R_ALL], ["c1c", "우리 집 고르는 기준 3가지 정하기", R_ALL, "crit"], ["c1b", "우리 길 고르기", R_ALL, "route"]] },
@@ -2278,6 +2353,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   // ---- 자동 체크: 다른 화면에서 이미 한 일 ----
   function autoDone(kind, sn, pl) {
     if (kind === "calc") return !!(sn && sn.touched);
+    if (kind === "cands3") return (J.cands || []).length >= 3;
     if (kind === "house") return !!(sn && sn.touched && sn.price > 0 && !/^예시/.test(sn.name || ""));
     if (kind === "route") return !!J.route;
     if (kind === "target") return J.save.target > 0;
@@ -2301,7 +2377,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     return pl && pl.items.some(function (it) { return it.kind === "pay" && it.status === "done" && /^계약금/.test(it.title); }) ? 4 : -1;
   }
   function stepStat(i, sn, pl) {
-    var cs = visibleChecks(i);
+    var cs = visibleChecks(i).filter(function (c) { return !c[4]; });   // c[4] = 권장 항목: 보이기만 하고 단계 진행 판정엔 넣지 않는다(이미 앞서간 사용자를 되돌리지 않게)
     if (i <= passedUntil(pl)) return { done: cs.length, total: cs.length, full: true, passed: true };
     var d = cs.filter(function (c) { return isDone(c, sn, pl); }).length; return { done: d, total: cs.length, full: d === cs.length };
   }
