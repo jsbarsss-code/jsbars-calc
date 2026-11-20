@@ -264,6 +264,10 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--key); vertical-alig
 .fresh header p, .fresh #saveCard, .fresh #mapReset { display: none; }
 .start { gap: 14px; }
 .start h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(23px, 6.2vw, 30px); line-height: 1.35; letter-spacing: -0.01em; text-wrap: balance; }
+.start.mini > :not(.smini) { display: none !important; }
+.smini { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; font-size: 16px; font-variant-numeric: tabular-nums; }
+.smini b { font-size: 19px; }
+.smini .txtbtn { padding: 0; }
 .start .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .start label.f { font-size: 15px; }
 .sans { border-top: 1px solid var(--line); padding: 14px 0 0; display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
@@ -372,6 +376,9 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--key); vertical-alig
   .brow input[data-bf=note] { grid-column: 1 / 4; grid-row: 3; }
 }
 details.docs summary { cursor: pointer; font-size: 15px; font-weight: 600; color: var(--accent); }
+details.fold { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+details.fold summary { font-size: 16px; font-weight: 700; color: var(--ink); }
+details.fold .foldin { display: grid; gap: 10px; padding-top: 12px; }
 details.docs ul { margin: 8px 0 0; padding-left: 18px; font-size: 15px; display: grid; gap: 4px; }
 .mdetail { background: var(--paper); border: 0; border-radius: 10px; padding: 20px; }
 .mdetail .mbody { margin-left: 0; padding: 0; }
@@ -2308,7 +2315,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     }).filter(function (x) { return x.price > 0; });
     return c;
   }
-  var J = clean(null);
+  var J = clean(null), detOpen = {};
   try { var s0 = JSON.parse(localStorage.getItem(KEY) || "null"); if (s0 && typeof s0 === "object") J = clean(s0); } catch (e) {}
   function numOf(s) { var m = String(s || "").replace(/,/g, "").match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : NaN; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(J)); } catch (e) {} }
@@ -2472,7 +2479,13 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
           + (debt > 0 ? (a0.loan > a1.loan ? " → 다 갚으면 <b>" + won(a0.loan) + "</b> (<b>+" + won(a0.loan - a1.loan) + "</b>)" : " → 다 갚아도 같아요(" + why + " 상한에 먼저 걸려요)") : "") + "</div>"
           + "<span class='hint'>연봉은 소득 증빙(원천징수영수증·소득금액증명) 기준으로 잡혀요. 부부 소득을 합칠 수 있는지는 은행·상품마다 달라서 상담 때 꼭 물어보세요. 월 상환액을 모르면 대출 앱의 월 상환액 × 12로 넣어요.</span></div>";
       } else dsr = "<div class='mfact'>0단계에서 연봉·현금과 집 가격을 넣으면, 기존 대출을 갚았을 때 한도가 얼마나 느는지 계산해 드려요.</div>";
-      return info + exp + table + dsr
+      var fold = function (key, title, inner, auto) {   // 5단계는 내용이 많아 접어 두고, 쓰기 시작했거나 펼친 칸은 다시 그려도 펼친 채로
+        var on = detOpen[key] !== undefined ? detOpen[key] : auto;
+        return "<details class='docs fold' data-det='" + key + "'" + (on ? " open" : "") + "><summary>" + title + "</summary><div class='foldin'>" + inner + "</div></details>";
+      };
+      return info
+        + fold("banks", "은행 2곳 이상 비교하기 (감정가·한도·금리)", exp + table, J.banks.length > 0)
+        + fold("dsr", "기존 대출을 갚으면 한도가 얼마나 늘까?", dsr.replace("<b>기존 대출을 갚으면 한도가 얼마나 늘까?</b>", ""), J.debt >= 0)
         + "<details class='docs'><summary>대출 서류 미리 챙기기 (은행마다 조금씩 달라요)</summary><ul><li>신분증, 주민등록등본, 가족관계증명서</li><li>소득 서류: 근로소득 원천징수영수증, 소득금액증명원 (부부 합산이면 두 사람 모두)</li><li>재직증명서, 건강보험 자격득실확인서</li><li>분양: 분양계약서·옵션계약서 / 매매: 매매계약서</li></ul></details>";
     }
     if (i === 6 || i === 7) {
@@ -2572,6 +2585,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 
   // ---- 이벤트 ----
   var view = $("viewMap");
+  view.addEventListener("toggle", function (ev) { var d = ev.target; if (d.hasAttribute && d.hasAttribute("data-det")) { detOpen[d.getAttribute("data-det")] = d.open; if (d.open) track("map-fold-" + d.getAttribute("data-det")); } }, true);
   view.addEventListener("click", function (ev) {
     var b = ev.target.closest("button"); if (!b) return;
     if (b.hasAttribute("data-open")) {
@@ -2582,6 +2596,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     if (b.hasAttribute("data-go")) { go(b.getAttribute("data-go")); return; }
     if (b.hasAttribute("data-mynum")) {   // 첫 화면 입력칸이 있으면 거기로, 없으면 계산 탭 연봉 칸으로
       var hs = $("startHero"), tgt = hs && !hs.hidden ? $("sSalary") : null;
+      if (tgt && hs.classList.contains("mini")) { var ub = hs.querySelector(".smini button"); if (ub) ub.click(); }
       if (!tgt) { go("calc"); tgt = $("salary"); }
       setTimeout(function () { if (tgt) { try { tgt.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} tgt.focus(); try { tgt.select(); } catch (e) {} } }, 60);
       track("map-mynum"); return; }
@@ -3165,7 +3180,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     if (src.type === "checkbox") $(dst).checked = src.checked; else $(dst).value = src.value;
     $(dst).dispatchEvent(new Event("input", { bubbles: true }));
     if (ev) $(dst).dispatchEvent(new Event("change", { bubbles: true }));
-    if (!used) { used = true; track("hero-used"); }
+    if (!used) { used = true; track("hero-used"); $("sToMap").textContent = "이 숫자로 다음 단계 보기"; $("sToMap").classList.remove("ghost"); }
     if (window.ujkUseMax) window.ujkUseMax("capital");   // 계산 탭의 예시 집을 방금 본 최고가 집으로
     answer();
     if (window.ujkJourneyRender) window.ujkJourneyRender();
@@ -3185,7 +3200,14 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   }
   $("sFind").addEventListener("click", find);
   $("sQ").addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); find(); } });
-  $("sToMap").addEventListener("click", function () { track("hero-to-map"); try { $("mapHead").scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} });
+  var mini = document.createElement("div"); mini.className = "smini"; mini.hidden = true;   // 숫자를 넣고 단계로 넘어가면 첫 화면을 한 줄로 접는다(0단계 설명이 세 번 반복되지 않게)
+  hero.insertBefore(mini, $("sAnswer"));
+  function fold(on) {
+    hero.classList.toggle("mini", on); mini.hidden = !on;
+    if (on) { var s = window.ujkCalcSnapshot ? window.ujkCalcSnapshot() : null; mini.innerHTML = "<span>내 우리집 후보 최고가 <b>" + (s ? won(Math.floor(s.maxCap / 100) * 100) : "") + "</b></span><button type='button' class='txtbtn strong'>숫자 바꾸기</button>"; }
+  }
+  mini.addEventListener("click", function (ev) { if (ev.target.closest("button")) { fold(false); track("hero-unfold"); try { $("sSalary").focus(); } catch (e) {} } });
+  $("sToMap").addEventListener("click", function () { track("hero-to-map"); if (used) fold(true); try { $("mapHead").scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} });
   fetch("data/meta.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
     if (m && m.complexes) $("sData").textContent = "국토교통부 실거래가와 청약홈 분양가를 매주 반영해요. 단지 " + (+m.complexes).toLocaleString("ko-KR") + "곳, 분양 공고 " + (+m.presale || 0).toLocaleString("ko-KR") + "건.";
   }).catch(function () {});
