@@ -224,6 +224,18 @@ input[type=date] { -webkit-appearance: none; appearance: none; font: inherit; fo
 /* 일정 목록: 박스 대신 계산기 '핵심 숫자'처럼 얇은 구분선 행 (DESIGN.md — 카드 안에 카드 금지) */
 .day { display: grid; gap: 0; }
 #tlView { margin: 0; }
+.dash { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.dbox { background: var(--bg); border-radius: 8px; padding: 10px 11px; display: grid; gap: 2px; min-width: 0; }
+.dbox .k { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.dbox b { font-size: 19px; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.dbox small { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dbox.key b { color: var(--key); }
+.dbar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.dbar span { display: block; height: 100%; background: var(--accent); }
+.dwarn { margin: 0 0 10px; font-size: 14px; color: var(--warn); }
+.undated { margin-top: 14px; border-top: 2px solid var(--line); }
+.undated.first { margin: 0 0 14px; border-top: 0; border-bottom: 2px solid var(--line); }
+@media (max-width: 640px) { .dash { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .calnav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 8px; }
 .calnav > b { font-size: 17px; min-width: 7.5em; text-align: center; }
 .calnav > .txtbtn { font-size: 22px; text-decoration: none; padding: 2px 10px; color: var(--ink); }
@@ -839,7 +851,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 
   <section class="card">
     <h2 class="step"><span class="no">4</span>날짜순 일정</h2>
-    <div class="seg" role="group" aria-label="일정 보기 방식" id="tlView"><button type="button" data-tv="list" aria-pressed="true">목록</button><button type="button" data-tv="cal" aria-pressed="false">달력</button></div>
+    <div class="seg" role="group" aria-label="일정 보기 방식" id="tlView"><button type="button" data-tv="cal" aria-pressed="true">한눈에 (달력)</button><button type="button" data-tv="list" aria-pressed="false">목록</button></div>
     <p class="hint">날짜 칸을 바꾸면 바로 옮겨지고 변경 기록이 남아요. 상태는 예정 → 확정 → 완료로 바꿔 두세요.</p>
     <div id="timeline" class="day"></div>
   </section>
@@ -1798,8 +1810,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   var MODE_DEF = { presale: { dep: 20, mid: 60 }, sale: { dep: 10, mid: 0 } };
   var state = { v: 1, house: Object.assign({}, DEF_HOUSE), items: [], seq: 1 };
   var readOnly = false, editing = null, canStore = true, pastOpen = false;
-  var tlView = "list", calMonth = "", calSel = "";   // 4. 일정 보기: 목록 / 달력(월 보드)
-  try { if (localStorage.getItem("ujk-tlview") === "cal") tlView = "cal"; } catch (e) {}
+  var tlView = "cal", calMonth = "", calSel = "";   // 4. 일정 보기: 달력 대시보드(기본) / 목록
+  try { if (localStorage.getItem("ujk-tlview") === "list") tlView = "list"; } catch (e) {}
   function eul(w) { var c = String(w || "").charCodeAt(String(w || "").length - 1); return w + (c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 ? "을" : "를"); }
 
   function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.items) return s; } catch (e) {} return null; }
@@ -2040,6 +2052,25 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     var ctl = readOnly ? "" : '<div class="ctl"><input type="date" aria-label="날짜 바꾸기" data-act="date" value="' + esc(it.date) + '"><select aria-label="상태" data-act="status">' + opts + '</select><button type="button" class="txtbtn" data-act="edit">수정</button><button type="button" class="txtbtn" data-act="del">삭제</button></div>';
     return '<div class="it' + (it.status === "done" ? " done" : "") + (flagged[it.id] ? " flagged" : "") + '" data-id="' + it.id + '"><div class="t">' + tags + esc(it.title) + (it.vendor ? "<small>" + esc(it.vendor) + "</small>" : "") + '</div><div class="m">' + meta + "</div>" + hist + ctl + "</div>";
   }
+  function dash(its, flagged) {   // 한눈에: 건수·상태·남은 돈·다음 일정
+    var t = today(), c = { all: its.length, nodate: 0, todo: 0, fixed: 0, done: 0, flag: 0 }, owe = 0, paid = 0;
+    its.forEach(function (it) {
+      if (!it.date) c.nodate++; c[it.status] = (c[it.status] || 0) + 1; if (flagged[it.id]) c.flag++;
+      if (it.kind === "work" && it.status !== "done") { owe += (it.bal || 0) + (it.depPaid ? 0 : it.dep || 0); paid += it.depPaid ? it.dep || 0 : 0; }
+    });
+    var nx = its.filter(function (it) { return it.date && it.date >= t && it.status !== "done"; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
+    var mv = state.house.movein, dmv = mv && mv >= t ? diffDays(t, mv) : null;
+    var pct = c.all ? Math.round(c.done / c.all * 100) : 0;
+    var box = function (k, v, cls, sub) { return '<div class="dbox' + (cls ? " " + cls : "") + '"><span class="k">' + k + '</span><b>' + v + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</div>"; };
+    return '<div class="dash">'
+      + box("입주까지", dmv === null ? (mv ? "지남" : "날짜 미정") : dmv === 0 ? "오늘" : "D-" + dmv, "key", mv ? shortD(mv) : "")
+      + box("다음 일정", nx ? (nx.date === t ? "오늘" : "D-" + diffDays(t, nx.date)) : "없음", "", nx ? esc(nx.title) : "")
+      + box("진행", c.done + "/" + c.all, "", "확정 " + (c.fixed || 0) + " · 예정 " + (c.todo || 0))
+      + box("업체에 남은 돈", won(owe), "", paid ? "계약금 낸 돈 " + won(paid) : "")
+      + "</div>"
+      + '<div class="dbar" role="img" aria-label="완료 ' + pct + '%"><span style="width:' + pct + '%"></span></div>'
+      + (c.nodate || c.flag ? '<p class="dwarn">' + [c.nodate ? "날짜 미정 <b>" + c.nodate + "건</b>(맨 아래에서 날짜 넣기)" : "", c.flag ? "순서·날짜 확인 <b>" + c.flag + "건</b>" : ""].filter(Boolean).join(" · ") + "</p>" : "");
+  }
   function renderCal(its, flagged) {   // 달력 보드: 한 달을 칸으로, 날마다 일정 칩. 날짜를 누르면 그날 일정을 아래에서 바로 고친다
     var t = today(), dated = its.filter(function (it) { return it.date; });
     if (!calMonth) {
@@ -2068,13 +2099,14 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     }
     html += "</div>";
     html += '<div class="callegend"><span class="cev pay">납입</span><span class="cev work">업체</span><span class="cev task">할 일</span><span class="cev flag">순서·날짜 확인</span><span class="cev done">완료</span></div>';
-    var undated = its.filter(function (it) { return !it.date; }).length;
+    var undatedList = its.filter(function (it) { return !it.date; }), undated = 0;   // 날짜 미정은 아래 칸에서 날짜를 넣는다
     if (calSel && calSel.slice(0, 7) === calMonth) {
       var sel = byDay[calSel] || [];
       html += '<div class="dayhead">' + fmtD(calSel) + (isWeekend(calSel) ? ' <span class="tag wk">주말</span>' : "") + "</div>" + (sel.length ? sel.map(function (it) { return itemHTML(it, flagged); }).join("") : '<p class="empty">이날은 일정이 없어요.</p>');
     } else html += '<p class="hint" style="margin:10px 0 0">날짜를 누르면 그날 일정을 보고 바로 고칠 수 있어요.</p>';
-    if (undated) html += '<p class="hint" style="margin:6px 0 0">날짜 없는 일정 ' + undated + '건은 <button type="button" class="txtbtn" data-tv="list" style="padding:0">목록</button>에서 날짜를 넣어 주세요.</p>';
-    $("timeline").innerHTML = html;
+    var tray = undatedList.length ? '<div class="undated' + (dated.length ? "" : " first") + '"><div class="dayhead">날짜 미정 ' + undatedList.length + '건 <small>날짜를 넣으면 달력에 들어가요</small></div>' + undatedList.map(function (it) { return itemHTML(it, flagged); }).join("") + "</div>" : "";
+    if (dated.length) html += tray; else html = tray + html;   // 날짜 있는 일정이 하나도 없으면 날짜 넣을 칸을 먼저
+    $("timeline").innerHTML = dash(its, flagged) + html;
   }
   function renderTimeline(flagged) {
     var RANK = { pay: 0, work: 1, task: 2 }, idn = function (it) { return parseInt(String(it.id).slice(1), 10) || 0; };
@@ -2130,6 +2162,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     if (el.getAttribute("data-act") === "date") {
       if (it.date && el.value !== it.date) it.hist = (it.hist || []).concat([{ f: it.date, t: el.value, at: today() }]).slice(-5);
       it.date = el.value; it.est = false; track("plan-move");
+      if (tlView === "cal" && el.value) { calMonth = el.value.slice(0, 7); calSel = el.value; }   // 달력에서 날짜를 넣으면 그 날로 옮겨 보여 준다
     } else if (el.getAttribute("data-act") === "status") it.status = el.value;
     save(); render(); if (window.ujkJourneyRender) window.ujkJourneyRender();
   });
