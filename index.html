@@ -268,6 +268,9 @@ header h1 .key { width: 0.82em; height: 0.82em; color: var(--key); vertical-alig
 .smini { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; font-size: 16px; font-variant-numeric: tabular-nums; }
 .smini b { font-size: 19px; }
 .smini .txtbtn { padding: 0; }
+.backbar { position: fixed; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom)); display: flex; justify-content: center; padding: 0 16px; z-index: 40; pointer-events: none; }
+.backbar[hidden] { display: none; }
+.backbar .btn { pointer-events: auto; max-width: 100%; white-space: normal; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
 .start .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .start label.f { font-size: 15px; }
 .sans { border-top: 1px solid var(--line); padding: 14px 0 0; display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
@@ -561,8 +564,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 
     <section class="card">
       <h2 class="step"><span class="no">2</span>우리집 후보 검색하기</h2>
-      <label class="f" for="q">역이나 단지 이름을 넣으면 내 예산 안 단지를 골라 보여 드려요
-        <input type="search" id="q" maxlength="40" placeholder="단지명 또는 역 이름 (예: 운정중앙역, 헬리오시티)" autocomplete="off">
+      <label class="f" for="q">동네·역·단지 이름을 넣으면 내 예산 안 단지를 골라 보여 드려요
+        <input type="search" id="q" maxlength="40" placeholder="단지·동네·역 이름 (예: 동탄, 운정중앙역, 헬리오시티)" autocomplete="off">
       </label>
       <div id="results" class="results" hidden></div>
       <button type="button" id="again" class="linkbtn" hidden></button>
@@ -1689,6 +1692,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 </script>
 
 <div class="toast" id="toast" hidden></div>
+<div class="backbar" id="backMap" hidden><button type="button" class="btn"></button></div>
 <script>
 (function () {   // 탭: 기본 = 열쇠까지 지도. #calc·블로그 계산 링크(?salary=…) = 계산기, #plan·공유 링크(#v=)·옛 plan.html(?to=plan) = 일정표.
   var NAMES = ["map", "calc", "plan", "acct"];   // acct = 내 계정(탭 없이 제목 옆 버튼으로 연다)
@@ -2332,7 +2336,12 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   function md(s) { var p = String(s || "").split("-"); return p.length === 3 ? (+p[1]) + "/" + (+p[2]) : "미정"; }
   function snap() { try { return window.ujkCalcSnapshot ? window.ujkCalcSnapshot() : null; } catch (e) { return null; } }
   function plan() { try { return window.ujkPlan ? window.ujkPlan() : null; } catch (e) { return null; } }
-  function go(tab) { if (window.ujkShowTab) window.ujkShowTab(tab, true); }
+  var lastOpen = 0;
+  function go(tab) { if (window.ujkShowTab) window.ujkShowTab(tab, true); showBack(lastOpen); }
+  function showBack(i) {   // 지도 단계에서 다른 화면으로 넘어가면, 보던 단계로 돌아오는 버튼을 화면 아래에 띄운다
+    var bb = $("backMap"); if (!bb || i < 0 || i >= STEPS.length) return;
+    bb.querySelector("button").textContent = "← 지도 " + i + "단계 '" + STEPS[i].t + "'로 돌아가기"; bb.setAttribute("data-step", i); bb.hidden = false;
+  }
 
   // ---- 단계 정의 (규칙은 자주 바뀌므로 판정 대신 '확인할 것'과 공식 확인처를 준다) ----
   var R_ALL = "", R_PS = "presale", R_SL = "sale";
@@ -2404,7 +2413,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       + "<div class='row3 crit'><label class='f'>회사까지 (차로)<span class='inrow'><input type='number' min='0' step='5' inputmode='numeric' data-cr='min' value='" + (c.min || "") + "' placeholder='50'><span class='unit'>분 이내</span></span></label>"
       + "<label class='f'>가격 상한<span class='inrow'><input type='number' min='0' step='1000' inputmode='numeric' data-cr='cap' value='" + (c.cap || "") + "' placeholder='" + capPh + "'><span class='unit'>만원</span></span></label>"
       + "<label class='check'><input type='checkbox' data-cr='station'" + (c.station ? " checked" : "") + "> <span>역 근처(걸어서)</span></label></div>"
-      + mine + "<div class='btns'><button type='button' class='btn small ghost' data-findq='1'>역 이름으로 예산 안 단지 찾기</button></div>";
+      + mine + "<div class='btns'><button type='button' class='btn small ghost' data-findq='1'>동네·역 이름으로 예산 안 단지 찾기</button></div>";
   }
   // ---- 단계별 '내 숫자' ----
   function mine(i, sn, pl) {
@@ -2527,6 +2536,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       })();
     var open = J.open >= 0 ? J.open : (J.open === -2 && !wide ? -1 : cur);
     if (wide && open < 0) open = cur < 0 ? STEPS.length - 1 : cur;
+    lastOpen = open >= 0 ? open : (cur < 0 ? STEPS.length - 1 : cur);
+    if (!$("viewMap").hidden && $("backMap")) $("backMap").hidden = true;
     $("mapGrid").className = "mapgrid" + (wide ? " wide" : "");
     var detail = "";
     $("mapSteps").innerHTML = STEPS.map(function (s, i) {
@@ -2585,6 +2596,11 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 
   // ---- 이벤트 ----
   var view = $("viewMap");
+  if ($("backMap")) $("backMap").querySelector("button").addEventListener("click", function () {
+    var i = +$("backMap").getAttribute("data-step"); $("backMap").hidden = true;
+    J.open = i; save(); if (window.ujkShowTab) window.ujkShowTab("map"); else render(); track("map-back-" + i);
+    setTimeout(function () { var el = !$("mapDetail").hidden ? $("mapDetail") : view.querySelector(".mstep.open"); if (el) try { el.scrollIntoView({ block: "start" }); } catch (e) {} }, 30);
+  });
   view.addEventListener("toggle", function (ev) { var d = ev.target; if (d.hasAttribute && d.hasAttribute("data-det")) { detOpen[d.getAttribute("data-det")] = d.open; if (d.open) track("map-fold-" + d.getAttribute("data-det")); } }, true);
   view.addEventListener("click", function (ev) {
     var b = ev.target.closest("button"); if (!b) return;
@@ -2608,7 +2624,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
         window.ujkPlanApply(ex);
       }
       go("plan"); if (window.ujkPlanGen) window.ujkPlanGen(); track("map-gen"); return; }
-    if (b.hasAttribute("data-findq")) { go("calc"); setTimeout(function () { var q = $("q"); if (q) { q.placeholder = "역 이름 (예: 운정중앙역) — 역세권 순, 예산 안 단지만"; q.focus(); try { q.scrollIntoView({ block: "center" }); } catch (e) {} } }, 50); track("map-find-station"); return; }
+    if (b.hasAttribute("data-findq")) { go("calc"); setTimeout(function () { var q = $("q"); if (q) { q.placeholder = "동네나 역 이름 (예: 동탄, 운정중앙역)"; q.focus(); try { q.scrollIntoView({ block: "center" }); } catch (e) {} } }, 50); track("map-find-station"); return; }
     if (b.hasAttribute("data-sug")) { J.save.target = +b.getAttribute("data-sug"); save(); render(); return; }
     if (b.getAttribute("data-bank") === "add") { if (J.banks.length < 2) J.banks = J.banks.concat([{}, {}]).slice(0, 2); if (J.banks.length < 8) J.banks.push({}); save(); render(); return; }
   });
