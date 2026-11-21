@@ -223,6 +223,36 @@ input[type=date] { -webkit-appearance: none; appearance: none; font: inherit; fo
 .warns li b { color: var(--warn); }
 /* 일정 목록: 박스 대신 계산기 '핵심 숫자'처럼 얇은 구분선 행 (DESIGN.md — 카드 안에 카드 금지) */
 .day { display: grid; gap: 0; }
+#tlView { margin: 0; }
+.calnav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 8px; }
+.calnav > b { font-size: 17px; min-width: 7.5em; text-align: center; }
+.calnav > .txtbtn { font-size: 22px; text-decoration: none; padding: 2px 10px; color: var(--ink); }
+.calmonths { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.calmonths .chip { padding: 4px 10px; font-size: 13.5px; }
+.calmonths .chip.on { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+.calmonths small { opacity: .75; }
+.calgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.cwd { font-size: 12.5px; font-weight: 700; text-align: center; padding: 5px 0; color: var(--muted); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg); }
+.cwd.sun, .cday.sun .cn { color: var(--bad); }
+.cwd.sat, .cday.sat .cn { color: #2f6fb3; }
+.cday { font: inherit; text-align: left; background: var(--paper); border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-height: 74px; padding: 4px 3px; display: flex; flex-direction: column; gap: 2px; min-width: 0; cursor: pointer; color: var(--ink); }
+.cday.blank { background: var(--bg); cursor: default; }
+.cday:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.cday.today .cn { background: var(--ink); color: var(--paper); border-radius: 99px; padding: 0 6px; }
+.cday.sel { box-shadow: inset 0 0 0 2px var(--accent); }
+.cn { font-size: 12.5px; font-weight: 700; align-self: flex-start; font-variant-numeric: tabular-nums; }
+.cmark { font-size: 10.5px; font-weight: 800; color: var(--accent); }
+.cmark.key { color: var(--key); }
+.cev { display: block; font-size: 11px; line-height: 1.35; font-weight: 600; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; background: var(--bg); color: var(--ink); border-left: 3px solid var(--line); }
+.cev.pay { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+.cev.work { border-left-color: var(--ink); }
+.cev.task { color: var(--muted); }
+.cev.flag { border-left-color: var(--warn); background: var(--warn-soft); color: var(--warn); }
+.cev.done { opacity: .5; text-decoration: line-through; }
+.cmore { font-size: 11px; color: var(--muted); font-weight: 700; padding-left: 2px; }
+.callegend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.callegend .cev { display: inline-block; text-decoration: none; opacity: 1; }
+@media (max-width: 480px) { .cday { min-height: 62px; padding: 3px 2px; } .cev { font-size: 10px; padding: 0 2px; border-left-width: 2px; } }
 .dayhead { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; font-weight: 700; font-size: 15.5px; padding: 18px 0 4px; color: var(--accent); }
 .dayhead:first-child { padding-top: 0; }
 .dayhead small { font-weight: 500; color: var(--muted); font-size: 14px; }
@@ -809,6 +839,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
 
   <section class="card">
     <h2 class="step"><span class="no">4</span>날짜순 일정</h2>
+    <div class="seg" role="group" aria-label="일정 보기 방식" id="tlView"><button type="button" data-tv="list" aria-pressed="true">목록</button><button type="button" data-tv="cal" aria-pressed="false">달력</button></div>
     <p class="hint">날짜 칸을 바꾸면 바로 옮겨지고 변경 기록이 남아요. 상태는 예정 → 확정 → 완료로 바꿔 두세요.</p>
     <div id="timeline" class="day"></div>
   </section>
@@ -1767,6 +1798,8 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
   var MODE_DEF = { presale: { dep: 20, mid: 60 }, sale: { dep: 10, mid: 0 } };
   var state = { v: 1, house: Object.assign({}, DEF_HOUSE), items: [], seq: 1 };
   var readOnly = false, editing = null, canStore = true, pastOpen = false;
+  var tlView = "list", calMonth = "", calSel = "";   // 4. 일정 보기: 목록 / 달력(월 보드)
+  try { if (localStorage.getItem("ujk-tlview") === "cal") tlView = "cal"; } catch (e) {}
   function eul(w) { var c = String(w || "").charCodeAt(String(w || "").length - 1); return w + (c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 ? "을" : "를"); }
 
   function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.items) return s; } catch (e) {} return null; }
@@ -2007,6 +2040,42 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     var ctl = readOnly ? "" : '<div class="ctl"><input type="date" aria-label="날짜 바꾸기" data-act="date" value="' + esc(it.date) + '"><select aria-label="상태" data-act="status">' + opts + '</select><button type="button" class="txtbtn" data-act="edit">수정</button><button type="button" class="txtbtn" data-act="del">삭제</button></div>';
     return '<div class="it' + (it.status === "done" ? " done" : "") + (flagged[it.id] ? " flagged" : "") + '" data-id="' + it.id + '"><div class="t">' + tags + esc(it.title) + (it.vendor ? "<small>" + esc(it.vendor) + "</small>" : "") + '</div><div class="m">' + meta + "</div>" + hist + ctl + "</div>";
   }
+  function renderCal(its, flagged) {   // 달력 보드: 한 달을 칸으로, 날마다 일정 칩. 날짜를 누르면 그날 일정을 아래에서 바로 고친다
+    var t = today(), dated = its.filter(function (it) { return it.date; });
+    if (!calMonth) {
+      var up = dated.filter(function (it) { return it.date >= t && it.status !== "done"; })[0] || dated[0];
+      calMonth = (up ? up.date : t).slice(0, 7);
+    }
+    var y = +calMonth.slice(0, 4), m = +calMonth.slice(5, 7), first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate();
+    var byDay = {}; dated.forEach(function (it) { (byDay[it.date] = byDay[it.date] || []).push(it); });
+    var mv = state.house.movein, ct = state.house.contract;
+    var months = {}; dated.forEach(function (it) { months[it.date.slice(0, 7)] = (months[it.date.slice(0, 7)] || 0) + 1; });
+    var mk = Object.keys(months).sort();
+    var shift = function (n) { var d = new Date(y, m - 1 + n, 1); return d.getFullYear() + "-" + pad(d.getMonth() + 1); };
+    var html = '<div class="calnav"><button type="button" class="txtbtn" data-cal="' + shift(-1) + '" aria-label="이전 달">‹</button><b>' + y + "년 " + m + "월</b>"
+      + '<button type="button" class="txtbtn" data-cal="' + shift(1) + '" aria-label="다음 달">›</button>'
+      + (mk.length > 1 ? '<span class="calmonths">' + mk.map(function (k) { return '<button type="button" class="chip' + (k === calMonth ? " on" : "") + '" data-cal="' + k + '">' + (k.slice(0, 4) !== calMonth.slice(0, 4) && k.slice(5) === "01" ? k.slice(2, 4) + "년 " : "") + (+k.slice(5)) + "월 <small>" + months[k] + "</small></button>"; }).join("") + "</span>" : "") + "</div>";
+    html += '<div class="calgrid">' + "일월화수목금토".split("").map(function (w, i) { return '<div class="cwd' + (i === 0 ? " sun" : i === 6 ? " sat" : "") + '">' + w + "</div>"; }).join("");
+    for (var b = 0; b < first.getDay(); b++) html += '<div class="cday blank"></div>';
+    for (var d = 1; d <= days; d++) {
+      var ds = calMonth + "-" + pad(d), list = byDay[ds] || [], dw = new Date(y, m - 1, d).getDay();
+      var cls = "cday" + (ds === t ? " today" : "") + (ds === calSel ? " sel" : "") + (dw === 0 ? " sun" : dw === 6 ? " sat" : "") + (list.length ? " has" : "");
+      var mark = ds === mv ? '<span class="cmark key">' + (state.house.mode === "presale" ? "입주" : "잔금") + "</span>" : ds === ct ? '<span class="cmark">계약</span>' : "";
+      var chips = list.slice(0, 3).map(function (it) {
+        return '<span class="cev ' + it.kind + (it.status === "done" ? " done" : "") + (flagged[it.id] ? " flag" : "") + '">' + esc(it.title) + "</span>";
+      }).join("") + (list.length > 3 ? '<span class="cmore">+' + (list.length - 3) + "</span>" : "");
+      html += '<button type="button" class="' + cls + '" data-calday="' + ds + '" aria-label="' + m + "월 " + d + "일 일정 " + list.length + '건"><span class="cn">' + d + "</span>" + mark + chips + "</button>";
+    }
+    html += "</div>";
+    html += '<div class="callegend"><span class="cev pay">납입</span><span class="cev work">업체</span><span class="cev task">할 일</span><span class="cev flag">순서·날짜 확인</span><span class="cev done">완료</span></div>';
+    var undated = its.filter(function (it) { return !it.date; }).length;
+    if (calSel && calSel.slice(0, 7) === calMonth) {
+      var sel = byDay[calSel] || [];
+      html += '<div class="dayhead">' + fmtD(calSel) + (isWeekend(calSel) ? ' <span class="tag wk">주말</span>' : "") + "</div>" + (sel.length ? sel.map(function (it) { return itemHTML(it, flagged); }).join("") : '<p class="empty">이날은 일정이 없어요.</p>');
+    } else html += '<p class="hint" style="margin:10px 0 0">날짜를 누르면 그날 일정을 보고 바로 고칠 수 있어요.</p>';
+    if (undated) html += '<p class="hint" style="margin:6px 0 0">날짜 없는 일정 ' + undated + '건은 <button type="button" class="txtbtn" data-tv="list" style="padding:0">목록</button>에서 날짜를 넣어 주세요.</p>';
+    $("timeline").innerHTML = html;
+  }
   function renderTimeline(flagged) {
     var RANK = { pay: 0, work: 1, task: 2 }, idn = function (it) { return parseInt(String(it.id).slice(1), 10) || 0; };
     var its = state.items.slice().sort(function (a, b) {   // 날짜 → 납입·업체·할 일 → 만든 순서
@@ -2014,6 +2083,7 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
       return da < db ? -1 : da > db ? 1 : (RANK[a.kind] - RANK[b.kind]) || (idn(a) - idn(b));
     });
     if (!its.length) { $("timeline").innerHTML = '<p class="empty">아직 일정이 없어요. 위에서 납입 일정을 만들거나 업체 일정을 추가해 보세요.</p>'; return; }
+    if (tlView === "cal") return renderCal(its, flagged);
     var t = today();
     var isPast = function (it) { return it.date && it.date < t && it.status === "done" && !flagged[it.id]; };   // 안 끝낸 지난 일정은 숨기지 않는다
     var past = its.filter(isPast), now = its.filter(function (it) { return !isPast(it); });
@@ -2040,6 +2110,20 @@ details.hmore .inner { display: grid; gap: 12px; margin-top: 12px; }
     $("houseCard").hidden = $("formCard").hidden = readOnly; $("toolCard").querySelector("details").hidden = readOnly;
     $("shareLink").hidden = readOnly;
   }
+  function setView(v) {
+    tlView = v; try { localStorage.setItem("ujk-tlview", v); } catch (e) {}
+    [].forEach.call($("tlView").querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-tv") === v ? "true" : "false"); });
+    render(); track("plan-view-" + v);
+  }
+  $("tlView").addEventListener("click", function (ev) { var b = ev.target.closest("[data-tv]"); if (b) setView(b.getAttribute("data-tv")); });
+  [].forEach.call($("tlView").querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-tv") === tlView ? "true" : "false"); });
+  $("timeline").addEventListener("click", function (ev) {   // 달력: 달 이동·날짜 고르기 (보기 전용 공유 화면에서도 된다)
+    var b = ev.target.closest("[data-cal],[data-calday],[data-tv]"); if (!b) return;
+    if (b.hasAttribute("data-tv")) { setView(b.getAttribute("data-tv")); return; }
+    if (b.hasAttribute("data-cal")) { calMonth = b.getAttribute("data-cal"); calSel = ""; render(); return; }
+    var ds = b.getAttribute("data-calday"); calSel = calSel === ds ? "" : ds; render();
+    if (calSel) { var h = $("timeline").querySelector(".dayhead"); if (h && h.getBoundingClientRect().top > window.innerHeight - 80) try { h.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }
+  });
   $("timeline").addEventListener("change", function (ev) {
     var el = ev.target, box = el.closest(".it"); if (!box || readOnly) return;
     var it = byId(box.getAttribute("data-id")); if (!it) return;
