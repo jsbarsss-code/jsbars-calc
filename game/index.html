@@ -199,6 +199,24 @@ body.playing.pad .touch{display:flex}
 @keyframes recblink{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.cinebar.replay .rec{animation:none}}
 .cinebar button{background:var(--ink);color:var(--bg);border:0;border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px}
+.tourcard{width:min(980px,100%)}
+.tsetup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tsetup label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.tsetup select{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:7px;color:var(--ink)}
+.tsetup .row{grid-column:1/-1}
+.bracket{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.bcol{display:flex;flex-direction:column;justify-content:space-around;gap:8px;min-width:150px;flex:1}
+.bcol h4{margin:0 0 2px;font-family:var(--f-display);font-size:14px;color:var(--gold);letter-spacing:.04em;text-align:center}
+.bm{background:var(--panel2);border:1px solid var(--line);border-radius:7px;overflow:hidden;font-size:12.5px}
+.bm .tr{display:flex;justify-content:space-between;gap:6px;padding:4px 8px}
+.bm .tr+.tr{border-top:1px solid var(--line)}
+.bm .tr.win{font-weight:700;color:var(--ink)}
+.bm .tr.lose{color:var(--muted)}
+.bm .tr.me{background:color-mix(in srgb,var(--gold) 20%,transparent)}
+.bm .tr span:last-child{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums}
+.bm.tbd .tr{color:var(--muted)}
+.champ{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:130px}
+.champ b{font-family:var(--f-display);font-size:18px;color:var(--gold);text-align:center}
 </style>
 
 <div class="wrap">
@@ -221,6 +239,23 @@ body.playing.pad .touch{display:flex}
         <div class="holder" id="holder" hidden><span class="hlab">공 소유</span><i id="holderDot"></i><b id="holderTxt"></b></div>
         <button class="pitchsub" id="pitchSub" type="button">교체 <small>P</small></button>
         <div class="cinebar" id="cineBar" hidden><i class="rec"></i><b id="cineTxt"></b><button type="button" id="cineSkip">건너뛰기</button></div>
+        <div class="submodal" id="tourModal" hidden>
+          <div class="smcard tourcard">
+            <div class="smhead"><h3 id="tourTitle">토너먼트</h3><button class="btn" id="tourClose" type="button">닫기</button></div>
+            <div id="tourSetup" class="tsetup">
+              <label for="tourMy">내 팀<select id="tourMy"></select></label>
+              <label for="tourSize">참가 팀 수<select id="tourSize"><option value="8">8팀 (8강부터)</option><option value="16">16팀 (16강부터)</option><option value="32">32팀 (32강부터)</option></select></label>
+              <label for="tourPool">상대 팀<select id="tourPool"><option value="all">전체 무작위</option><option value="club">현역 클럽만</option><option value="nat">국가대표만 (현역+레전드)</option></select></label>
+              <label for="tourMode">내 경기<select id="tourMode"><option value="play">직접 플레이</option><option value="watch">관전</option></select></label>
+              <div class="row"><button class="btn primary" id="tourStart" type="button">대진 추첨하고 시작</button></div>
+            </div>
+            <div id="tourView" hidden>
+              <div class="bracket" id="bracket"></div>
+              <p class="smmsg" id="tourMsg"></p>
+              <div class="row" id="tourActs"></div>
+            </div>
+          </div>
+        </div>
         <div class="submodal" id="subModal" hidden>
           <div class="smcard">
             <div class="smhead"><h3 id="smTitle">교체</h3><button class="btn" id="smSwap" type="button" hidden>상대 팀</button></div>
@@ -259,6 +294,7 @@ body.playing.pad .touch{display:flex}
         <button class="btn" id="padBtn" aria-pressed="false">조이스틱</button>
         <button class="btn" id="skip">결과 바로 보기</button>
         <button class="btn" id="reset">새 경기</button>
+        <button class="btn" id="tourBtn">토너먼트</button>
       </div>
       <div class="tactics">
         <label for="teamA"><span class="dot" style="background:var(--teamA)"></span>홈<select id="teamA" aria-label="홈 팀"></select><select id="tacA" aria-label="홈 전술"></select></label>
@@ -496,6 +532,151 @@ for(const tm of TEAMS)tm.bench=BENCH[tm.id]||[];
   const sc=a=>a.map((v,i)=>i===5?(v>20?Math.round(v*0.96):v):Math.round(v*0.93));
   kor.players.forEach(q=>{q[6]=sc(q[6]);});kor.bench.forEach(q=>{q[4]=sc(q[4]);});
 })();
+
+// ---------- 현역 팀 (2025-26 시즌 기준 · 이적 반영이 늦거나 다를 수 있음) ----------
+FORM['3-5-2']=[['GK',.035,.5],['CB',.22,.25],['CB',.19,.5],['CB',.22,.75],['LB',.44,.1],['CM',.42,.33],['DM',.36,.5],['CM',.42,.67],['RB',.44,.9],['ST',.66,.4],['ST',.66,.6]];
+FORM['3-4-3']=[['GK',.035,.5],['CB',.22,.25],['CB',.19,.5],['CB',.22,.75],['LB',.42,.1],['CM',.40,.38],['CM',.40,.62],['RB',.42,.9],['LW',.62,.22],['ST',.68,.5],['RW',.62,.78]];
+const NUMS={'홀란':9,'메시':10,'호날두':7,'손흥민':7,'음바페':10,'비니시우스':7,'벨링엄':5,'야말':10,'레반도프스키':9,'케인':9,'살라':11,'사카':7,'외데고르':8,'라이스':41,'팔머':10,'브루누':8,'김민재':3,'이강인':19,'데브라위너':11,'모드리치':14,'라우타로':10,'뎀벨레':10,'크바라츠헬리아':7,'하키미':2,'비르츠':7,'이삭':9,'요케레스':14,'쿠르투아':1,'로드리':16,'페드리':8,'하피냐':11,'판데이크':4,'오시멘':45,'황희찬':11,'구보':20,'미토마':22};
+const POSNUM={GK:1,RB:2,LB:3,CB:4,DM:6,CM:8,AM:10,LW:11,RW:7,LM:11,RM:7,ST:9};
+function genAttrs(pos,o,name){
+  let h=0;for(const ch of name)h=(h*31+ch.charCodeAt(0))>>>0;
+  const j=k=>((h>>>(k*3))%7)-3;
+  const T={GK:[-35,-22,-60,-40,-45,0],CB:[-10,-12,-35,-18,2,0],LB:[2,-4,-25,-5,-3,0],RB:[2,-4,-25,-5,-3,0],DM:[-15,0,-15,-6,1,0],CM:[-10,2,-8,0,-15,0],AM:[-6,1,-3,2,-40,0],LW:[4,-5,-3,2,-45,0],RW:[4,-5,-3,2,-45,0],LM:[3,-3,-6,1,-35,0],RM:[3,-3,-6,1,-35,0],ST:[-2,-10,3,-3,-45,0]}[pos]||[0,0,0,0,0,0];
+  const a=T.map((d,k)=>Math.max(25,Math.min(99,o+d+j(k))));
+  a[5]=pos==='GK'?o:10;
+  return a;
+}
+function parseSq(str){
+  if(!str)return [];
+  return str.split('|').map(x=>{const t=x.trim().split(/\s+/);return [t[0],t.slice(1,-1).join(' '),+t[t.length-1]];});
+}
+function K(shirt,shorts,socks,trim,num,alt,extra){return Object.assign({shirt,shorts,socks,trim,num,alt:{shirt:alt[0],shorts:alt[1]||alt[0],socks:alt[2]||alt[0]}},extra||{});}
+function cur(id,name,sub,form,tactic,kit,st,bn,extra){
+  const f=FORM[form],S=parseSq(st),Bn=parseSq(bn),used=new Set();
+  const num=(nm,pos,fb)=>{let n=NUMS[nm]||POSNUM[pos]||fb;while(used.has(n))n+=10;used.add(n);return n;};
+  return Object.assign({id,name,sub,formation:form,tactic,kit,cur:true,
+    players:S.map((q,i)=>[q[1],q[1],num(q[1],f[i][0],i+2),f[i][0],f[i][1],f[i][2],genAttrs(f[i][0],q[2],q[1])]),
+    bench:Bn.map((q,i)=>[q[1],q[1],num(q[1],q[0],12+i),q[0],genAttrs(q[0],q[2],q[1])])},extra||{});
+}
+const RED=['#f2f2f2','#f2f2f2','#f2f2f2'];
+const CUR=[
+  cur('mci','맨시티','현역 2025-26','4-2-3-1','possess',K('#6cabdd','#f2f2f2','#6cabdd','#1c2c5b','#1c2c5b',['#1c2c5b']),
+    'GK 돈나룸마 89|LB 아이트누리 82|CB 그바르디올 86|CB 디아스 88|RB 루이스 81|DM 로드리 90|DM 레인더르스 84|LW 도쿠 84|AM 셰르키 83|RW 포든 86|ST 홀란 91',
+    'GK 트래포드 78|CB 스톤스 82|CB 아칸지 83|LB 오라일리 76|DM 니코 곤살레스 80|CM 코바치치 83|CM 베르나르두 85|RW 사비뉴 80|ST 마르무시 83'),
+  cur('ars','아스널','현역 2025-26','4-3-3','balance',K('#ef0107','#f2f2f2','#ef0107','#f2f2f2','#f2f2f2',['#f7d117','#1c2c5b','#f7d117']),
+    'GK 라야 86|LB 칼라피오리 83|CB 가브리에우 88|CB 살리바 89|RB 팀버 85|CM 외데고르 87|DM 수비멘디 86|CM 라이스 88|LW 마르티넬리 83|ST 요케레스 86|RW 사카 89',
+    'GK 케파 80|RB 화이트 82|CB 모스케라 79|LB 인카피에 82|DM 노르고르 80|CM 메리노 83|AM 에제 85|RW 마두에케 81|ST 하베르츠 84'),
+  cur('liv','리버풀','현역 2025-26','4-2-3-1','attack',K('#c8102e','#c8102e','#c8102e','#f2f2f2','#f2f2f2',RED),
+    'GK 알리송 89|LB 케르케즈 82|CB 판데이크 89|CB 코나테 85|RB 프림퐁 84|DM 흐라벤베르흐 85|DM 맥알리스터 86|LW 가크포 84|AM 비르츠 89|RW 살라 90|ST 이삭 88',
+    'GK 마마르다슈빌리 82|LB 로버트슨 82|CB 고메스 80|RB 브래들리 78|CM 소보슬라이 84|CM 존스 80|DM 엔도 78|RW 키에사 79|ST 에키티케 84'),
+  cur('che','첼시','현역 2025-26','4-2-3-1','balance',K('#034694','#034694','#f2f2f2','#f2f2f2','#f2f2f2',['#f2f2f2','#f2f2f2','#034694']),
+    'GK 산체스 80|LB 쿠쿠레야 83|CB 콜윌 83|CB 찰로바 82|RB 제임스 84|DM 카이세도 88|DM 엔소 85|LW 네투 83|AM 팔머 88|RW 이스테방 82|ST 주앙 페드루 83',
+    'GK 요르겐센 75|CB 포파나 80|CB 아다라비오요 78|RB 귀스토 79|DM 라비아 78|CM 안드레이 산투스 77|LW 가르나초 80|LW 기튼스 79|ST 델랍 79'),
+  cur('mun','맨유','현역 2025-26','3-4-3','balance',K('#da291c','#f2f2f2','#111111','#f2f2f2','#f2f2f2',['#f2f2f2','#111111','#f2f2f2']),
+    'GK 라먼스 80|CB 요로 82|CB 더리흐트 83|CB 마즈라위 81|LB 도르구 78|CM 브루누 87|CM 카세미루 81|RB 디알로 82|LW 쿠냐 84|ST 셰슈코 81|RW 음뵈모 84',
+    'GK 바인디르 74|CB 마과이어 79|CB 리산드로 84|LB 쇼 78|DM 우가르테 80|CM 마이누 79|AM 마운트 79|RW 아마드 80|ST 지르크제이 78'),
+  cur('tot','토트넘','현역 2025-26','4-3-3','balance',K('#f2f2f2','#132257','#f2f2f2','#132257','#132257',['#132257']),
+    'GK 비카리오 84|LB 우도기 81|CB 판더펜 85|CB 로메로 86|RB 포로 83|CM 비수마 79|DM 팔리냐 82|CM 사르 80|LW 시몬스 84|ST 솔랑케 81|RW 쿠두스 83',
+    'GK 킨스키 76|LB 스펜스 76|CB 단소 79|CB 드라구신 78|CM 벤탄쿠르 80|CM 베리발 76|AM 매디슨 84|RW 존슨 81|ST 히샬리송 78'),
+  cur('new','뉴캐슬','현역 2025-26','4-3-3','attack',K('#f2f2f2','#111111','#111111','#111111','#f2f2f2',['#2a5caa'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 포프 84|LB 홀 80|CB 보트만 82|CB 셰어 81|RB 트리피어 81|CM 조엘린통 82|DM 기마랑이스 87|CM 토날리 84|LW 고든 84|ST 볼테마데 82|RW 엘랑가 80',
+    'GK 램스데일 80|CB 번 80|CB 티아우 79|RB 리브라멘토 80|CM 윌록 77|RW 머피 79|LW 반스 79|ST 위사 81'),
+  cur('avl','애스턴 빌라','현역 2025-26','4-2-3-1','balance',K('#670e36','#f2f2f2','#670e36','#95bfe5','#f2d36c',['#95bfe5','#670e36','#95bfe5']),
+    'GK 마르티네스 87|LB 디뉴 80|CB 토레스 81|CB 콘사 83|RB 캐시 80|DM 카마라 83|DM 틸레만스 83|LW 로저스 84|AM 맥긴 81|RW 부엔디아 79|ST 왓킨스 84',
+    'GK 비소 74|CB 밍스 79|LB 마트센 79|DM 오나나 79|CM 바클리 76|AM 엘리엇 79|RW 산초 78'),
+  cur('rma','레알 마드리드','현역 2025-26','4-3-3','attack',K('#f2f2f2','#f2f2f2','#f2f2f2','#c9a227','#3d2a6b',['#5b3a9e','#2a1a4a','#5b3a9e'],{side:'#3d2a6b'}),
+    'GK 쿠르투아 89|LB 카레라스 82|CB 뤼디거 85|CB 하위선 83|RB 아놀드 86|CM 벨링엄 89|DM 추아메니 85|CM 발베르데 88|LW 비니시우스 90|ST 음바페 91|RW 호드리구 84',
+    'GK 루닌 79|CB 밀리탕 85|CB 알라바 83|RB 카르바할 84|LB 멘디 80|CM 카마빙가 84|AM 귈레르 82|AM 브라힘 80|RW 마스탄투오노 77'),
+  cur('fcb','바르셀로나','현역 2025-26','4-2-3-1','possess',K('#a50044','#004d98','#004d98','#f5c518','#f5c518',['#f5c518'],{pattern:'stripes',stripe:'#004d98'}),
+    'GK 주앙 가르시아 82|LB 발데 84|CB 쿠바르시 84|CB 아라우호 83|RB 쿤데 86|DM 페드리 89|DM 더용 86|LW 하피냐 89|AM 페르민 82|RW 야말 90|ST 레반도프스키 87',
+    'GK 슈체스니 83|CB 에리크 가르시아 79|CB 크리스텐센 79|LB 마르틴 77|DM 카사도 79|CM 가비 83|AM 올모 84|LW 래시퍼드 81|ST 페란 80'),
+  cur('atm','아틀레티코','현역 2025-26','4-4-2','counter',K('#cb3524','#272e61','#cb3524','#272e61','#272e61',['#1c1c1c'],{pattern:'stripes',stripe:'#f2f2f2'}),
+    'GK 오블락 87|LB 한츠코 80|CB 르노르망 81|CB 히메네스 82|RB 요렌테 84|LM 바에나 84|CM 코케 81|CM 바리오스 82|RM 시메오네 79|ST 알바레스 87|ST 쇠를로트 82',
+    'GK 무소 77|CB 랑글레 78|RB 몰리나 80|LB 갈란 76|DM 카르도소 78|CM 가야고 80|AM 알마다 81|LW 니코 곤살레스 81|ST 그리즈만 85'),
+  cur('fcbayern','바이에른','현역 2025-26','4-2-3-1','possess',K('#dc052d','#dc052d','#dc052d','#f2f2f2','#f2f2f2',['#1f2a44']),
+    'GK 노이어 85|LB 데이비스 84|CB 우파메카노 85|CB 김민재 84|RB 키미히 87|DM 파블로비치 82|DM 고레츠카 81|LW 루이스 디아스 86|AM 무시알라 89|RW 올리세 87|ST 케인 90',
+    'GK 울라이히 75|CB 타 84|CB 이토 80|LB 게헤이루 79|CM 라이머 79|CM 비쇼프 76|AM 칼 77|RW 그나브리 81|ST 잭슨 80'),
+  cur('bvb','도르트문트','현역 2025-26','3-4-3','attack',K('#fde100','#111111','#fde100','#111111','#111111',['#1a1a1a','#1a1a1a','#1a1a1a']),
+    'GK 코벨 86|CB 안톤 81|CB 슐로터베크 83|CB 쥘레 79|LB 스벤손 77|CM 은메차 80|CM 그로스 79|RB 리에르손 77|LW 브란트 81|ST 기라시 85|RW 아데예미 80',
+    'GK 마이어 70|CB 벤세바이니 78|RB 쿠투 77|DM 엠레 잔 78|CM 자비처 78|CM J.벨링엄 77|CM 외즈칸 75|LW 뒤랑빌 74|ST F.실바 77'),
+  cur('int','인테르','현역 2025-26','3-5-2','balance',K('#0068a8','#111111','#111111','#f2d36c','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 좀머 85|CB 바스토니 87|CB 아체르비 82|CB 파바르 83|LB 디마르코 85|CM 바렐라 87|DM 찰하놀루 86|CM 므키타리안 82|RB 덤프리스 84|ST 라우타로 89|ST 튀람 85',
+    'GK J.마르티네스 77|CB 더프레이 81|CB 비세크 80|LB 카를루스 아우구스투 79|CM 프라테시 80|CM 수치치 76|RW 루이스 엔히키 78|ST 보니 79|ST 에스포지토 76'),
+  cur('acm','AC 밀란','현역 2025-26','3-5-2','balance',K('#c7101e','#111111','#111111','#111111','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 메냥 87|CB 토모리 81|CB 가비아 80|CB S.파블로비치 79|LB 에스투피냔 80|CM 로프터스치크 80|DM 모드리치 85|CM 라비오 83|RB 살레마커스 80|ST 레앙 86|ST 풀리식 85',
+    'GK 테라치아노 75|CB 더빈터 77|CB 오도구 72|LB 바르테사기 72|CM Y.포파나 80|CM 리치 78|AM 은쿤쿠 81|RW 추쿠에제 76|ST S.히메네스 80'),
+  cur('juv','유벤투스','현역 2025-26','3-4-3','balance',K('#f2f2f2','#111111','#f2f2f2','#111111','#111111',['#f4a6c6','#111111','#f4a6c6'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 디그레고리오 83|CB 가티 81|CB 브레메르 85|CB 켈리 78|LB 캄비아소 83|CM 로카텔리 82|CM K.튀랑 80|RB 칼룰루 80|LW 일디즈 86|ST 블라호비치 83|RW 콘세이상 82',
+    'GK 페린 77|CB 루가니 75|LB 코스티치 77|RB 주앙 마리우 77|CM 맥케니 80|CM 쿠프메이너르스 80|AM 제그로바 80|ST 다비드 83|ST 오펜다 82'),
+  cur('nap','나폴리','현역 2025-26','4-3-3','balance',K('#12a0d7','#f2f2f2','#12a0d7','#f2f2f2','#f2f2f2',['#1b1b1b']),
+    'GK 메레트 82|LB 올리베라 80|CB 부온조르노 83|CB 라흐마니 81|RB 디로렌초 84|CM 맥토미니 86|DM 로보트카 85|CM 데브라위너 88|LW 랑 80|ST 회이룬 82|RW 폴리타노 80',
+    'GK V.밀린코비치 80|CB 후안 제수스 76|LB 스피나촐라 77|CM 앙귀사 83|CM 길모어 78|AM 엘마스 77|RW 네레스 79|ST 루카쿠 83|GK 콘티니 70'),
+  cur('ata','아탈란타','현역 2025-26','3-4-3','attack',K('#1e71b8','#111111','#111111','#111111','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 카르네세키 83|CB 디심시티 79|CB 히엔 80|CB 콜라시나츠 78|LB 잘레프스키 77|CM 더룬 81|CM 에데르송 84|RB 벨라노바 80|LW 룩먼 85|ST 스카마카 81|RW 더케텔라러 84',
+    'GK 로시 72|CB 스칼비니 79|CB 코수누 79|RB 차파코스타 78|LB 베르나스코니 74|CM 브레시아니니 77|AM 사마르지치 78|AM 말디니 76|ST 크르스토비치 79'),
+  cur('psg','파리 생제르맹','현역 2025-26','4-3-3','possess',K('#004170','#004170','#004170','#da291c','#f2f2f2',['#f2f2f2']),
+    'GK 슈발리에 82|LB 누누 멘드스 87|CB 파초 83|CB 마르키뉴스 85|RB 하키미 88|CM 주앙 네베스 86|DM 비티냐 89|CM 파비안 루이스 85|LW 크바라츠헬리아 88|ST 뎀벨레 90|RW 두에 85',
+    'GK 사포노프 76|CB 베랄두 78|CB 자바르니 79|LB 에르난데스 80|CM 자이르에메리 81|CM 마율루 74|RW 이강인 82|LW 바르콜라 83|ST 하무스 80'),
+  cur('gal','갈라타사라이','현역 2025-26','4-2-3-1','attack',K('#a90432','#a90432','#a90432','#fdb912','#fdb912',['#fdb912','#a90432','#fdb912']),
+    'GK 차키르 80|LB 엘말르 74|CB D.산체스 80|CB 바르닥츠 77|RB 싱고 79|DM 토레이라 80|DM 르미나 78|LW 사네 82|AM 사라 79|RW 바르시 79|ST 오시멘 88',
+    'GK 귀벤치 72|RW 아크귄 76|RW 살라이 77|ST 이카르디 80'),
+  cur('nsr','알나스르','현역 2025-26','4-2-3-1','attack',K('#ffd700','#0a2d6e','#ffd700','#0a2d6e','#0a2d6e',['#0a2d6e']),
+    'GK 벤투 80|LB 부샬 73|CB I.마르티네스 82|CB 시마칸 80|RB 알가남 76|DM 브로조비치 83|DM 알하산 74|LW 마네 82|AM 펠릭스 81|RW 코망 82|ST 호날두 86',
+    'GK 알아키디 74|CB 라자미 73|CB 알아므리 74|CM 알카이바리 72|RW 야히야 73|LW 가리브 75|RW 앙젤루 77|LW 웨슬리 76'),
+  cur('hil','알힐랄','현역 2025-26','4-3-3','balance',K('#0066b3','#f2f2f2','#0066b3','#f2f2f2','#f2f2f2',['#f2f2f2']),
+    'GK 보노 85|LB 테오 84|CB 쿨리발리 82|CB 알탐박티 76|RB 칸셀루 84|CM 밀린코비치 84|DM 네베스 85|CM 칸노 75|LW 말콤 83|ST 누녜스 82|RW 레오나르두 80',
+    'GK 알오와이스 74|RB 알부라이크 74|LB 알샤흐라니 72|LW 알다와사리 78|AM 카이우 세자르 74|ST 미트로비치 82'),
+  cur('mia','인터 마이애미','현역 2025-26','4-4-2','balance',K('#f7b5cd','#231f20','#f7b5cd','#231f20','#231f20',['#231f20']),
+    'GK 우스타리 75|LB 알바 80|CB 팔콘 72|CB 아빌레스 72|RB 웨이간트 72|LM 아옌데 78|CM 부스케츠 80|CM 데폴 83|RM 세고비아 75|ST 메시 88|ST 수아레스 82',
+    'GK 칼렌더 72|CM 크레마스키 72|CM 레돈도 72|RW 실베티 70'),
+  cur('laf','LAFC','현역 2025-26','4-3-3','counter',K('#1a1a1a','#1a1a1a','#1a1a1a','#c39e6d','#c39e6d',['#f2f2f2','#f2f2f2','#f2f2f2']),
+    'GK 요리스 82|LB 홀링스헤드 73|CB 롱 74|CB 세구라 72|RB 팔렌시아 73|CM 델가도 73|DM 틸만 74|CM 아투에스타 74|LW 부앙가 82|ST 손흥민 87|RW 올리베라 74',
+    'RW 데이비드 마르티네스 75'),
+  // 현역 국가대표
+  cur('korN','대한민국','현역 국가대표','4-2-3-1','balance',K('#e4002b','#111111','#e4002b','#1b2a5e','#ffffff',['#f2f2f2']),
+    'GK 조현우 80|LB 이태석 74|CB 김민재 85|CB 조유민 74|RB 설영우 76|DM 황인범 80|DM 백승호 76|LW 손흥민 87|AM 이강인 82|RW 이재성 79|ST 오현규 77',
+    'GK 김승규 78|CB 김주성 73|CB 정승현 72|RB 김문환 73|CM 박용우 73|CM 카스트로프 75|LW 황희찬 79|RW 배준호 76|ST 조규성 76',{nat:true}),
+  cur('jpnN','일본','현역 국가대표','3-4-3','possess',K('#1b2a6b','#1b2a6b','#1b2a6b','#f2f2f2','#f2f2f2',['#f2f2f2']),
+    'GK 스즈키 78|CB 이타쿠라 80|CB 다니구치 75|CB 세코 74|LB 미토마 84|CM 엔도 80|CM 가마다 80|RB 도안 81|LW 미나미노 80|ST 우에다 79|RW 구보 84',
+    'GK 오사코 72|CB 마치다 76|CB 이토 80|CM 모리타 77|CM 다나카 76|AM 사노 75|RW J.이토 79|LW 나카무라 76|ST 마에다 78',{nat:true}),
+  cur('argN','아르헨티나','현역 국가대표','4-4-2','balance',K('#75aadb','#1a1a2e','#f2f2f2','#1a1a2e','#111111',['#1d2a5e'],{pattern:'stripes',stripe:'#f2f2f2'}),
+    'GK 마르티네스 86|LB 타글리아피코 79|CB 리산드로 84|CB 로메로 86|RB 몰리나 80|LM 맥알리스터 86|CM 엔소 85|CM 데폴 83|RM 메시 88|ST 라우타로 89|ST 알바레스 87',
+    'GK 무소 77|CB 오타멘디 79|CB 페첼라 78|RB 몬티엘 77|DM 파레데스 79|CM 로셀소 78|AM 알마다 81|LW 가르나초 80|RW 시메오네 79',{nat:true}),
+  cur('fraN','프랑스','현역 국가대표','4-3-3','balance',K('#1d2a5e','#f2f2f2','#c8102e','#c8102e','#f2f2f2',['#f2f2f2','#1d2a5e','#f2f2f2']),
+    'GK 메냥 87|LB 테오 84|CB 우파메카노 85|CB 살리바 89|RB 쿤데 86|CM 추아메니 85|DM 코네 82|CM 라비오 83|LW 음바페 91|ST 뎀벨레 90|RW 올리세 87',
+    'GK 슈발리에 82|CB 코나테 85|LB 디뉴 80|RB 칼룰루 80|CM 자이르에메리 81|CM 카마빙가 84|AM 셰르키 83|LW 두에 85|ST 튀람 85',{nat:true}),
+  cur('engN','잉글랜드','현역 국가대표','4-2-3-1','attack',K('#f2f2f2','#1d2a5e','#f2f2f2','#1d2a5e','#1d2a5e',['#c8102e']),
+    'GK 픽포드 84|LB 리브라멘토 80|CB 게히 83|CB 스톤스 82|RB 제임스 84|DM 라이스 88|DM 앤더슨 81|LW 고든 84|AM 벨링엄 89|RW 사카 89|ST 케인 90',
+    'GK 램스데일 80|CB 콘사 83|CB 콜윌 83|RB 아놀드 86|CM 존스 80|AM 로저스 84|AM 팔머 88|LW 래시퍼드 81|ST 왓킨스 84',{nat:true}),
+  cur('espN','스페인','현역 국가대표','4-3-3','possess',K('#c60b1e','#1d2a5e','#1d2a5e','#f1bf00','#f1bf00',['#f2f2f2']),
+    'GK 시몬 85|LB 쿠쿠레야 83|CB 라포르트 82|CB 하위선 83|RB 포로 83|CM 페드리 89|DM 로드리 90|CM 파비안 루이스 85|LW N.윌리엄스 85|ST 오야르사발 83|RW 야말 90',
+    'GK 라야 86|CB 쿠바르시 84|CB 르노르망 81|RB 요렌테 84|DM 수비멘디 86|CM 메리노 83|AM 올모 84|LW 바에나 84|ST 모라타 79',{nat:true}),
+  cur('braN','브라질','현역 국가대표','4-2-3-1','attack',K('#ffdc02','#1c4fa0','#f2f2f2','#0a8f3c','#1c4fa0',['#1c4fa0','#f2f2f2','#1c4fa0']),
+    'GK 알리송 89|LB 카를루스 아우구스투 79|CB 마르키뉴스 85|CB 가브리에우 88|RB 웨슬리 77|DM 카세미루 81|DM 기마랑이스 87|LW 비니시우스 90|AM 파케타 82|RW 하피냐 89|ST 쿠냐 84',
+    'GK 에데르송 86|CB 밀리탕 85|CB 브레메르 85|RB 반데르송 77|CM 조엘린통 82|RW 이스테방 82|LW 마르티넬리 83|ST 주앙 페드루 83|ST 호드리구 84',{nat:true}),
+  cur('porN','포르투갈','현역 국가대표','4-3-3','balance',K('#a6192e','#00653a','#a6192e','#00653a','#f1bf00',['#f2f2f2']),
+    'GK D.코스타 84|LB 누누 멘드스 87|CB 디아스 88|CB 이나시우 80|RB 칸셀루 84|CM 베르나르두 85|DM 비티냐 89|CM 브루누 87|LW 레앙 86|ST 호날두 86|RW 주앙 네베스 86',
+    'GK 사 81|CB A.실바 79|RB 달로 82|DM 팔리냐 82|AM 펠릭스 81|RW 콘세이상 82|LW 네투 83|ST 하무스 80',{nat:true}),
+  cur('gerN','독일','현역 국가대표','4-2-3-1','balance',K('#f2f2f2','#111111','#f2f2f2','#111111','#111111',['#2c2c2c']),
+    'GK 바우만 80|LB 라움 82|CB 타 84|CB 뤼디거 85|RB 키미히 87|DM 파블로비치 82|DM 고레츠카 81|LW 사네 82|AM 비르츠 89|RW 그나브리 81|ST 볼테마데 82',
+    'GK 테어슈테겐 85|CB 슐로터베크 83|LB 미텔슈테트 77|CM 그로스 79|AM 무시알라 89|LW 아데예미 80|ST 하베르츠 84',{nat:true}),
+  cur('nedN','네덜란드','현역 국가대표','4-3-3','attack',K('#f36c21','#f2f2f2','#f36c21','#1d2a5e','#1d2a5e',['#1d2a5e']),
+    'GK 페르브뤼헌 80|LB 판더펜 85|CB 판데이크 89|CB 더프레이 81|RB 덤프리스 84|CM 레인더르스 84|DM 흐라벤베르흐 85|CM 더용 86|LW 가크포 84|ST 데파이 79|RW 시몬스 84',
+    'GK 플레켄 80|CB 판헤케 80|CB 팀버 85|LB 아케 80|CM 쿠프메이너르스 80|AM 클라위버르트 80|RW 말런 79|ST 베흐호르스트 75|ST 브로베이 76',{nat:true}),
+  cur('itaN','이탈리아','현역 국가대표','3-5-2','counter',K('#1f4fa0','#f2f2f2','#1f4fa0','#f2f2f2','#f2f2f2',['#f2f2f2','#1f4fa0','#f2f2f2']),
+    'GK 돈나룸마 89|CB 바스토니 87|CB 부온조르노 83|CB 칼라피오리 83|LB 디마르코 85|CM 바렐라 87|DM 로카텔리 82|CM 토날리 84|RB 디로렌초 84|ST 레테기 80|ST 킨 83',
+    'GK 비카리오 84|CB 만치니 79|CB 가티 81|RB 캄비아소 83|CM 프라테시 80|CM 리치 78|AM 라스파도리 79|RW 폴리타노 80|ST 스카마카 81',{nat:true}),
+  cur('belN','벨기에','현역 국가대표','4-3-3','balance',K('#e30613','#e30613','#e30613','#f5c518','#f5c518',['#f2f2f2']),
+    'GK 쿠르투아 89|LB 드카위퍼 78|CB 테아테 79|CB 데바스트 79|RB 카스타뉴 78|CM 틸레만스 83|DM 오나나 79|CM 데브라위너 88|LW 도쿠 84|ST 루카쿠 83|RW 트로사르 82',
+    'GK 카스텔스 80|RB 살레마커스 80|CM 망갈라 77|AM 더케텔라러 84|RW 바카요코 79|ST 오펜다 82',{nat:true})
+];
+(function(){
+  const LEG_IDS=['kor','bra','arg','fra','ger','esp','eng','ita','por','ned'];
+  const LEG=TEAMS.filter(t=>LEG_IDS.includes(t.id));
+  LEG.forEach(t=>{t.name=t.name+' 레전드';t.legend=true;});
+  TEAMS.length=0;TEAMS.push(...CUR,...LEG);
+})();
+
 
 function ovrOf(p){
   const [pac,pas,sho,dri,def,gk]=p[6];
@@ -1316,8 +1497,7 @@ for(const [id,t] of [['tacA',0],['tacB',1]]){
 
 for(const [id,def] of [['teamA',0],['teamB',1]]){
   const sel=$(id);
-  const NAT=['kor','bra','arg','fra','ger','esp','eng','ita','por','ned'];
-  const groups=[['드림팀',t=>t.id.startsWith('dream')],['클럽 레전드',t=>!t.id.startsWith('dream')&&!NAT.includes(t.id)],['국가대표 레전드',t=>NAT.includes(t.id)]];
+  const groups=[['현역 클럽 (2025-26)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat],['국가대표 레전드',t=>t.legend]];
   for(const [label,fn] of groups){
     const og=document.createElement('optgroup');og.label=label;
     TEAMS.forEach((tm,i)=>{if(!fn(tm))return;const o=document.createElement('option');o.value=i;o.textContent=tm.name+(tm.id.startsWith('dream')?' · '+tm.sub:'');og.appendChild(o);});
@@ -1348,8 +1528,9 @@ function showOverlay(kind){
     card.innerHTML=`<h2>역대 드림매치</h2>
       <div class="vs"><span class="a">${T0.name}</span><span>vs</span><span class="b">${T1.name}</span></div>
       <p>팀과 전술은 아래에서 바꿀 수 있어요. 한 팀을 골라 직접 뛰거나 관전하세요.</p>
-      <div class="row"><button class="btn primary" id="ovA">${ro(T0.name)} 플레이</button><button class="btn primary" id="ovB">${ro(T1.name)} 플레이</button><button class="btn" id="ovW">관전</button></div>`;
-    $('ovA').addEventListener('click',()=>start(0));$('ovB').addEventListener('click',()=>start(1));$('ovW').addEventListener('click',()=>start(-1));
+      <div class="row"><button class="btn primary" id="ovA">${ro(T0.name)} 플레이</button><button class="btn primary" id="ovB">${ro(T1.name)} 플레이</button><button class="btn" id="ovW">관전</button></div>
+      <div class="row"><button class="btn" id="ovT">토너먼트 모드</button></div>`;
+    $('ovA').addEventListener('click',()=>start(0));$('ovB').addEventListener('click',()=>start(1));$('ovW').addEventListener('click',()=>start(-1));$('ovT').addEventListener('click',openTour);
   }else if(kind==='end'){
     const m=match,w=m.winner;
     const head=w===-1?'무승부':`${m.teams[w].name} 승리`;
@@ -1357,9 +1538,10 @@ function showOverlay(kind){
     card.innerHTML=`<h2>${head}</h2>
       <div class="big"><span style="color:var(--teamA)">${m.score[0]}</span> <span style="color:var(--muted)">:</span> <span style="color:var(--teamB)">${m.score[1]}</span></div>${pk}
       <div class="mvp">MVP <b>${m.mvp.name}</b> · 평점 ${m.mvp.rating.toFixed(1)}<br><span style="color:var(--muted)">${recText(m.mvp)||'경기 내내 존재감'}</span></div>
-      <div class="row"><button class="btn primary" id="ovAgain">다시 하기</button><button class="btn" id="ovRec">기록 보기</button></div>`;
+      <div class="row"><button class="btn primary" id="ovAgain">다시 하기</button><button class="btn" id="ovRec">기록 보기</button>${tour?'<button class="btn primary" id="ovTour">대진표 보기</button>':''}</div>`;
     $('ovAgain').addEventListener('click',()=>{newMatch();});
     $('ovRec').addEventListener('click',()=>{showOverlay(null);setTab('lineup');});
+    {const ot=$('ovTour');if(ot)ot.addEventListener('click',()=>{showOverlay(null);openTour();});}
   }
 }
 
@@ -1729,11 +1911,34 @@ Object.assign(LOOKS,{
   '이영표':['#e9c8a8','#120c08','short',''],'홍명보':['#e9c8a8','#120c08','short',''],'송종국':['#e9c8a8','#120c08','short',''],
   '기성용':['#efd3b4','#120c08','short','stubble'],'차범근':['#e9c8a8','#120c08','short',''],'황선홍':['#e9c8a8','#120c08','short','']
 });
+Object.assign(LOOKS,{
+  '홀란':['#f6dcc4','#e8c98a','long',''],'비니시우스':['#5a3a24','#120c08','curly',''],'벨링엄':['#a87550','#120c08','buzz','stubble'],
+  '야말':['#c99a72','#120c08','curly',''],'황희찬':['#e9c8a8','#120c08','short',''],'사카':['#4a2e1c','#120c08','buzz',''],
+  '외데고르':['#f1d1b5','#c9a46a','short',''],'라이스':['#f1d1b5','#8a6a45','short',''],'팔머':['#efd3b4','#5a3c22','short',''],
+  '브루누':['#e2b892','#1c1410','short','stubble'],'데브라위너':['#f6dcc4','#e0a060','short',''],'레반도프스키':['#efd3b4','#8a6a45','short',''],
+  '하피냐':['#c99a72','#1c1410','long',''],'뎀벨레':['#5a3a24','#120c08','buzz','stubble'],'크바라츠헬리아':['#f1d1b5','#1c1410','long',''],
+  '라우타로':['#d8ab83','#1c1410','short','stubble'],'레앙':['#6e4529','#120c08','buzz','full'],'비르츠':['#f1d1b5','#8a6a45','short',''],
+  '무시알라':['#c99a72','#1c1410','short',''],'쿠르투아':['#f1d1b5','#3a2a1e','short',''],'발베르데':['#e2b892','#1c1410','long','full'],
+  '하키미':['#a87550','#120c08','buzz','stubble'],'메냥':['#5a3a24','#120c08','buzz','full'],'돈나룸마':['#e9c4a0','#1c1410','short','stubble'],
+  '이삭':['#6e4529','#120c08','long',''],'요케레스':['#efd3b4','#8a6a45','short','full'],'기마랑이스':['#c99a72','#120c08','short','stubble'],
+  '쿠냐':['#a87550','#120c08','buzz',''],'로드리':['#efd3b4','#3a2a1e','short','full'],'그바르디올':['#f1d1b5','#2b1d14','buzz','stubble'],
+  '살리바':['#4a2e1c','#120c08','buzz',''],'올리세':['#6e4529','#120c08','buzz',''],'쿤데':['#6e4529','#120c08','buzz',''],
+  '추아메니':['#4a2e1c','#120c08','buzz',''],'카마빙가':['#4a2e1c','#120c08','dreads',''],'미토마':['#efd3b4','#120c08','short',''],
+  '구보':['#efd3b4','#120c08','short',''],'엔도':['#efd3b4','#120c08','short','stubble'],'오현규':['#e9c8a8','#120c08','short',''],
+  '조현우':['#e9c8a8','#120c08','short',''],'이재성':['#e9c8a8','#120c08','short',''],'오시멘':['#4a2e1c','#e8c98a','dreads',''],
+  '가크포':['#8d5e3c','#120c08','buzz',''],'맥알리스터':['#efd3b4','#c98a4a','curly',''],'코나테':['#4a2e1c','#120c08','buzz',''],
+  '포든':['#efd3b4','#c98a4a','buzz',''],'도쿠':['#4a2e1c','#120c08','curly',''],'카이세도':['#6e4529','#120c08','short',''],
+  '뤼디거':['#4a2e1c','#120c08','buzz','full'],'루카쿠':['#4a2e1c','#120c08','buzz',''],'튀람':['#6e4529','#120c08','buzz',''],
+  '데폴':['#e2b892','#1c1410','short','full'],'알바레스':['#e2b892','#1c1410','short',''],'바렐라':['#efd3b4','#3a2a1e','short','stubble'],
+  '맥토미니':['#f1d1b5','#c98a4a','short',''],'로메로':['#d8ab83','#1c1410','short','full'],'케르케즈':['#efd3b4','#5a3c22','short','']
+});
 function lookOf(p){
   const L=LOOKS[p.short];
   if(L)return {skin:L[0],hair:L[1],style:L[2],beard:L[3]};
   let h=0;for(const ch of p.name)h=(h*31+ch.charCodeAt(0))>>>0;
   const skins=['#f1d1b5','#e9c4a0','#d8ab83','#c99a72','#a87550','#8d5e3c'],hairs=['#1c1410','#2b1d14','#4a3221','#6b4a2e'],st=['short','short','buzz','slick','curly'];
+  const tid=(match&&match.teams&&match.teams[p.t])?match.teams[p.t].id:'';
+  if(['korN','kor','jpnN'].includes(tid))return {skin:['#efd3b4','#e9c8a8','#e2c3a0'][h%3],hair:'#120c08',style:['short','short','buzz','slick'][(h>>4)%4],beard:''};
   return {skin:skins[h%skins.length],hair:hairs[(h>>3)%hairs.length],style:st[(h>>6)%st.length],beard:(h>>9)%3===0?'stubble':''};
 }
 function shade(hex,a){const c=hexRgb(hex).map(v=>Math.round(Math.max(0,Math.min(255,a<0?v*(1+a):v+(255-v)*a))));return `rgb(${c[0]},${c[1]},${c[2]})`;}
@@ -2605,6 +2810,124 @@ function cineCam(dt){
   camPos.lerp(_v1,k);camLook.lerp(_v2,k);camera.position.copy(camPos);camera.lookAt(camLook);setFov(42);
 }
 
+
+// ---------- 토너먼트 ----------
+let tour=null;
+const RNAMES={2:'결승',4:'4강',8:'8강',16:'16강',32:'32강'};
+const tIdx=id=>TEAMS.findIndex(t=>t.id===id);
+const tName=id=>{const t=TEAMS[tIdx(id)];return t?t.name:id;};
+function saveTour(){try{localStorage.setItem('dm-tour',JSON.stringify(tour));}catch(_){}}
+(function loadTour(){try{const v=localStorage.getItem('dm-tour');if(!v)return;const t=JSON.parse(v);
+  if(t&&t.rounds&&t.rounds.every(r=>r.every(mt=>tIdx(mt.a)>=0&&tIdx(mt.b)>=0))){t.playing=false;tour=t;}}catch(_){}})();
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function openTour(){
+  if(running&&match&&match.phase!=='ft'&&match.phase!=='pre')togglePlay();
+  $('tourModal').hidden=false;
+  if(tour&&!tour.done)showBracket();else showSetup();
+}
+function closeTour(){$('tourModal').hidden=true;}
+function showSetup(){
+  $('tourTitle').textContent='토너먼트 만들기';$('tourSetup').hidden=false;$('tourView').hidden=true;
+  const sel=$('tourMy');
+  if(!sel.options.length){
+    for(const [label,fn] of [['현역 클럽 (2025-26)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat],['국가대표 레전드',t=>t.legend]]){
+      const og=document.createElement('optgroup');og.label=label;
+      TEAMS.forEach((t,i)=>{if(fn(t)){const o=document.createElement('option');o.value=i;o.textContent=t.name;og.appendChild(o);}});
+      sel.appendChild(og);
+    }
+  }
+  sel.value=$('teamA').value;
+}
+function startTour(){
+  const size=+$('tourSize').value,pool=$('tourPool').value,my=TEAMS[+$('tourMy').value].id,mode=$('tourMode').value;
+  const inPool=t=>pool==='all'||(pool==='club'&&t.cur&&!t.nat)||(pool==='nat'&&(t.nat||t.legend));
+  const cands=shuffle(TEAMS.filter(t=>t.id!==my&&inPool(t)).map(t=>t.id));
+  let n=size;while(n>2&&cands.length<n-1)n/=2;   // 고를 수 있는 팀이 모자라면 대진을 줄인다
+  const ids=shuffle([my,...cands.slice(0,n-1)]);
+  const r0=[];for(let i=0;i+1<ids.length;i+=2)r0.push({a:ids[i],b:ids[i+1]});
+  tour={size:r0.length*2,my,mode,rounds:[r0],round:0,playing:false,done:false,out:false,champion:null};
+  saveTour();showBracket();
+}
+function myMatch(){if(!tour)return null;const r=tour.rounds[tour.round];return r?r.find(mt=>(mt.a===tour.my||mt.b===tour.my)&&mt.w==null)||null:null;}
+function scoreTxt(mt,side){
+  if(mt.w==null)return '';
+  const g=side==='a'?mt.sa:mt.sb,pk=side==='a'?mt.pa:mt.pb;
+  return pk!=null?`${g} (${pk})`:String(g);
+}
+function showBracket(){
+  $('tourSetup').hidden=true;$('tourView').hidden=false;
+  const total=Math.round(Math.log2(tour.size));
+  const cols=[];
+  for(let r=0;r<total;r++){
+    const n=tour.size>>(r+1),ms=tour.rounds[r]||Array.from({length:n},()=>null);
+    cols.push(`<div class="bcol"><h4>${RNAMES[n*2]||(n*2)+'강'}</h4>${ms.map(mt=>{
+      if(!mt)return '<div class="bm tbd"><div class="tr"><span>미정</span><span></span></div><div class="tr"><span>미정</span><span></span></div></div>';
+      const row=side=>{const id=mt[side];const cls=[mt.w==null?'':(mt.w===id?'win':'lose'),id===tour.my?'me':''].join(' ');
+        return `<div class="tr ${cls}"><span>${tName(id)}</span><span>${scoreTxt(mt,side)}</span></div>`;};
+      return `<div class="bm">${row('a')}${row('b')}</div>`;
+    }).join('')}</div>`);
+  }
+  const champ=tour.champion?`<div class="champ"><svg width="56" height="64" viewBox="0 0 56 64" aria-hidden="true"><path d="M14 4h28v14c0 10-6 18-14 18S14 28 14 18z" fill="#f2d36c"/><path d="M14 8H5c0 9 4 14 10 15M42 8h9c0 9-4 14-10 15" fill="none" stroke="#f2d36c" stroke-width="4"/><rect x="24" y="36" width="8" height="12" fill="#c9a227"/><rect x="14" y="48" width="28" height="8" rx="2" fill="#f2d36c"/></svg><b>${tName(tour.champion)}</b><span style="color:var(--muted);font-size:12px">우승</span></div>`:'';
+  $('bracket').innerHTML=cols.join('')+champ;
+  const acts=[],mm=myMatch();
+  let title,msg='';
+  if(tour.done){title=tour.champion===tour.my?'우승!':'토너먼트 종료';msg=tour.champion===tour.my?`${tName(tour.my)} 우승을 축하해요!`:`우승은 ${tName(tour.champion)}이에요.`;acts.push(['tNew','새 토너먼트',true]);}
+  else if(tour.out){title=`토너먼트 · ${RNAMES[tour.rounds[tour.round].length*2]||''}`;msg=`${tName(tour.my)}는 탈락했어요.`;acts.push(['tSimAll','남은 경기 결과 보기',true],['tNew','새 토너먼트',false]);}
+  else if(mm){const opp=mm.a===tour.my?mm.b:mm.a;title=`토너먼트 · ${RNAMES[tour.rounds[tour.round].length*2]||''}`;msg=`다음 상대는 ${tName(opp)}예요.`;
+    acts.push(['tPlay',`${tour.mode==='play'?'내 경기 시작':'내 경기 관전'} (vs ${tName(opp)})`,true],['tNew','새 토너먼트',false]);}
+  else{title='토너먼트';acts.push(['tNew','새 토너먼트',true]);}
+  $('tourTitle').textContent=title;$('tourMsg').textContent=msg;
+  $('tourActs').innerHTML=acts.map(([id,t,pr])=>`<button class="btn${pr?' primary':''}" id="${id}" type="button">${t}</button>`).join('');
+  const on=(id,f)=>{const b=$(id);if(b)b.addEventListener('click',f);};
+  on('tNew',showSetup);on('tPlay',tourPlay);on('tSimAll',()=>simulateRest(true));
+  if(tour.done&&tour.champion===tour.my&&!tour.cheered){tour.cheered=true;saveTour();try{SFX.goal();VOICE.say(`${tName(tour.my)}, 우승입니다!`,true);}catch(_){}}
+}
+function tourPlay(){
+  const mt=myMatch();if(!mt)return;
+  const opp=mt.a===tour.my?mt.b:mt.a,ia=tIdx(tour.my),ib=tIdx(opp);
+  $('teamA').value=ia;$('teamB').value=ib;$('tacA').value=TEAMS[ia].tactic;$('tacB').value=TEAMS[ib].tactic;
+  newMatch();closeTour();tour.playing=true;saveTour();
+  start(tour.mode==='play'?0:-1);
+}
+function simMatch(aId,bId){
+  const ta=TEAMS[tIdx(aId)],tb=TEAMS[tIdx(bId)];
+  const m=createMatch({seed:(Math.random()*4294967296)>>>0,tactics:[ta.tactic,tb.tactic],teams:[ta,tb]});
+  m.prepare();m.start();let n=0;while(m.phase!=='ft'&&n<90000){m.step(1/30);n++;}
+  return {sa:m.score[0],sb:m.score[1],pa:m.pens?m.pens.sum[0]:null,pb:m.pens?m.pens.sum[1]:null,w:m.winner===1?bId:aId};
+}
+function tourRecord(m){
+  tour.playing=false;const mt=myMatch();if(!mt){saveTour();return;}
+  const iAmA=mt.a===tour.my;
+  mt.sa=iAmA?m.score[0]:m.score[1];mt.sb=iAmA?m.score[1]:m.score[0];
+  if(m.pens){mt.pa=iAmA?m.pens.sum[0]:m.pens.sum[1];mt.pb=iAmA?m.pens.sum[1]:m.pens.sum[0];}
+  const myWin=m.winner===0;mt.w=myWin?tour.my:(iAmA?mt.b:mt.a);if(!myWin)tour.out=true;
+  saveTour();simulateRest(false);
+}
+function advanceIfDone(){
+  const r=tour.rounds[tour.round];
+  if(!r.every(mt=>mt.w!=null))return false;
+  if(r.length===1){tour.done=true;tour.champion=r[0].w;return true;}
+  const nx=[];for(let i=0;i<r.length;i+=2)nx.push({a:r[i].w,b:r[i+1].w});
+  tour.rounds.push(nx);tour.round++;return true;
+}
+function simulateRest(allRounds){
+  const step=()=>{
+    const r=tour.rounds[tour.round];
+    const mt=r.find(x=>x.w==null&&(tour.out||!(x.a===tour.my||x.b===tour.my)));
+    if(mt){
+      $('tourMsg').textContent=`다른 경기 결과 계산 중… ${tName(mt.a)} vs ${tName(mt.b)}`;
+      setTimeout(()=>{Object.assign(mt,simMatch(mt.a,mt.b));saveTour();step();},20);
+      return;
+    }
+    if(advanceIfDone()){saveTour();if(!tour.done&&(allRounds||tour.out)&&allRounds){step();return;}}
+    saveTour();if(!$('tourModal').hidden)showBracket();
+  };
+  step();
+}
+$('tourBtn').addEventListener('click',openTour);
+$('tourClose').addEventListener('click',closeTour);
+$('tourStart').addEventListener('click',startTour);
+
 let qAcc=0,qN=0,qLevel=0,gfxHigh=true;
 function setQuality(hi){
   gfxHigh=hi;
@@ -2732,6 +3055,7 @@ function frame(ts){
       $('play').textContent='종료';$('play').disabled=true;$('skip').disabled=true;
       flushEvents();renderBoard();renderStats();renderLineup();draw();
       document.body.classList.remove('playing');
+      if(tour&&tour.playing)tourRecord(match);
       setTimeout(()=>{if(match.phase==='ft'&&ended)showOverlay('end');},match.pens?1800:900);
     }
   }
