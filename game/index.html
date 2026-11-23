@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>[hidden]{display:none!important}body{margin:0}</style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="현역 36팀과 레전드 국가대표 10팀이 3D 경기장에서 붙는 브라우저 축구 게임. 직접 조종, 토너먼트, 골 세리머니와 리플레이."><meta property="og:type" content="website"><meta property="og:title" content="드림매치 3D — 브라우저 축구 게임"><meta property="og:description" content="현역 36팀 · 레전드 10팀 · 토너먼트 · 직접 플레이 · 골 리플레이. 설치 없이 바로 플레이."><meta property="og:image" content="https://jsbarsss-code.github.io/jsbars-calc/game/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:url" content="https://jsbarsss-code.github.io/jsbars-calc/game/"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#09110e"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2230%22 fill=%22%23fff%22 stroke=%22%23111%22 stroke-width=%223%22/%3E%3Cpolygon points=%2232,20 43,28 39,41 25,41 21,28%22 fill=%22%23111%22/%3E%3C/svg%3E"><style>[hidden]{display:none!important}body{margin:0}</style>
 <title>드림매치 3D</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -546,6 +546,29 @@ function genAttrs(pos,o,name){
   a[5]=pos==='GK'?o:10;
   return a;
 }
+
+// [속도, 패스, 슈팅, 드리블, 수비] — 실제 플레이 특징을 바탕으로 한 이 게임의 자체 추정치
+const STAR={
+  '음바페':[97,80,92,92,36],'비니시우스':[95,81,85,93,30],'홀란':[89,66,94,79,45],'야말':[86,85,83,92,30],'살라':[89,82,88,88,45],
+  '케인':[70,84,93,82,49],'벨링엄':[80,84,84,88,78],'레반도프스키':[76,79,90,85,43],'하피냐':[88,83,85,88,55],'메시':[80,90,87,91,33],
+  '호날두':[80,77,90,80,34],'손흥민':[86,80,87,84,42],'뎀벨레':[92,84,86,91,38],'크바라츠헬리아':[86,82,82,90,40],'사카':[85,85,83,87,58],
+  '외데고르':[72,89,81,87,62],'비르츠':[80,88,84,91,55],'무시알라':[82,84,82,93,62],'팔머':[76,86,86,87,52],'데브라위너':[67,93,87,86,63],
+  '모드리치':[63,90,76,86,72],'로드리':[64,86,80,84,86],'라이스':[76,83,77,82,86],'페드리':[74,88,72,90,72],'더용':[80,87,70,88,77],
+  '키미히':[70,88,74,83,82],'판데이크':[76,75,60,72,90],'살리바':[83,74,40,74,87],'김민재':[80,70,40,68,87],'뤼디거':[82,72,52,68,86],
+  '하키미':[92,82,75,83,77],'누누 멘드스':[91,80,68,85,78],'아놀드':[76,90,74,82,73],'테오':[91,78,74,82,77],'라우타로':[80,78,88,84,47],
+  '튀람':[85,74,82,82,40],'이삭':[85,77,87,86,40],'요케레스':[87,72,87,80,42],'올리세':[80,85,84,89,40],'쿤데':[85,75,50,77,85],
+  '카이세도':[77,79,68,80,86],'발베르데':[86,85,83,84,79],'추아메니':[72,80,72,78,84],'비티냐':[74,90,76,90,72],'주앙 네베스':[76,85,74,86,77],
+  '두에':[85,81,80,88,45],'레앙':[93,78,81,89,35],'풀리식':[86,80,82,86,42],'일디즈':[82,79,82,89,35],'데폴':[74,84,76,82,76],
+  '알바레스':[83,80,86,85,58],'그리즈만':[75,86,85,85,56],'맥알리스터':[70,86,80,84,75],'흐라벤베르흐':[76,82,72,85,80],'기마랑이스':[72,85,77,85,80],
+  '브루누':[72,88,85,82,64],'음뵈모':[86,80,84,85,45],'쿠냐':[82,78,82,86,52],'도쿠':[94,74,72,91,30],'포든':[80,85,84,89,55],
+  '셰르키':[75,85,82,90,35],'오시멘':[87,64,86,78,40],'이강인':[72,86,80,88,55],'황희찬':[87,72,79,82,48],'구보':[83,80,80,88,45],
+  '미토마':[87,76,76,88,48],'바렐라':[78,85,78,85,76],'찰하놀루':[60,89,82,82,74],'바스토니':[72,82,60,74,87],'그바르디올':[82,78,64,79,86],
+  '마르키뉴스':[72,78,55,72,86],'프림퐁':[94,80,74,86,72],'가크포':[85,78,82,85,45],'고든':[90,79,80,85,42],'루이스 디아스':[90,80,82,88,45],
+  '케르케즈':[86,76,60,78,76],'칼라피오리':[78,78,65,78,82],'스카마카':[70,70,84,74,38],'룩먼':[88,78,82,86,40],'코망':[90,78,76,87,38],
+  '마네':[86,78,80,84,44],'누녜스':[90,68,81,76,40],'수아레스':[66,80,84,78,38],'부스케츠':[48,86,64,78,74],'부앙가':[90,74,82,84,36]
+};
+function starAttrs(name,pos){const v=STAR[name];if(!v)return null;return [...v,pos==='GK'?80:10];}
+
 function parseSq(str){
   if(!str)return [];
   return str.split('|').map(x=>{const t=x.trim().split(/\s+/);return [t[0],t.slice(1,-1).join(' '),+t[t.length-1]];});
@@ -555,8 +578,8 @@ function cur(id,name,sub,form,tactic,kit,st,bn,extra){
   const f=FORM[form],S=parseSq(st),Bn=parseSq(bn),used=new Set();
   const num=(nm,pos,fb)=>{let n=NUMS[nm]||POSNUM[pos]||fb;while(used.has(n))n+=10;used.add(n);return n;};
   return Object.assign({id,name,sub,formation:form,tactic,kit,cur:true,
-    players:S.map((q,i)=>[q[1],q[1],num(q[1],f[i][0],i+2),f[i][0],f[i][1],f[i][2],genAttrs(f[i][0],q[2],q[1])]),
-    bench:Bn.map((q,i)=>[q[1],q[1],num(q[1],q[0],12+i),q[0],genAttrs(q[0],q[2],q[1])])},extra||{});
+    players:S.map((q,i)=>[q[1],q[1],num(q[1],f[i][0],i+2),f[i][0],f[i][1],f[i][2],starAttrs(q[1],f[i][0])||genAttrs(f[i][0],q[2],q[1])]),
+    bench:Bn.map((q,i)=>[q[1],q[1],num(q[1],q[0],12+i),q[0],starAttrs(q[1],q[0])||genAttrs(q[0],q[2],q[1])])},extra||{});
 }
 const RED=['#f2f2f2','#f2f2f2','#f2f2f2'];
 const CUR=[
@@ -1708,7 +1731,7 @@ function renderLineup(){
     const rows=ps.map(p=>{
       const isM=done&&m.mvp===p;
       const right=done?p.rating.toFixed(1):p.ovr;
-      return `<tr class="${isM?'mvp':''}"><td class="pos">${p.pos}</td><td>${p.short}${p.yellow?'<span class="yc" title="경고"></span>':''}${isM?'<span class="badge">MVP</span>':''}</td><td class="rec">${recText(p)}</td><td class="r">${right}</td></tr>`;
+      return `<tr class="${isM?'mvp':''}"><td class="pos">${p.pos}</td><td>${p.short}${p.yellow?'<span class="yc" title="경고"></span>':''}${isM?'<span class="badge">MVP</span>':''}</td><td class="rec">${done?recText(p):(p.pos==='GK'?`골키핑 ${p.gk}`:`속도 ${p.pac} · 슛 ${p.sho} · 드리블 ${p.dri}`)}</td><td class="r">${right}</td></tr>`;
     }).join('');
     return `<div><h3 style="color:${teamColor(t)}">${m.teams[t].name} <small>${m.teams[t].formation} · ${done?'평점':'능력치 평균 '+avg}</small></h3><table>${rows}${offRows(m,t,done)}</table></div>`;
   }).join('');
@@ -2131,6 +2154,22 @@ const ballCanvas=document.createElement('canvas');ballCanvas.width=128;ballCanva
   for(const [x,y] of [[16,16],[48,40],[80,14],[112,42],[32,58],[96,60],[64,4],[0,40],[128,40]]){g.beginPath();g.arc(x,y,7,0,Math.PI*2);g.fill();}})();
 const ball=new THREE.Mesh(new THREE.SphereGeometry(0.32,24,16),new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(ballCanvas),roughness:0.4}));
 ball.castShadow=true;scene.add(ball);
+const TRAIL_N=14,trailPts=new Float32Array(TRAIL_N*3),trailGeo=new THREE.BufferGeometry();
+trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPts,3));
+const trailLine=new THREE.Line(trailGeo,new THREE.LineBasicMaterial({color:0xfff2c0,transparent:true,opacity:0.75,blending:THREE.AdditiveBlending,depthWrite:false}));
+trailLine.frustumCulled=false;trailLine.visible=false;scene.add(trailLine);
+let trailCount=0;
+function updateTrail(B){
+  const on=B.mode==='shot'||(B.mode==='pass'&&B.arc>0);
+  if(on){
+    for(let i=TRAIL_N-1;i>0;i--){trailPts[i*3]=trailPts[(i-1)*3];trailPts[i*3+1]=trailPts[(i-1)*3+1];trailPts[i*3+2]=trailPts[(i-1)*3+2];}
+    trailPts[0]=ball.position.x;trailPts[1]=ball.position.y;trailPts[2]=ball.position.z;
+    if(trailCount===0)for(let i=1;i<TRAIL_N;i++){trailPts[i*3]=trailPts[0];trailPts[i*3+1]=trailPts[1];trailPts[i*3+2]=trailPts[2];}
+    trailCount=Math.min(TRAIL_N,trailCount+1);
+    trailGeo.attributes.position.needsUpdate=true;trailLine.visible=true;
+    trailLine.material.opacity=B.mode==='shot'?0.8:0.35;
+  }else if(trailLine.visible){trailLine.material.opacity*=0.8;if(trailLine.material.opacity<0.05){trailLine.visible=false;trailCount=0;}}
+}
 const ballBlob=makeBlob(0.9);scene.add(ballBlob);
 
 // 카메라
@@ -2502,9 +2541,23 @@ function updateDust(dt){
 
 // ---------- 관중 들썩임 ----------
 let crowdUp=false;const crowdDummy=new THREE.Object3D();
+let crowdTick=0;
 function animateCrowd(now){
   const on=celebT>0;
-  if(!on&&!crowdUp)return;
+  if(!on&&!crowdUp){
+    // 평소: 프레임마다 관중 1/4만 갱신해서 가볍게 들썩이게
+    if(!gfxHigh||!running)return;
+    const part=(crowdTick++)%4;
+    for(const fs of fanSets){
+      if(!fs.fans.visible)continue;const P=fs.fanPos;
+      for(let k=part;k<fs.fans.count;k+=4){
+        const j=Math.max(0,Math.sin(now*0.004+k*2.3))*0.12;
+        crowdDummy.position.set(P[k*3],P[k*3+1]+j,P[k*3+2]);crowdDummy.updateMatrix();fs.fans.setMatrixAt(k,crowdDummy.matrix);
+      }
+      fs.fans.instanceMatrix.needsUpdate=true;
+    }
+    return;
+  }
   for(const fs of fanSets){
     const P=fs.fanPos;
     for(let k=0;k<fs.fans.count;k++){
@@ -2985,6 +3038,7 @@ function adaptQuality(dt){
 }
 function lerpAngle(a,b,t){const d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t;}
 let lastDraw=0,pensKey='',ballY=0.32,builtSubs=-1,ballHopT=0;
+const THUMB=location.hash==='#thumb';  // 공유 썸네일 촬영용: 이름표 숨김
 function draw(){
   if(!match)return;
   if(match.subsVer!==builtSubs){builtSubs=match.subsVer;clearPlayers();}
@@ -3005,6 +3059,7 @@ function draw(){
     o.label.material.opacity=B.owner===p?1:(camMode==='follow'?0.55:0.8);
     o.label.visible=!(camMode==='close'&&B.owner===p)&&!(cine&&cine.phase==='celebrate');
     if(o.label.visible){const dx=camera.position.x-o.root.position.x,dz=camera.position.z-o.root.position.z;if(dx*dx+dz*dz<49)o.label.visible=false;}
+    if(THUMB)o.label.visible=false;
     const ls=p.red?2:p.yellow?1:0;
     if(o.ls!==ls){o.ls=ls;drawLabel(o.tex.image,p.short,ls);o.tex.needsUpdate=true;}
     o.label.scale.set(B.owner===p?5.2:4.4,B.owner===p?1.3:1.1,1);
@@ -3018,6 +3073,7 @@ function draw(){
     const go=playerObjs[m.players.indexOf(B.owner)],yaw=go?go.root.rotation.y:0;ballY=1.45;
     ball.position.set(B.owner.x-W/2+Math.sin(yaw)*0.5,1.45,B.owner.y-H/2+Math.cos(yaw)*0.5);
   }else ball.position.set(B.x-W/2,ballY,B.y-H/2);
+  updateTrail(B);
   ballBlob.position.set(ball.position.x,0.03,ball.position.z);ballBlob.scale.setScalar(0.9*(1-Math.min(0.5,(ballY-0.32)*0.35)));
   if(running){ball.rotation.x+=(B.vy||0)*dt*speed/0.32;ball.rotation.z-=(B.vx||0)*dt*speed/0.32;}
   updateHumanMarker();
