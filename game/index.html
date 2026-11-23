@@ -135,6 +135,7 @@ canvas{display:block;width:100%;max-width:100%}
   .spacer{display:none}
 }
 .overlay{z-index:5}
+.pauseTag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;padding:14px 22px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(5,10,8,.78);color:#fff;font:700 18px/1.2 inherit;cursor:pointer}
 .flash{position:absolute;left:0;right:0;top:36%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;background:linear-gradient(90deg,transparent,rgba(5,10,8,.72),transparent);pointer-events:none;z-index:3}
 .flash b{font-family:var(--f-display);font-weight:800;font-size:clamp(40px,9vw,96px);line-height:1;letter-spacing:.04em}
 .flash span{font-weight:600;font-size:clamp(14px,2.2vw,22px)}
@@ -234,6 +235,7 @@ body.playing.pad .touch{display:flex}
     <section class="stage">
       <div class="pitchbox">
         <canvas id="pitch" aria-label="3D 경기장"></canvas>
+        <button class="pauseTag" id="pauseTag" type="button" hidden>일시정지 · 눌러서 계속</button>
         <div class="flash" id="flash" hidden><b id="flashT"></b><span id="flashS"></span></div>
         <div class="pens" id="pens" hidden></div>
         <div class="holder" id="holder" hidden><span class="hlab">공 소유</span><i id="holderDot"></i><b id="holderTxt"></b></div>
@@ -1594,8 +1596,10 @@ function skipToEnd(){
   while(match.phase!=='ft'&&guard<60000){match.step(1/30);guard++;}
   running=false;
 }
-$('play').addEventListener('click',togglePlay);
+$('play').addEventListener('click',e=>{togglePlay();e.currentTarget.blur();});
+$('pauseTag').addEventListener('click',()=>{if(!running)togglePlay();});
 $('skip').addEventListener('click',skipToEnd);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&match&&match.phase!=='ft'&&match.phase!=='pre'&&!cine)togglePlay();});
 $('reset').addEventListener('click',newMatch);
 $('padBtn').addEventListener('click',()=>{const on=document.body.classList.toggle('pad');$('padBtn').setAttribute('aria-pressed',String(on));$('padBtn').classList.toggle('on',on);});
 window.addEventListener('gamepadconnected',e=>{$('padStatus').textContent=' · 컨트롤러 연결됨';});
@@ -1683,9 +1687,10 @@ function flushEvents(){
 }
 function renderBoard(){
   const m=match;
-  $('sA').textContent=m.score[0];$('sB').textContent=m.score[1];
-  $('clock').textContent=m.clockText();
-  $('half').textContent={pre:'킥오프 전',play:m.half===1?'전반':'후반',ht:'하프타임',pens:'승부차기',ft:'경기 종료'}[m.phase];
+  const setT=(id,v)=>{const el=$(id);v=String(v);if(el.textContent!==v)el.textContent=v;};
+  setT('sA',m.score[0]);setT('sB',m.score[1]);setT('clock',m.clockText());
+  setT('half',{pre:'킥오프 전',play:m.half===1?'전반':'후반',ht:'하프타임',pens:'승부차기',ft:'경기 종료'}[m.phase]);
+  const pz=$('pauseTag');if(pz){const show=!running&&m.phase!=='pre'&&m.phase!=='ft'&&!cine;if(pz.hidden===show)pz.hidden=!show;}
   for(const t of [0,1]){
     const ul=$(t===0?'gA':'gB');
     const html=m.goals.filter(g=>g.t===t).map(g=>`<li><b>${g.p.short}</b> ${g.min}${g.kind==='pen'?' (PK)':''}</li>`).join('');
@@ -1763,7 +1768,7 @@ const camera=new THREE.PerspectiveCamera(36,16/9,0.5,700);
 scene.add(new THREE.HemisphereLight(0xcfe6ff,0x0d1a12,0.6));
 const sun=new THREE.DirectionalLight(0xffffff,0.9);
 sun.position.set(-30,80,40);sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-0.0006;
+sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-0.0006;
 Object.assign(sun.shadow.camera,{left:-65,right:65,top:45,bottom:-45,near:10,far:220});
 scene.add(sun);
 const fillL=new THREE.DirectionalLight(0xbfd4ff,0.35);fillL.position.set(40,50,-40);scene.add(fillL);
@@ -1962,8 +1967,8 @@ function lookOf(p){
   let h=0;for(const ch of p.name)h=(h*31+ch.charCodeAt(0))>>>0;
   const skins=['#f1d1b5','#e9c4a0','#d8ab83','#c99a72','#a87550','#8d5e3c'],hairs=['#1c1410','#2b1d14','#4a3221','#6b4a2e'],st=['short','short','buzz','slick','curly'];
   const tid=(match&&match.teams&&match.teams[p.t])?match.teams[p.t].id:'';
-  if(['korN','kor','jpnN'].includes(tid))return {skin:['#efd3b4','#e9c8a8','#e2c3a0'][h%3],hair:'#120c08',style:['short','short','buzz','slick'][(h>>4)%4],beard:''};
-  return {skin:skins[h%skins.length],hair:hairs[(h>>3)%hairs.length],style:st[(h>>6)%st.length],beard:(h>>9)%3===0?'stubble':''};
+  if(['korN','kor','jpnN'].includes(tid))return {skin:['#efd3b4','#e9c8a8','#e2c3a0'][h%3],hair:'#120c08',style:['short','short','buzz','slick'][(h>>>4)%4],beard:''};
+  return {skin:skins[h%skins.length],hair:hairs[(h>>>3)%hairs.length],style:st[(h>>>6)%st.length],beard:(h>>>9)%3===0?'stubble':''};
 }
 function shade(hex,a){const c=hexRgb(hex).map(v=>Math.round(Math.max(0,Math.min(255,a<0?v*(1+a):v+(255-v)*a))));return `rgb(${c[0]},${c[1]},${c[2]})`;}
 function lum(hex){const c=hexRgb(hex);return (0.299*c[0]+0.587*c[1]+0.114*c[2])/255;}
@@ -2078,62 +2083,83 @@ function nameCanvas(text,color){
   g.fillStyle=color;g.fillText(text,128,34);
   return c;
 }
-function buildPlayers(){
-  const skins=[0xe9c4a0,0xc99a72,0x8d5e3c,0xf1d1b5,0x6e4529];
-  match.players.forEach((p,idx)=>{
+const _matCache=new Map(),_geoCache=new Map(),_texMatCache=new Map();
+function texMatC(k,make){let m=_texMatCache.get(k);if(m){_texMatCache.delete(k);_texMatCache.set(k,m);return m;}
+  m=make();
+  if(_texMatCache.size>=160){/* 오래 안 쓴 것부터 정리 (지금 경기장에 있는 건 남김) */
+    const used=new Set();for(const o of playerObjs)o.root.traverse(n=>{if(n.material&&!Array.isArray(n.material))used.add(n.material);else if(Array.isArray(n.material))n.material.forEach(x=>used.add(x));});
+    for(const [kk,mm] of _texMatCache){if(_texMatCache.size<120)break;if(used.has(mm))continue;_texMatCache.delete(kk);if(mm.map)mm.map.dispose();mm.dispose();}
+  }
+  m.userData.shared=true;_texMatCache.set(k,m);return m;}
+function faceMatC(p){return texMatC('f|'+p.name,()=>new THREE.MeshStandardMaterial({map:faceTexture(p),roughness:0.8}));}
+function kitMatC(kd,p){return texMatC('k|'+JSON.stringify(kd)+'|'+p.short+'|'+p.num,()=>new THREE.MeshStandardMaterial({map:kitTexture(kd,p),roughness:0.7}));}
+function matC(c,r,ds){const k=String(c)+'|'+r+'|'+(ds?1:0);let m=_matCache.get(k);
+  if(!m){m=new THREE.MeshStandardMaterial({color:new THREE.Color(c),roughness:r,side:ds?THREE.DoubleSide:THREE.FrontSide});m.userData.shared=true;_matCache.set(k,m);}return m;}
+function geoC(t,a){const k=t+a.join(',');let g=_geoCache.get(k);
+  if(!g){g=new THREE[t+'Geometry'](...a);g.userData.shared=true;_geoCache.set(k,g);}return g;}
+function buildPlayers(){match.players.forEach(p=>playerObjs.push(buildOne(p)));}
+function buildOne(p){{
     const kt=kits[p.t],gkBase=p.t===0?'#2fd58a':'#f2e04a',gkCol=cdist(gkBase,kt.shirt)<130?'#b28cff':gkBase;
     const kitDef=p.pos==='GK'?{shirt:gkCol,trim:'#1a1a1a',num:'#1a1a1a'}:kt;
-    const shirt=new THREE.MeshStandardMaterial({map:kitTexture(kitDef,p),roughness:0.7});
-    const sleeve=new THREE.MeshStandardMaterial({color:new THREE.Color(kitDef.shirt).getHex(),roughness:0.7});
-    const shorts=new THREE.MeshStandardMaterial({color:new THREE.Color(kt.shorts).getHex(),roughness:0.8});
-    const sock=new THREE.MeshStandardMaterial({color:new THREE.Color(kt.socks).getHex(),roughness:0.8});
-    const look=lookOf(p),skin=new THREE.MeshStandardMaterial({color:new THREE.Color(look.skin).getHex(),roughness:0.9});
+    const shirt=kitMatC(kitDef,p);
+    const sleeve=matC(kitDef.shirt,0.7);
+    const shorts=matC(kt.shorts,0.8);
+    const sock=matC(kt.socks,0.8);
+    const look=lookOf(p),skin=matC(look.skin,0.9);
     const root=new THREE.Group(),body=new THREE.Group();root.add(body);body.scale.setScalar(PS);root.add(makeBlob(1.5));
     const add=(geo,mat,x,y,z,parent)=>{const mesh=new THREE.Mesh(geo,mat);mesh.position.set(x,y,z);mesh.castShadow=true;(parent||body).add(mesh);return mesh;};
-    add(new THREE.CylinderGeometry(0.25,0.21,0.6,18),[shirt,sleeve,sleeve],0,1.12,0);
-    {const sh=new THREE.Mesh(new THREE.SphereGeometry(1,18,10),sleeve);sh.scale.set(0.31,0.1,0.22);sh.position.y=1.41;body.add(sh);
-     const nk=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.065,0.12,10),skin);nk.position.y=1.48;body.add(nk);}
-    add(new THREE.CylinderGeometry(0.22,0.22,0.24,10),shorts,0,0.8,0);
-    {const hm=add(new THREE.SphereGeometry(0.16,28,20),new THREE.MeshStandardMaterial({map:faceTexture(p),roughness:0.8}),0,1.61,0);hm.scale.set(0.94,1.08,1);}
+    add(geoC('Cylinder',[0.25,0.21,0.6,18]),[shirt,sleeve,sleeve],0,1.12,0);
+    {const sh=new THREE.Mesh(geoC('Sphere',[1,18,10]),sleeve);sh.scale.set(0.31,0.1,0.22);sh.position.y=1.41;body.add(sh);
+     const nk=new THREE.Mesh(geoC('Cylinder',[0.055,0.065,0.12,10]),skin);nk.position.y=1.48;body.add(nk);}
+    add(geoC('Cylinder',[0.22,0.22,0.24,10]),shorts,0,0.8,0);
+    {const hm=add(geoC('Sphere',[0.16,28,20]),faceMatC(p),0,1.61,0);hm.scale.set(0.94,1.08,1);}
     {
-      const st=look.style,hairM=new THREE.MeshStandardMaterial({color:new THREE.Color(look.hair).getHex(),roughness:0.95});
+      const st=look.style,hairM=matC(look.hair,0.95);
       if(st!=='bald'){
         const vol={buzz:0.006,short:0.014,slick:0.012,long:0.02,curly:0.032,curlylong:0.032,afro:0.075,dreads:0.03}[st]||0.014;
         const cap=new THREE.Mesh(new THREE.SphereGeometry(0.16+vol,22,12,0,Math.PI*2,0,Math.PI*(st==='afro'?0.56:0.42)),hairM);
         cap.position.set(0,1.61+(st==='afro'?0.03:0.012),-0.012);cap.rotation.x=-0.28;cap.scale.set(0.95,1.08,1);body.add(cap);
         if(st==='long'||st==='curlylong'||st==='dreads'){
-          const back=new THREE.Mesh(new THREE.CylinderGeometry(0.165,0.14,0.24,16,1,true,Math.PI*0.62,Math.PI*0.76),hairM);
-          back.material.side=THREE.DoubleSide;back.position.set(0,1.53,-0.01);body.add(back);
+          const back=new THREE.Mesh(geoC('Cylinder',[0.165,0.14,0.24,16,1,true,Math.PI*0.62,Math.PI*0.76]),hairM);
+          back.material=matC(look.hair,0.95,true);back.position.set(0,1.53,-0.01);body.add(back);
         }
       }
       if(look.beard==='full'){
-        const bm=new THREE.MeshStandardMaterial({color:new THREE.Color(look.hair).getHex(),roughness:1});
-        const bd=new THREE.Mesh(new THREE.SphereGeometry(0.163,20,10,Math.PI/2-0.75,1.5,Math.PI*0.58,Math.PI*0.34),bm);
+        const bm=matC(look.hair,1);
+        const bd=new THREE.Mesh(geoC('Sphere',[0.163,20,10,Math.PI/2-0.75,1.5,Math.PI*0.58,Math.PI*0.34]),bm);
         bd.position.set(0,1.61,0.004);bd.scale.set(0.95,1.08,1.02);body.add(bd);
       }
-      for(const sg of [-1,1]){const ear=new THREE.Mesh(new THREE.SphereGeometry(0.036,8,6),skin);ear.scale.set(0.55,1,0.8);ear.position.set(sg*0.158,1.6,0);body.add(ear);}
-      const nose=new THREE.Mesh(new THREE.ConeGeometry(0.024,0.06,8),skin);nose.rotation.x=Math.PI/2;nose.position.set(0,1.585,0.165);body.add(nose);
+      for(const sg of [-1,1]){const ear=new THREE.Mesh(geoC('Sphere',[0.036,8,6]),skin);ear.scale.set(0.55,1,0.8);ear.position.set(sg*0.158,1.6,0);body.add(ear);}
+      const nose=new THREE.Mesh(geoC('Cone',[0.024,0.06,8]),skin);nose.rotation.x=Math.PI/2;nose.position.set(0,1.585,0.165);body.add(nose);
     }
-    const limb=(x,y,len,r,mat)=>{const pv=new THREE.Group();pv.position.set(x,y,0);body.add(pv);add(new THREE.CylinderGeometry(r,r*0.85,len,8),mat,0,-len/2,0,pv);return pv;};
+    const limb=(x,y,len,r,mat)=>{const pv=new THREE.Group();pv.position.set(x,y,0);body.add(pv);add(geoC('Cylinder',[r,r*0.85,len,8]),mat,0,-len/2,0,pv);return pv;};
     const legL=limb(-0.1,0.72,0.7,0.075,sock),legR=limb(0.1,0.72,0.7,0.075,sock);
-    {const bootM=new THREE.MeshStandardMaterial({color:p.t===0?0x111111:0xf2f2f2,roughness:0.5});
-     for(const lg of [legL,legR]){const bt=new THREE.Mesh(new THREE.BoxGeometry(0.11,0.07,0.24),bootM);bt.position.set(0,-0.69,0.045);bt.castShadow=true;lg.add(bt);}}
+    {const bootM=matC(p.t===0?0x111111:0xf2f2f2,0.5);
+     for(const lg of [legL,legR]){const bt=new THREE.Mesh(geoC('Box',[0.11,0.07,0.24]),bootM);bt.position.set(0,-0.69,0.045);bt.castShadow=true;lg.add(bt);}}
     const armL=limb(-0.31,1.38,0.52,0.055,skin),armR=limb(0.31,1.38,0.52,0.055,skin);
-    for(const a of [armL,armR]){const hd=new THREE.Mesh(new THREE.SphereGeometry(0.05,10,8),skin);hd.position.y=-0.54;a.add(hd);}
-    for(const a of [armL,armR]){const sl=new THREE.Mesh(new THREE.CylinderGeometry(0.078,0.07,0.2,10),sleeve);sl.position.y=-0.09;sl.castShadow=true;a.add(sl);}
+    for(const a of [armL,armR]){const hd=new THREE.Mesh(geoC('Sphere',[0.05,10,8]),skin);hd.position.y=-0.54;a.add(hd);}
+    for(const a of [armL,armR]){const sl=new THREE.Mesh(geoC('Cylinder',[0.078,0.07,0.2,10]),sleeve);sl.position.y=-0.09;sl.castShadow=true;a.add(sl);}
     const nc=nameCanvas(p.short,'#ffffff'),tex=new THREE.CanvasTexture(nc);
     const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true}));
     label.scale.set(4.4,1.1,1);label.position.y=3.05;label.renderOrder=10;root.add(label);
     scene.add(root);
-    playerObjs.push({root,body,legL,legR,armL,armR,label,tex,ph:Math.random()*6,kickT:0,tackT:0});
-  });
-}
+    return {root,body,legL,legR,armL,armR,label,tex,ph:Math.random()*6,kickT:0,tackT:0,pid:p.name};
+}}
 function clearPlayers(){
   for(const o of playerObjs){
     scene.remove(o.root);
-    o.root.traverse(n=>{if(n.userData.shared)return;if(n.geometry)n.geometry.dispose();if(n.material){for(const mt of (Array.isArray(n.material)?n.material:[n.material])){if(mt.map)mt.map.dispose();mt.dispose();}}});
+    disposeObj(o);
   }
   playerObjs.length=0;
+}
+function disposeObj(o){
+  scene.remove(o.root);
+  o.root.traverse(n=>{if(n.userData.shared)return;if(n.geometry&&!n.geometry.userData.shared)n.geometry.dispose();if(n.material){for(const mt of (Array.isArray(n.material)?n.material:[n.material])){if(mt.userData.shared)continue;if(mt.map)mt.map.dispose();mt.dispose();}}});
+}
+// 교체된 선수만 새로 만든다 (전원 재생성하면 화면이 멈춤)
+function syncPlayers(){
+  if(playerObjs.length!==match.players.length){clearPlayers();return;}
+  match.players.forEach((p,i)=>{const o=playerObjs[i];if(o.pid===p.name)return;disposeObj(o);playerObjs[i]=buildOne(p);});
 }
 function drawLabel(c,text,ls){
   const g=c.getContext('2d');g.clearRect(0,0,256,64);
@@ -2981,6 +3007,38 @@ function simMatch(aId,bId){
   m.prepare();m.start();let n=0;while(m.phase!=='ft'&&n<90000){m.step(1/30);n++;}
   return {sa:m.score[0],sb:m.score[1],pa:m.pens?m.pens.sum[0]:null,pb:m.pens?m.pens.sum[1]:null,w:m.winner===1?bId:aId};
 }
+let simWorker=null,simSeq=0;const simCbs=new Map();
+function getSimWorker(){
+  if(simWorker!==null)return simWorker;
+  try{
+    const src=document.getElementById('engine').textContent;
+    const code='var window=self;'+src+'\nself.onmessage=function(e){var d=e.data,DM=self.DreamMatch,T=DM.TEAMS;'+
+      'var ta=T.find(function(t){return t.id===d.a;}),tb=T.find(function(t){return t.id===d.b;});'+
+      'var m=DM.createMatch({seed:d.seed,tactics:[ta.tactic,tb.tactic],teams:[ta,tb]});m.prepare();m.start();var n=0;'+
+      'while(m.phase!=="ft"&&n<90000){m.step(1/30);n++;}'+
+      'postMessage({id:d.id,sa:m.score[0],sb:m.score[1],pa:m.pens?m.pens.sum[0]:null,pb:m.pens?m.pens.sum[1]:null,w:m.winner===1?d.b:d.a});};';
+    simWorker=new Worker(URL.createObjectURL(new Blob([code],{type:'text/javascript'})));
+    simWorker.onmessage=e=>{const cb=simCbs.get(e.data.id);if(!cb)return;simCbs.delete(e.data.id);const r=e.data;delete r.id;cb(r);};
+    simWorker.onerror=()=>{simWorker=false;for(const [,cb] of simCbs)cb(null);simCbs.clear();};
+  }catch(_){simWorker=false;}
+  return simWorker;
+}
+// 워커가 안 되면 메인에서 프레임마다 조금씩 나눠 계산
+function simMatchChunked(aId,bId,cb){
+  const ta=TEAMS[tIdx(aId)],tb=TEAMS[tIdx(bId)];
+  const m=createMatch({seed:(Math.random()*4294967296)>>>0,tactics:[ta.tactic,tb.tactic],teams:[ta,tb]});
+  m.prepare();m.start();let n=0;
+  const tick=()=>{const end=n+700;while(m.phase!=='ft'&&n<end&&n<90000){m.step(1/30);n++;}
+    if(m.phase!=='ft'&&n<90000){setTimeout(tick,0);return;}
+    cb({sa:m.score[0],sb:m.score[1],pa:m.pens?m.pens.sum[0]:null,pb:m.pens?m.pens.sum[1]:null,w:m.winner===1?bId:aId});};
+  tick();
+}
+function simMatchAsync(aId,bId,cb){
+  const w=getSimWorker();
+  if(!w){simMatchChunked(aId,bId,cb);return;}
+  const id=++simSeq;simCbs.set(id,r=>{if(r)cb(r);else simMatchChunked(aId,bId,cb);});
+  w.postMessage({id,a:aId,b:bId,seed:(Math.random()*4294967296)>>>0});
+}
 function tourRecord(m){
   tour.playing=false;const mt=myMatch();if(!mt){saveTour();return;}
   const iAmA=mt.a===tour.my;
@@ -3002,7 +3060,7 @@ function simulateRest(allRounds){
     const mt=r.find(x=>x.w==null&&(tour.out||!(x.a===tour.my||x.b===tour.my)));
     if(mt){
       $('tourMsg').textContent=`다른 경기 결과 계산 중… ${tName(mt.a)} vs ${tName(mt.b)}`;
-      setTimeout(()=>{Object.assign(mt,simMatch(mt.a,mt.b));saveTour();step();},20);
+      simMatchAsync(mt.a,mt.b,res=>{Object.assign(mt,res);saveTour();step();});
       return;
     }
     if(advanceIfDone()){saveTour();if(!tour.done&&(allRounds||tour.out)&&allRounds){step();return;}}
@@ -3016,23 +3074,25 @@ $('tourStart').addEventListener('click',startTour);
 
 let qAcc=0,qN=0,qLevel=0,gfxHigh=true;
 function setQuality(hi){
+  const changed=renderer.shadowMap.enabled!==hi;
   gfxHigh=hi;
-  renderer.shadowMap.enabled=hi;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  renderer.setPixelRatio(hi?Math.min(2,window.devicePixelRatio||1):Math.min(1.25,window.devicePixelRatio||1));
-  scene.traverse(o=>{if(o.material)for(const mt of (Array.isArray(o.material)?o.material:[o.material]))mt.needsUpdate=true;});
-  try{localStorage.setItem('dm-gfx',hi?'hi':'mid');}catch(_){}
+  renderer.shadowMap.enabled=hi;renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.setPixelRatio(hi?Math.min(1.5,window.devicePixelRatio||1):1);
+  if(changed)scene.traverse(o=>{if(o.material)for(const mt of (Array.isArray(o.material)?o.material:[o.material]))mt.needsUpdate=true;});
+  try{localStorage.setItem('dm-gfx2',hi?'hi':'mid');}catch(_){}
   syncToggle('gfxBtn',hi,'그래픽 높음','그래픽 보통');resize();
 }
 $('gfxBtn').addEventListener('click',()=>{qLevel=0;setQuality(!gfxHigh);});
-setTimeout(()=>{let pref='hi';try{pref=localStorage.getItem('dm-gfx')||'hi';}catch(_){}setQuality(pref==='hi');},0);
+setTimeout(()=>{let pref='mid';try{pref=localStorage.getItem('dm-gfx2')||'mid';}catch(_){}setQuality(pref==='hi');},0);
 function adaptQuality(dt){
-  if(qLevel>=2||!running||dt<=0)return;
-  qAcc+=dt;qN++;if(qN<120)return;
+  if(qLevel>=3||!running||dt<=0)return;
+  qAcc+=dt;qN++;if(qN<60)return;
   const avg=qAcc/qN;qAcc=0;qN=0;
-  if(avg>0.026){
+  if(avg>0.024){
     qLevel++;
-    if(qLevel===1){setQuality(false);renderer.setPixelRatio(1);}
-    else{renderer.setPixelRatio(0.8);for(const fs of fanSets)fs.fans.visible=false;}
+    if(gfxHigh)setQuality(false);
+    else if(qLevel===2)renderer.setPixelRatio(0.8);
+    else{renderer.setPixelRatio(0.65);for(const fs of fanSets)fs.fans.visible=false;}
     resize();
   }
 }
@@ -3041,7 +3101,7 @@ let lastDraw=0,pensKey='',ballY=0.32,builtSubs=-1,ballHopT=0;
 const THUMB=location.hash==='#thumb';  // 공유 썸네일 촬영용: 이름표 숨김
 function draw(){
   if(!match)return;
-  if(match.subsVer!==builtSubs){builtSubs=match.subsVer;clearPlayers();}
+  if(match.subsVer!==builtSubs){builtSubs=match.subsVer;if(playerObjs.length)syncPlayers();}
   if(!playerObjs.length)buildPlayers();
   const now=performance.now(),dt=Math.min(0.05,lastDraw?(now-lastDraw)/1000:0);lastDraw=now;
   const m=match,B=m.ball;
