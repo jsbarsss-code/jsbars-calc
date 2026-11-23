@@ -32,6 +32,7 @@ jobs:
       - name: 사이트 조립
         run: |
           cp index.html terms.html plan.html og.png site/
+          cp -r game site/   # 드림매치 3D 축구 게임 (별도 정적 페이지, CSP 대상 아님)
           python3 build_pages.py site
           python3 tools/add_csp.py site/index.html site/terms.html site/plan.html   # 콘텐츠 보안 정책: 페이지 안 스크립트 해시 + 허용 호스트
           touch site/.nojekyll
