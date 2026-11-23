@@ -249,6 +249,7 @@ body.playing.pad .touch{display:flex}
               <label for="tourSize">참가 팀 수<select id="tourSize"><option value="8">8팀 (8강부터)</option><option value="16">16팀 (16강부터)</option><option value="32">32팀 (32강부터)</option></select></label>
               <label for="tourPool">상대 팀<select id="tourPool"><option value="all">전체 무작위</option><option value="club">현역 클럽만</option><option value="nat">현역 국가대표만</option></select></label>
               <label for="tourMode">내 경기<select id="tourMode"><option value="play">직접 플레이</option><option value="watch">관전</option></select></label>
+              <label for="tourDiff">난이도<select id="tourDiff"><option value="0">쉬움</option><option value="1">보통</option><option value="2">어려움</option><option value="3">월드클래스</option></select></label>
               <div class="row"><button class="btn primary" id="tourStart" type="button">대진 추첨하고 시작</button></div>
             </div>
             <div id="tourView" hidden>
@@ -806,13 +807,49 @@ function createMatch(opts){
       fx=clamp(fx,0.025,0.95);fy=clamp(fy,0.04,0.96);
       p.tx=wx(p.t,fx);p.ty=wy(p.t,fy);
     }
+    // 진짜 수비: 골키퍼는 공-골대 선 위에서 각도를 좁히고, 수비수는 들어온 공격수를 골문 쪽에서 맡는다
+    for(const t of [0,1]){
+      const og=ownGoalX(t),gk=gkOf(t);
+      if(gk&&!gk.red&&gk!==B.owner&&!(B.mode==='free'&&B.restrict)){
+        const dB=Math.hypot(B.x-og,B.y-H/2)||1,ux=(B.x-og)/dB,uy=(B.y-H/2)/dB;
+        const off=dB>50?9:dB>28?2.6+(dB-28)*0.29:1.1+dB*0.055;
+        let tx=og+ux*off,ty=H/2+uy*off;
+        if(off<4)ty=clamp(ty,H/2-3.3,H/2+3.3);
+        const o=B.owner;
+        if(o&&o.t!==t&&inOwnBox(t,o)){
+          const dO=Math.hypot(o.x-og,o.y-H/2)||1;
+          const covered=P.some(q=>q.t===t&&q.pos!=='GK'&&!q.red&&Math.hypot(q.x-og,q.y-H/2)<dO-0.5&&
+            Math.abs((q.x-og)*(o.y-H/2)-(q.y-H/2)*(o.x-og))/dO<1.8);
+          if(!covered&&dO<17){tx=o.x-(o.x-og)/dO*1.6;ty=o.y-(o.y-H/2)/dO*1.6;gk.chasing=true;}
+        }
+        gk.tx=tx;gk.ty=ty;
+      }
+      if(pt===t)continue;
+      if(prog(t,B.x)>0.62)continue;
+      const deep=prog(t,B.x)<0.38;
+      const att=P.filter(o=>o.t!==t&&o.pos!=='GK'&&!o.red&&o!==B.owner&&prog(t,o.x)<0.5);
+      const defs=P.filter(q=>q.t===t&&q.pos!=='GK'&&!q.red&&q!==B.owner&&q.fx<0.42);
+      const taken=new Set();
+      for(const q of defs){
+        let best=null,bd=deep?15:11;
+        for(const o of att){if(taken.has(o))continue;const d=Math.hypot(o.x-q.tx,o.y-q.ty);if(d<bd){bd=d;best=o;}}
+        if(!best)continue;taken.add(best);
+        const l=Math.hypot(og-best.x,H/2-best.y)||1;
+        const mx=best.x+(og-best.x)/l*1.5+best.vx*0.25,my=best.y+(H/2-best.y)/l*1.5+best.vy*0.25;
+        const w=deep?0.8:0.55;q.tx=q.tx*(1-w)+mx*w;q.ty=q.ty*(1-w)+my*w;
+        if(deep&&bd>4)q.chasing=true;
+      }
+    }
     if(B.mode==='shot'&&B.shot){const g=B.shot.gk;g.tx=B.shot.gx+(B.shot.gx>W/2?-0.6:0.6);g.ty=B.shot.gkY;g.chasing=true;}
     if(B.owner){
       const o=B.owner,T=TACTICS[tac[1-o.t]];
-      const n=T.press+(prog(o.t,o.x)>0.72?1:0);
+      const n=T.press+(prog(o.t,o.x)>0.72?1:0)+(m.human&&o.t===m.human.team?DF().press:0);
       const ds=P.filter(p=>p.t!==o.t&&p.pos!=='GK').sort((a,b)=>dist(a,o)-dist(b,o)).slice(0,n);
       const gx=goalX(o.t);
       for(const d of ds){const dx=gx-o.x,dy=H/2-o.y,l=Math.hypot(dx,dy)||1;d.tx=o.x+dx/l*0.9;d.ty=o.y+dy/l*0.9;d.chasing=true;}
+      {const dx=gx-o.x,dy=H/2-o.y,l=Math.hypot(dx,dy)||1;
+       if(l<34){const cv=P.filter(p=>p.t!==o.t&&p.pos!=='GK'&&!p.red&&!ds.includes(p)&&!(m.human&&m.human.p===p)).sort((a,b)=>dist(a,o)-dist(b,o))[0];
+         if(cv){cv.tx=o.x+dx/l*Math.min(5,l*0.35);cv.ty=o.y+dy/l*Math.min(5,l*0.35);cv.chasing=true;}}}
     }else if(B.mode==='free'){
       const r=B.restrict;
       for(const t of [0,1]){
@@ -859,7 +896,7 @@ function createMatch(opts){
 
   function xG(p,d,nd){
     const ang=Math.abs(p.y-H/2)/Math.max(1,d);
-    let x=0.42*Math.exp(-d/7.0)*(1-ang*0.8);
+    let x=0.58*Math.exp(-d/7.0)*(1-ang*0.8);
     x*=Math.pow(p.sho/86,3);
     x*=Math.pow(87/gkOf(1-p.t).gk,2);
     if(nd<1.6)x*=0.65;
@@ -935,6 +972,26 @@ function createMatch(opts){
 
   function shoot(p,xg,kind){
     const t=p.t,gx=goalX(t),gk=gkOf(1-t);
+    if(kind==='open'){
+      const dx0=gx-p.x,dy0=H/2-p.y,l0=Math.hypot(dx0,dy0)||1;
+      let blk=null,bs=0;
+      for(const d of P){
+        if(d.t===t||d.pos==='GK'||d.red)continue;
+        const rx=d.x-p.x,ry=d.y-p.y,along=(rx*dx0+ry*dy0)/l0;
+        if(along<0.6||along>Math.min(11,l0-1))continue;
+        const perp=Math.abs(rx*dy0-ry*dx0)/l0;if(perp>1.1)continue;
+        const sc=(1.1-perp)*(d.def/80);if(sc>bs){bs=sc;blk=d;}
+      }
+      if(blk&&rng()<Math.min(0.5,0.42*bs+0.08)){
+        m.stats[t].sh++;m.stats[t].xg+=xg*0.3;p.st.sh++;p.cool=0.5;
+        const a=Math.atan2(dy0,dx0)+Math.PI+R(-1.3,1.3),sp=R(7,13);
+        Object.assign(B,{owner:null,mode:'free',x:blk.x-dx0/l0*0.5,y:blk.y-dy0/l0*0.5,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,shot:null,from:blk,to:null,age:0,restrict:null,arc:0,z:0});
+        m.lastTouch=blk.t;blk.st.tk++;blk.cool=0.4;m.assist=null;
+        m.fx.push({type:'tackle',d:blk,o:p,won:true});
+        say(pick([`${I(blk.short)} 몸을 날려 ${p.short}의 슈팅을 막아냅니다!`,`${p.short}의 슈팅, ${blk.short}에게 막힙니다!`,`육탄 방어! ${blk.short}!`]),'chance',blk.t);
+        return;
+      }
+    }
     let out;
     if(rng()<xg)out='goal';else out=rng()<(kind==='pen'?0.6:0.36)?'save':'miss';
     const side=rng()<0.5?-1:1;
@@ -1071,14 +1128,25 @@ function createMatch(opts){
   }
   function tackles(dt){
     const o=B.owner;if(!o)return;
+    {const g=gkOf(1-o.t);
+     if(g&&!g.red&&g.cool<=0&&inOwnBox(g.t,o)&&dist(g,o)<1.5&&!(m.human&&m.human.p===g)&&rng()<dt*2.4){
+       g.cool=1.2;
+       if(rng()<g.gk/(g.gk+o.dri*0.9)){
+         m.fx.push({type:'tackle',d:g,o,won:true});
+         o.cool=0.8;B.owner=g;B.mode='held';g.decide=R(0.7,1.1);g.st.sv++;m.lastTouch=g.t;m.assist=null;
+         say(pick([`${I(g.short)} 뛰쳐나와 ${o.short}의 발밑 공을 덮칩니다!`,`${g.short}, 1대1에서 몸을 던져 막아냅니다!`]),'chance',g.t);
+         return;
+       }
+     }}
     for(const d of P){
       if(d.t===o.t||d.cool>0||d.pos==='GK'||(m.human&&m.human.p===d))continue;
       if(dist(d,o)>1.7)continue;
-      if(rng()>dt*1.15)continue;
+      const hv=isAI(d)&&o.t===m.human.team;
+      if(rng()>dt*1.15*(hv?DF().tkR:1))continue;
       d.cool=0.9;
       const inBox=inOwnBox(d.t,o);
       if(rng()<(inBox?0.025:0.13)){foul(d,o,inBox);return;}
-      const win=d.def*d.def/(d.def*d.def+Math.pow(o.dri*0.95,2))*(o.skillT>0?0.35:1);
+      const win=Math.min(0.92,d.def*d.def/(d.def*d.def+Math.pow(o.dri*0.95,2))*(o.skillT>0?0.35:1)*(hv?DF().tkW:1));
       if(rng()<win){
         m.fx.push({type:'tackle',d,o,won:true});
         o.cool=0.7;B.owner=d;B.mode='held';d.decide=R(0.25,0.6);d.st.tk++;m.stats[d.t].tk++;m.lastTouch=d.t;m.assist=null;
@@ -1094,7 +1162,7 @@ function createMatch(opts){
   function take(p){
     const prev=B.mode,from=B.from,r=B.restrict,to0=B.to;
     Object.assign(B,{owner:p,mode:'held',restrict:null,shot:null,z:0,arc:0});
-    p.decide=p.pos==='GK'?R(0.6,1.0):R(0.08,0.25);
+    p.decide=(p.pos==='GK'?R(0.6,1.0):R(0.08,0.25))*(isAI(p)?DF().think:1);
     const fromPass=prev==='pass'||(prev==='free'&&B.wasPass&&!r);B.wasPass=false;
     if(fromPass&&from){
       if(from.t===p.t){from.st.pc++;m.stats[p.t].pc++;m.assist={from,to:p,t:m.t};}
@@ -1339,7 +1407,7 @@ function createMatch(opts){
         const ang=Math.abs(p.y-H/2)/Math.max(1,dG),nd=nearestOpp(p)[1];
         let xg=0.95*Math.exp(-dG/14)*(1-ang*0.5)*Math.pow(p.sho/88,1.5)*Math.pow(88/gkOf(1-p.t).gk,1.2);
         if(dG>25)xg*=0.5;if(nd<1.6)xg*=0.75;
-        xg=clamp(xg,0.02,0.85);
+        xg=clamp(xg*DF().shot,0.02,0.85);
         if(p.skillT>0)xg=Math.min(0.9,xg*1.25);
         shoot(p,Math.max(0.01,xg),'open');
       }
@@ -1435,9 +1503,25 @@ function createMatch(opts){
     aiSubs();
   }
 
+  // 난이도 (직접 플레이할 때 상대 AI에만 적용): 0 쉬움 · 1 보통 · 2 어려움 · 3 월드클래스
+  const DIFF=[{att:0.93,tkR:0.7,tkW:0.85,press:0,shot:1.15,think:1.3},{att:1,tkR:1,tkW:1,press:0,shot:1,think:1},
+              {att:1.05,tkR:1.5,tkW:1.12,press:1,shot:0.85,think:0.75},{att:1.09,tkR:1.95,tkW:1.25,press:2,shot:0.72,think:0.6}];
+  m.diff=1;
+  const DF=()=>DIFF[m.human?m.diff:1];
+  const isAI=q=>!!(m.human&&q.t!==m.human.team);
+  function applyDiff(){
+    const k=m.human?DIFF[m.diff].att:1;
+    for(const q of P){
+      if(!q._b||q._b.name!==q.name)q._b={name:q.name,pac:q.pac,pas:q.pas,sho:q.sho,dri:q.dri,def:q.def,gk:q.gk};
+      const f=isAI(q)?k:1,c=v=>Math.min(99,Math.round(v*f));
+      q.pac=c(q._b.pac);q.pas=c(q._b.pas);q.sho=c(q._b.sho);q.dri=c(q._b.dri);q.def=c(q._b.def);q.gk=c(q._b.gk);
+    }
+  }
+  m.setDiff=function(d){m.diff=Math.max(0,Math.min(3,d|0));applyDiff();};
   m.setHuman=function(team){
     m.human=team<0?null:{team,p:null,ix:0,iy:0,idle:true,sprint:false,dx:team===0?1:-1,dy:0,q:[],prev:-1};
     if(m.human)switchNearest();
+    applyDiff();
   };
   m.setInput=function(ix,iy,sprint){
     const h=m.human;if(!h)return;
@@ -1458,7 +1542,7 @@ function createMatch(opts){
     const a=b.attrs;
     Object.assign(p,{name:b.name,short:b.short,num:b.num,ovr:b.ovr,pac:a[0],pas:a[1],sho:a[2],dri:a[3],def:a[4],gk:a[5],yellow:0,slowT:0,rating:null,
       st:{g:0,a:0,sh:0,sot:0,pa:0,pc:0,tk:0,sv:0,fl:0,ga:0}});
-    b.used=true;m.subs[t]++;m.subsVer++;
+    b.used=true;m.subs[t]++;m.subsVer++;applyDiff();
     if(m.assist&&(m.assist.from===p||m.assist.to===p))m.assist=null;
     say(`교체: ${tname(t)} ${b.short} 들어가고 ${off.short} 나옵니다`,'info',t);
     return '';
@@ -1544,6 +1628,11 @@ function newMatch(){
   renderBoard();renderStats();renderLineup();renderSubs(true);
 }
 
+let diffLv=2;try{const v=localStorage.getItem('dm-diff');if(v!==null)diffLv=+v;}catch(_){}
+const DIFF_NAMES=['쉬움','보통','어려움','월드클래스'];
+function diffRow(){return `<div class="row diffrow" role="group" aria-label="난이도"><span style="color:var(--muted);font-size:13px">난이도</span>${DIFF_NAMES.map((n,i)=>`<button class="btn${i===diffLv?' primary':''}" data-diff="${i}" type="button">${n}</button>`).join('')}</div>`;}
+function bindDiff(root){root.querySelectorAll('[data-diff]').forEach(b=>b.addEventListener('click',()=>{diffLv=+b.dataset.diff;try{localStorage.setItem('dm-diff',String(diffLv));}catch(_){}
+  root.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('primary',+x.dataset.diff===diffLv));}));}
 function showOverlay(kind){
   const ov=$('overlay'),card=$('ovCard');
   if(kind===null){ov.hidden=true;return;}
@@ -1554,7 +1643,9 @@ function showOverlay(kind){
       <div class="vs"><span class="a">${T0.name}</span><span>vs</span><span class="b">${T1.name}</span></div>
       <p>팀과 전술은 아래에서 바꿀 수 있어요. 한 팀을 골라 직접 뛰거나 관전하세요.</p>
       <div class="row"><button class="btn primary" id="ovA">${ro(T0.name)} 플레이</button><button class="btn primary" id="ovB">${ro(T1.name)} 플레이</button><button class="btn" id="ovW">관전</button></div>
+      ${diffRow()}
       <div class="row"><button class="btn" id="ovT">토너먼트 모드</button></div>`;
+    bindDiff(card);
     $('ovA').addEventListener('click',()=>start(0));$('ovB').addEventListener('click',()=>start(1));$('ovW').addEventListener('click',()=>start(-1));$('ovT').addEventListener('click',openTour);
   }else if(kind==='end'){
     const m=match,w=m.winner;
@@ -1573,7 +1664,7 @@ function showOverlay(kind){
 function start(mode){
   if(!match||match.phase!=='pre')return;
   if(mode===undefined)mode=-1;
-  playMode=mode;match.setHuman(mode);if(mode>=0)setSpeed(1);
+  playMode=mode;match.setHuman(mode);match.setDiff(diffLv);if(mode>=0)setSpeed(1);
   document.body.classList.toggle('playing',mode>=0);
   match.setTactic(0,$('tacA').value);match.setTactic(1,$('tacB').value);
   match.start();running=true;showOverlay(null);
@@ -3071,6 +3162,7 @@ function simulateRest(allRounds){
 $('tourBtn').addEventListener('click',openTour);
 $('tourClose').addEventListener('click',closeTour);
 $('tourStart').addEventListener('click',startTour);
+$('tourDiff').value=String(diffLv);$('tourDiff').addEventListener('change',e=>{diffLv=+e.target.value;try{localStorage.setItem('dm-diff',String(diffLv));}catch(_){}});
 
 let qAcc=0,qN=0,qLevel=0,gfxHigh=true;
 function setQuality(hi){
