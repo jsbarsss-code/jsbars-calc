@@ -245,7 +245,7 @@ body.playing.pad .touch{display:flex}
             <div id="tourSetup" class="tsetup">
               <label for="tourMy">내 팀<select id="tourMy"></select></label>
               <label for="tourSize">참가 팀 수<select id="tourSize"><option value="8">8팀 (8강부터)</option><option value="16">16팀 (16강부터)</option><option value="32">32팀 (32강부터)</option></select></label>
-              <label for="tourPool">상대 팀<select id="tourPool"><option value="all">전체 무작위</option><option value="club">현역 클럽만</option><option value="nat">국가대표만 (현역+레전드)</option></select></label>
+              <label for="tourPool">상대 팀<select id="tourPool"><option value="all">전체 무작위</option><option value="club">현역 클럽만</option><option value="nat">현역 국가대표만</option></select></label>
               <label for="tourMode">내 경기<select id="tourMode"><option value="play">직접 플레이</option><option value="watch">관전</option></select></label>
               <div class="row"><button class="btn primary" id="tourStart" type="button">대진 추첨하고 시작</button></div>
             </div>
@@ -1932,9 +1932,10 @@ Object.assign(LOOKS,{
   '데폴':['#e2b892','#1c1410','short','full'],'알바레스':['#e2b892','#1c1410','short',''],'바렐라':['#efd3b4','#3a2a1e','short','stubble'],
   '맥토미니':['#f1d1b5','#c98a4a','short',''],'로메로':['#d8ab83','#1c1410','short','full'],'케르케즈':['#efd3b4','#5a3c22','short','']
 });
+const EYES={'홀란':'#4f7fb0','데브라위너':'#5b86b5','모드리치':'#5d7f9a','외데고르':'#5c84a8','케인':'#5b7fa0','쿠르투아':'#5a7a90','비르츠':'#6a8070','라이스':'#5b7c98','팔머':'#6a7f8e','포든':'#5f8aa8','요케레스':'#5f7f9a','레반도프스키':'#6b7a5a','그바르디올':'#5a7a8a','크바라츠헬리아':'#5c6f5a','베컴':'#5b86b5','바조':'#3a2a1e'};
 function lookOf(p){
   const L=LOOKS[p.short];
-  if(L)return {skin:L[0],hair:L[1],style:L[2],beard:L[3]};
+  if(L)return {skin:L[0],hair:L[1],style:L[2],beard:L[3],eye:L[4]||EYES[p.short]};
   let h=0;for(const ch of p.name)h=(h*31+ch.charCodeAt(0))>>>0;
   const skins=['#f1d1b5','#e9c4a0','#d8ab83','#c99a72','#a87550','#8d5e3c'],hairs=['#1c1410','#2b1d14','#4a3221','#6b4a2e'],st=['short','short','buzz','slick','curly'];
   const tid=(match&&match.teams&&match.teams[p.t])?match.teams[p.t].id:'';
@@ -1944,41 +1945,68 @@ function lookOf(p){
 function shade(hex,a){const c=hexRgb(hex).map(v=>Math.round(Math.max(0,Math.min(255,a<0?v*(1+a):v+(255-v)*a))));return `rgb(${c[0]},${c[1]},${c[2]})`;}
 function lum(hex){const c=hexRgb(hex);return (0.299*c[0]+0.587*c[1]+0.114*c[2])/255;}
 function faceTexture(p){
-  const L=lookOf(p),c=document.createElement('canvas');c.width=256;c.height=128;
-  const g=c.getContext('2d'),F=64; // u=0.25 = 얼굴 정면
-  g.fillStyle=L.skin;g.fillRect(0,0,256,128);
-  g.fillStyle=shade(L.skin,-0.12);
-  for(const x of [0,128,256]){g.beginPath();g.ellipse(x,62,7,11,0,0,Math.PI*2);g.fill();}
+  const L=lookOf(p),c=document.createElement('canvas');c.width=512;c.height=256;
+  const g=c.getContext('2d'),F=128,ey=112,sk=L.skin;
+  // 피부: 위는 밝게, 아래(턱)는 어둡게 + 얼굴 둘레 음영
+  const bg=g.createLinearGradient(0,0,0,256);bg.addColorStop(0,shade(sk,0.07));bg.addColorStop(0.55,sk);bg.addColorStop(1,shade(sk,-0.08));
+  g.fillStyle=bg;g.fillRect(0,0,512,256);
+  for(const cx of [F-512,F,F+512]){const r=g.createRadialGradient(cx,ey+20,40,cx,ey+20,170);r.addColorStop(0,'rgba(0,0,0,0)');r.addColorStop(1,'rgba(0,0,0,0.1)');g.fillStyle=r;g.fillRect(0,0,512,256);}
+  // 귀(옆면)
+  g.fillStyle=shade(sk,-0.16);for(const x of [0,256,512]){g.beginPath();g.ellipse(x,124,14,22,0,0,Math.PI*2);g.fill();}
+  // 볼 혈색
+  for(const sg of [-1,1]){const r=g.createRadialGradient(F+sg*38,ey+40,2,F+sg*38,ey+40,26);r.addColorStop(0,'rgba(205,95,85,0.16)');r.addColorStop(1,'rgba(205,95,85,0)');g.fillStyle=r;g.fillRect(F+sg*38-30,ey+10,60,60);}
+  // 머리카락
   if(L.style!=='bald'){
-    const line={buzz:30,short:36,slick:33,long:38,curly:40,curlylong:40,afro:46,dreads:40}[L.style]||36;
-    const back={buzz:62,short:72,slick:74,long:104,curly:80,curlylong:100,afro:88,dreads:112}[L.style]||72;
-    g.fillStyle=L.hair;g.beginPath();g.moveTo(0,0);
-    for(let x=0;x<=256;x+=4){let d=Math.abs(x-F);d=Math.min(d,256-d);const t=Math.min(1,Math.max(0,(d-34)/58));g.lineTo(x,line+(back-line)*t);}
-    g.lineTo(256,0);g.closePath();g.fill();
-    if(L.style==='curly'||L.style==='curlylong'||L.style==='afro'){
-      g.fillStyle=shade(L.hair,0.12);
-      for(let i=0;i<160;i++){const x=Math.random()*256;let d=Math.abs(x-F);d=Math.min(d,256-d);const lim=line+(back-line)*Math.min(1,Math.max(0,(d-34)/58));
-        g.beginPath();g.arc(x,Math.random()*lim,2.5+Math.random()*2,0,Math.PI*2);g.fill();}
-    }
-    if(L.style==='dreads'){g.strokeStyle=shade(L.hair,0.15);g.lineWidth=3;for(let x=90;x<250;x+=7){g.beginPath();g.moveTo(x,20);g.lineTo(x+2,back);g.stroke();}}
-    if(L.style==='slick'){g.strokeStyle=shade(L.hair,0.2);g.lineWidth=1.5;for(let i=0;i<8;i++){g.beginPath();g.moveTo(F-30+i*8,line-2);g.lineTo(F-10+i*12,4);g.stroke();}}
-  }else{g.fillStyle=shade(L.skin,0.08);g.beginPath();g.ellipse(F,14,60,16,0,0,Math.PI*2);g.fill();}
-  const ey=56,brow=L.style==='bald'?shade(L.hair,0):L.hair;
-  for(const sgn of [-1,1]){
-    g.fillStyle='#ffffff';g.beginPath();g.ellipse(F+sgn*14,ey,6,3.6,0,0,Math.PI*2);g.fill();
-    g.fillStyle='#2a1a10';g.beginPath();g.arc(F+sgn*14,ey+0.4,2.6,0,Math.PI*2);g.fill();
-    g.strokeStyle=brow;g.lineWidth=3;g.beginPath();g.moveTo(F+sgn*7,ey-8);g.lineTo(F+sgn*21,ey-9.5);g.stroke();
+    const line={buzz:60,short:72,slick:66,long:76,curly:80,curlylong:80,afro:92,dreads:80}[L.style]||72;
+    const back={buzz:124,short:144,slick:148,long:208,curly:160,curlylong:200,afro:176,dreads:224}[L.style]||144;
+    const hairPath=()=>{g.beginPath();g.moveTo(0,0);for(let x=0;x<=512;x+=4){let d=Math.abs(x-F);d=Math.min(d,512-d);const t=Math.min(1,Math.max(0,(d-64)/120));g.lineTo(x,line+(back-line)*t+Math.sin(x*0.3)*2);}g.lineTo(512,0);g.closePath();};
+    g.fillStyle=L.style==='buzz'?shade(L.hair,0.1):L.hair;hairPath();g.fill();
+    g.save();hairPath();g.clip();
+    g.strokeStyle=shade(L.hair,0.22);g.globalAlpha=0.5;g.lineWidth=1.4;
+    for(let i=0;i<260;i++){const x=Math.random()*512,y=Math.random()*back;g.beginPath();g.moveTo(x,y);g.lineTo(x+(Math.random()-0.5)*8,y+6+Math.random()*10);g.stroke();}
+    if(['curly','curlylong','afro'].includes(L.style)){g.fillStyle=shade(L.hair,0.15);for(let i=0;i<340;i++){g.beginPath();g.arc(Math.random()*512,Math.random()*back,3+Math.random()*4,0,Math.PI*2);g.fill();}}
+    if(L.style==='dreads'){g.strokeStyle=shade(L.hair,0.18);g.lineWidth=5;for(let x=170;x<500;x+=12){g.beginPath();g.moveTo(x,30);g.lineTo(x+3,back);g.stroke();}}
+    g.restore();g.globalAlpha=1;
+  }else{const r=g.createRadialGradient(F,20,4,F,20,120);r.addColorStop(0,'rgba(255,255,255,0.16)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,300,120);}
+  // 눈썹(가운데 굵고 끝은 얇게)
+  const browC=L.style==='bald'?shade(L.hair,-0.1):shade(L.hair,-0.05);
+  for(const sg of [-1,1]){g.fillStyle=browC;g.beginPath();g.moveTo(F+sg*12,ey-15);g.quadraticCurveTo(F+sg*28,ey-24,F+sg*46,ey-18);g.lineTo(F+sg*44,ey-15);g.quadraticCurveTo(F+sg*28,ey-19,F+sg*13,ey-10);g.closePath();g.fill();}
+  // 눈
+  const iris=L.eye||'#4a2c1a';
+  for(const sg of [-1,1]){
+    const cx=F+sg*28;
+    g.fillStyle=shade(sk,-0.12);g.beginPath();g.ellipse(cx,ey-2,15,6,0,Math.PI,0);g.fill(); // 눈두덩
+    g.fillStyle='#f6f3ee';g.beginPath();g.ellipse(cx,ey+2,12.5,6.5,0,0,Math.PI*2);g.fill();
+    g.fillStyle=iris;g.beginPath();g.arc(cx+sg*0.5,ey+2,5.6,0,Math.PI*2);g.fill();
+    g.fillStyle='#0b0b0b';g.beginPath();g.arc(cx+sg*0.5,ey+2,2.7,0,Math.PI*2);g.fill();
+    g.fillStyle='rgba(255,255,255,0.9)';g.beginPath();g.arc(cx-1.5,ey,1.4,0,Math.PI*2);g.fill();
+    g.strokeStyle='#1b120c';g.lineWidth=2.2;g.beginPath();g.ellipse(cx,ey+2,12.5,6.5,0,Math.PI*1.05,Math.PI*1.95);g.stroke(); // 속눈썹선
+    g.strokeStyle=shade(sk,-0.2);g.lineWidth=1;g.beginPath();g.ellipse(cx,ey+3,12,6,0,Math.PI*0.15,Math.PI*0.85);g.stroke();
   }
-  if(L.beard){
-    g.fillStyle=L.hair;g.globalAlpha=L.beard==='full'?0.85:0.3;
-    g.beginPath();g.ellipse(F,88,28,17,0,0,Math.PI*2);g.fill();
-    g.fillRect(F-30,64,6,24);g.fillRect(F+24,64,6,24);
-    g.fillRect(F-10,ey+15,20,4);
+  // 코: 옆 그늘 + 콧볼 + 콧구멍
+  {const ng=g.createLinearGradient(F-10,0,F+10,0);ng.addColorStop(0,'rgba(0,0,0,0)');ng.addColorStop(1,'rgba(0,0,0,0.16)');g.fillStyle=ng;g.fillRect(F,ey+4,9,26);}
+  g.fillStyle=shade(sk,-0.1);g.beginPath();g.ellipse(F,ey+31,11,6,0,0,Math.PI*2);g.fill();
+  g.fillStyle=shade(sk,-0.45);for(const sg of [-1,1]){g.beginPath();g.ellipse(F+sg*5,ey+33,2.6,1.6,0,0,Math.PI*2);g.fill();}
+  // 수염
+  if(L.beard==='full'){
+    g.save();g.beginPath();g.ellipse(F,ey+68,58,40,0,0,Math.PI*2);g.rect(F-60,ey+20,16,50);g.rect(F+44,ey+20,16,50);g.clip();
+    g.fillStyle=L.hair;g.globalAlpha=0.88;g.fillRect(F-70,ey+24,140,100);
+    g.globalAlpha=0.45;g.strokeStyle=shade(L.hair,0.2);g.lineWidth=1.2;
+    for(let i=0;i<220;i++){const x=F-60+Math.random()*120,y=ey+30+Math.random()*80;g.beginPath();g.moveTo(x,y);g.lineTo(x+(Math.random()-0.5)*3,y+5);g.stroke();}
+    g.restore();g.globalAlpha=1;
+  }else if(L.beard==='stubble'){
+    g.fillStyle=shade(L.hair,0.05);
+    for(let i=0;i<900;i++){const a=Math.random()*Math.PI*2,r=Math.sqrt(Math.random());const x=F+Math.cos(a)*56*r,y=ey+70+Math.sin(a)*36*r;if(y<ey+40&&Math.abs(x-F)<40)continue;g.globalAlpha=0.35;g.fillRect(x,y,1.6,1.6);}
     g.globalAlpha=1;
   }
-  g.strokeStyle=shade(L.skin,-0.28);g.lineWidth=2;g.beginPath();g.moveTo(F,ey+2);g.lineTo(F-2.5,ey+13);g.lineTo(F+3,ey+14);g.stroke();
-  g.strokeStyle='#7a3a2a';g.lineWidth=2.2;g.beginPath();g.moveTo(F-7,ey+21);g.quadraticCurveTo(F,ey+24.5,F+7,ey+21);g.stroke();
-  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;
+  // 입
+  const lip=`rgb(${hexRgb(sk).map((v,i)=>Math.round(v*0.72+[150,70,60][i]*0.28)).join(',')})`;
+  g.fillStyle=shade(lip,-0.15);g.beginPath();g.moveTo(F-16,ey+48);g.quadraticCurveTo(F-6,ey+43,F,ey+46);g.quadraticCurveTo(F+6,ey+43,F+16,ey+48);g.quadraticCurveTo(F,ey+50,F-16,ey+48);g.fill();
+  g.fillStyle=lip;g.beginPath();g.moveTo(F-15,ey+48.5);g.quadraticCurveTo(F,ey+58,F+15,ey+48.5);g.quadraticCurveTo(F,ey+51,F-15,ey+48.5);g.fill();
+  g.strokeStyle=shade(lip,-0.35);g.lineWidth=1.2;g.beginPath();g.moveTo(F-15,ey+48.5);g.quadraticCurveTo(F,ey+51,F+15,ey+48.5);g.stroke();
+  // 턱 그늘
+  {const r=g.createRadialGradient(F,ey+92,6,F,ey+92,40);r.addColorStop(0,'rgba(0,0,0,0.08)');r.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=r;g.fillRect(F-45,ey+60,90,70);}
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;
 }
 function kitTexture(k,p){
   const c=document.createElement('canvas');c.width=512;c.height=256;const g=c.getContext('2d');
@@ -2043,17 +2071,22 @@ function buildPlayers(){
     {const sh=new THREE.Mesh(new THREE.SphereGeometry(1,18,10),sleeve);sh.scale.set(0.31,0.1,0.22);sh.position.y=1.41;body.add(sh);
      const nk=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.065,0.12,10),skin);nk.position.y=1.48;body.add(nk);}
     add(new THREE.CylinderGeometry(0.22,0.22,0.24,10),shorts,0,0.8,0);
-    add(new THREE.SphereGeometry(0.16,22,16),new THREE.MeshStandardMaterial({map:faceTexture(p),roughness:0.85}),0,1.61,0);
+    {const hm=add(new THREE.SphereGeometry(0.16,28,20),new THREE.MeshStandardMaterial({map:faceTexture(p),roughness:0.8}),0,1.61,0);hm.scale.set(0.94,1.08,1);}
     {
       const st=look.style,hairM=new THREE.MeshStandardMaterial({color:new THREE.Color(look.hair).getHex(),roughness:0.95});
       if(st!=='bald'){
         const vol={buzz:0.006,short:0.014,slick:0.012,long:0.02,curly:0.032,curlylong:0.032,afro:0.075,dreads:0.03}[st]||0.014;
         const cap=new THREE.Mesh(new THREE.SphereGeometry(0.16+vol,22,12,0,Math.PI*2,0,Math.PI*(st==='afro'?0.56:0.42)),hairM);
-        cap.position.set(0,1.61+(st==='afro'?0.03:0.006),-0.012);cap.rotation.x=-0.28;body.add(cap);
+        cap.position.set(0,1.61+(st==='afro'?0.03:0.012),-0.012);cap.rotation.x=-0.28;cap.scale.set(0.95,1.08,1);body.add(cap);
         if(st==='long'||st==='curlylong'||st==='dreads'){
           const back=new THREE.Mesh(new THREE.CylinderGeometry(0.165,0.14,0.24,16,1,true,Math.PI*0.62,Math.PI*0.76),hairM);
           back.material.side=THREE.DoubleSide;back.position.set(0,1.53,-0.01);body.add(back);
         }
+      }
+      if(look.beard==='full'){
+        const bm=new THREE.MeshStandardMaterial({color:new THREE.Color(look.hair).getHex(),roughness:1});
+        const bd=new THREE.Mesh(new THREE.SphereGeometry(0.163,20,10,Math.PI/2-0.75,1.5,Math.PI*0.58,Math.PI*0.34),bm);
+        bd.position.set(0,1.61,0.004);bd.scale.set(0.95,1.08,1.02);body.add(bd);
       }
       for(const sg of [-1,1]){const ear=new THREE.Mesh(new THREE.SphereGeometry(0.036,8,6),skin);ear.scale.set(0.55,1,0.8);ear.position.set(sg*0.158,1.6,0);body.add(ear);}
       const nose=new THREE.Mesh(new THREE.ConeGeometry(0.024,0.06,8),skin);nose.rotation.x=Math.PI/2;nose.position.set(0,1.585,0.165);body.add(nose);
@@ -2830,17 +2863,17 @@ function showSetup(){
   $('tourTitle').textContent='토너먼트 만들기';$('tourSetup').hidden=false;$('tourView').hidden=true;
   const sel=$('tourMy');
   if(!sel.options.length){
-    for(const [label,fn] of [['현역 클럽 (2025-26)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat],['국가대표 레전드',t=>t.legend]]){
+    for(const [label,fn] of [['현역 클럽 (2025-26)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat]]){
       const og=document.createElement('optgroup');og.label=label;
       TEAMS.forEach((t,i)=>{if(fn(t)){const o=document.createElement('option');o.value=i;o.textContent=t.name;og.appendChild(o);}});
       sel.appendChild(og);
     }
   }
-  sel.value=$('teamA').value;
+  sel.value=TEAMS[+$('teamA').value]&&!TEAMS[+$('teamA').value].legend?$('teamA').value:'0';
 }
 function startTour(){
   const size=+$('tourSize').value,pool=$('tourPool').value,my=TEAMS[+$('tourMy').value].id,mode=$('tourMode').value;
-  const inPool=t=>pool==='all'||(pool==='club'&&t.cur&&!t.nat)||(pool==='nat'&&(t.nat||t.legend));
+  const inPool=t=>!t.legend&&(pool==='all'||(pool==='club'&&!t.nat)||(pool==='nat'&&t.nat));
   const cands=shuffle(TEAMS.filter(t=>t.id!==my&&inPool(t)).map(t=>t.id));
   let n=size;while(n>2&&cands.length<n-1)n/=2;   // 고를 수 있는 팀이 모자라면 대진을 줄인다
   const ids=shuffle([my,...cands.slice(0,n-1)]);
