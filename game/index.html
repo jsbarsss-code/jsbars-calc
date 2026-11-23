@@ -135,6 +135,9 @@ canvas{display:block;width:100%;max-width:100%}
   .spacer{display:none}
 }
 .overlay{z-index:5}
+.diffbox{margin:10px auto 4px;max-width:520px}.diffhd{font-size:13px;color:var(--muted);margin-bottom:6px}.diffrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.dstep{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer;font:inherit}
+.dstep b{font-size:15px}.dstep small{font-size:11px;color:var(--muted)}.dstep.on{background:var(--gold,#f2d36c);border-color:transparent;color:#111}.dstep.on small{color:#333}
 .pauseTag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;padding:14px 22px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(5,10,8,.78);color:#fff;font:700 18px/1.2 inherit;cursor:pointer}
 .flash{position:absolute;left:0;right:0;top:36%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;background:linear-gradient(90deg,transparent,rgba(5,10,8,.72),transparent);pointer-events:none;z-index:3}
 .flash b{font-family:var(--f-display);font-weight:800;font-size:clamp(40px,9vw,96px);line-height:1;letter-spacing:.04em}
@@ -249,7 +252,7 @@ body.playing.pad .touch{display:flex}
               <label for="tourSize">참가 팀 수<select id="tourSize"><option value="8">8팀 (8강부터)</option><option value="16">16팀 (16강부터)</option><option value="32">32팀 (32강부터)</option></select></label>
               <label for="tourPool">상대 팀<select id="tourPool"><option value="all">전체 무작위</option><option value="club">현역 클럽만</option><option value="nat">현역 국가대표만</option></select></label>
               <label for="tourMode">내 경기<select id="tourMode"><option value="play">직접 플레이</option><option value="watch">관전</option></select></label>
-              <label for="tourDiff">난이도<select id="tourDiff"><option value="0">쉬움</option><option value="1">보통</option><option value="2">어려움</option><option value="3">월드클래스</option></select></label>
+              <label for="tourDiff">난이도<select id="tourDiff"><option value="0">1단계 · 쉬움</option><option value="1">2단계 · 보통</option><option value="2">3단계 · 어려움</option><option value="3">4단계 · 월드클래스</option><option value="4">5단계 · 레전드</option></select></label>
               <div class="row"><button class="btn primary" id="tourStart" type="button">대진 추첨하고 시작</button></div>
             </div>
             <div id="tourView" hidden>
@@ -586,76 +589,76 @@ function cur(id,name,sub,form,tactic,kit,st,bn,extra){
 }
 const RED=['#f2f2f2','#f2f2f2','#f2f2f2'];
 const CUR=[
-  cur('mci','맨시티','현역 2025-26','4-2-3-1','possess',K('#6cabdd','#f2f2f2','#6cabdd','#1c2c5b','#1c2c5b',['#1c2c5b']),
-    'GK 돈나룸마 89|LB 아이트누리 82|CB 그바르디올 86|CB 디아스 88|RB 루이스 81|DM 로드리 90|DM 레인더르스 84|LW 도쿠 84|AM 셰르키 83|RW 포든 86|ST 홀란 91',
-    'GK 트래포드 78|CB 스톤스 82|CB 아칸지 83|LB 오라일리 76|DM 니코 곤살레스 80|CM 코바치치 83|CM 베르나르두 85|RW 사비뉴 80|ST 마르무시 83'),
-  cur('ars','아스널','현역 2025-26','4-3-3','balance',K('#ef0107','#f2f2f2','#ef0107','#f2f2f2','#f2f2f2',['#f7d117','#1c2c5b','#f7d117']),
+  cur('mci','맨시티','2026-27 시즌','4-2-3-1','possess',K('#6cabdd','#f2f2f2','#6cabdd','#1c2c5b','#1c2c5b',['#1c2c5b']),
+    'GK 돈나룸마 89|LB 아이트누리 82|CB 그바르디올 86|CB 디아스 88|RB 루이스 81|DM 앤더슨 85|DM 레인더르스 84|LW 도쿠 84|AM 셰르키 83|RW 포든 86|ST 홀란 91',
+    'GK 트래포드 78|CB 아칸지 83|LB 오라일리 76|DM 니코 곤살레스 80|CM 코바치치 83|RW 사비뉴 80|ST 마르무시 83'),
+  cur('ars','아스널','2026-27 시즌','4-3-3','balance',K('#ef0107','#f2f2f2','#ef0107','#f2f2f2','#f2f2f2',['#f7d117','#1c2c5b','#f7d117']),
     'GK 라야 86|LB 칼라피오리 83|CB 가브리에우 88|CB 살리바 89|RB 팀버 85|CM 외데고르 87|DM 수비멘디 86|CM 라이스 88|LW 마르티넬리 83|ST 요케레스 86|RW 사카 89',
     'GK 케파 80|RB 화이트 82|CB 모스케라 79|LB 인카피에 82|DM 노르고르 80|CM 메리노 83|AM 에제 85|RW 마두에케 81|ST 하베르츠 84'),
-  cur('liv','리버풀','현역 2025-26','4-2-3-1','attack',K('#c8102e','#c8102e','#c8102e','#f2f2f2','#f2f2f2',RED),
-    'GK 알리송 89|LB 케르케즈 82|CB 판데이크 89|CB 코나테 85|RB 프림퐁 84|DM 흐라벤베르흐 85|DM 맥알리스터 86|LW 가크포 84|AM 비르츠 89|RW 살라 90|ST 이삭 88',
-    'GK 마마르다슈빌리 82|LB 로버트슨 82|CB 고메스 80|RB 브래들리 78|CM 소보슬라이 84|CM 존스 80|DM 엔도 78|RW 키에사 79|ST 에키티케 84'),
-  cur('che','첼시','현역 2025-26','4-2-3-1','balance',K('#034694','#034694','#f2f2f2','#f2f2f2','#f2f2f2',['#f2f2f2','#f2f2f2','#034694']),
-    'GK 산체스 80|LB 쿠쿠레야 83|CB 콜윌 83|CB 찰로바 82|RB 제임스 84|DM 카이세도 88|DM 엔소 85|LW 네투 83|AM 팔머 88|RW 이스테방 82|ST 주앙 페드루 83',
-    'GK 요르겐센 75|CB 포파나 80|CB 아다라비오요 78|RB 귀스토 79|DM 라비아 78|CM 안드레이 산투스 77|LW 가르나초 80|LW 기튼스 79|ST 델랍 79'),
-  cur('mun','맨유','현역 2025-26','3-4-3','balance',K('#da291c','#f2f2f2','#111111','#f2f2f2','#f2f2f2',['#f2f2f2','#111111','#f2f2f2']),
-    'GK 라먼스 80|CB 요로 82|CB 더리흐트 83|CB 마즈라위 81|LB 도르구 78|CM 브루누 87|CM 카세미루 81|RB 디알로 82|LW 쿠냐 84|ST 셰슈코 81|RW 음뵈모 84',
-    'GK 바인디르 74|CB 마과이어 79|CB 리산드로 84|LB 쇼 78|DM 우가르테 80|CM 마이누 79|AM 마운트 79|RW 아마드 80|ST 지르크제이 78'),
-  cur('tot','토트넘','현역 2025-26','4-3-3','balance',K('#f2f2f2','#132257','#f2f2f2','#132257','#132257',['#132257']),
-    'GK 비카리오 84|LB 우도기 81|CB 판더펜 85|CB 로메로 86|RB 포로 83|CM 비수마 79|DM 팔리냐 82|CM 사르 80|LW 시몬스 84|ST 솔랑케 81|RW 쿠두스 83',
-    'GK 킨스키 76|LB 스펜스 76|CB 단소 79|CB 드라구신 78|CM 벤탄쿠르 80|CM 베리발 76|AM 매디슨 84|RW 존슨 81|ST 히샬리송 78'),
-  cur('new','뉴캐슬','현역 2025-26','4-3-3','attack',K('#f2f2f2','#111111','#111111','#111111','#f2f2f2',['#2a5caa'],{pattern:'stripes',stripe:'#111111'}),
-    'GK 포프 84|LB 홀 80|CB 보트만 82|CB 셰어 81|RB 트리피어 81|CM 조엘린통 82|DM 기마랑이스 87|CM 토날리 84|LW 고든 84|ST 볼테마데 82|RW 엘랑가 80',
-    'GK 램스데일 80|CB 번 80|CB 티아우 79|RB 리브라멘토 80|CM 윌록 77|RW 머피 79|LW 반스 79|ST 위사 81'),
-  cur('avl','애스턴 빌라','현역 2025-26','4-2-3-1','balance',K('#670e36','#f2f2f2','#670e36','#95bfe5','#f2d36c',['#95bfe5','#670e36','#95bfe5']),
-    'GK 마르티네스 87|LB 디뉴 80|CB 토레스 81|CB 콘사 83|RB 캐시 80|DM 카마라 83|DM 틸레만스 83|LW 로저스 84|AM 맥긴 81|RW 부엔디아 79|ST 왓킨스 84',
-    'GK 비소 74|CB 밍스 79|LB 마트센 79|DM 오나나 79|CM 바클리 76|AM 엘리엇 79|RW 산초 78'),
-  cur('rma','레알 마드리드','현역 2025-26','4-3-3','attack',K('#f2f2f2','#f2f2f2','#f2f2f2','#c9a227','#3d2a6b',['#5b3a9e','#2a1a4a','#5b3a9e'],{side:'#3d2a6b'}),
-    'GK 쿠르투아 89|LB 카레라스 82|CB 뤼디거 85|CB 하위선 83|RB 아놀드 86|CM 벨링엄 89|DM 추아메니 85|CM 발베르데 88|LW 비니시우스 90|ST 음바페 91|RW 호드리구 84',
-    'GK 루닌 79|CB 밀리탕 85|CB 알라바 83|RB 카르바할 84|LB 멘디 80|CM 카마빙가 84|AM 귈레르 82|AM 브라힘 80|RW 마스탄투오노 77'),
-  cur('fcb','바르셀로나','현역 2025-26','4-2-3-1','possess',K('#a50044','#004d98','#004d98','#f5c518','#f5c518',['#f5c518'],{pattern:'stripes',stripe:'#004d98'}),
-    'GK 주앙 가르시아 82|LB 발데 84|CB 쿠바르시 84|CB 아라우호 83|RB 쿤데 86|DM 페드리 89|DM 더용 86|LW 하피냐 89|AM 페르민 82|RW 야말 90|ST 레반도프스키 87',
-    'GK 슈체스니 83|CB 에리크 가르시아 79|CB 크리스텐센 79|LB 마르틴 77|DM 카사도 79|CM 가비 83|AM 올모 84|LW 래시퍼드 81|ST 페란 80'),
-  cur('atm','아틀레티코','현역 2025-26','4-4-2','counter',K('#cb3524','#272e61','#cb3524','#272e61','#272e61',['#1c1c1c'],{pattern:'stripes',stripe:'#f2f2f2'}),
-    'GK 오블락 87|LB 한츠코 80|CB 르노르망 81|CB 히메네스 82|RB 요렌테 84|LM 바에나 84|CM 코케 81|CM 바리오스 82|RM 시메오네 79|ST 알바레스 87|ST 쇠를로트 82',
-    'GK 무소 77|CB 랑글레 78|RB 몰리나 80|LB 갈란 76|DM 카르도소 78|CM 가야고 80|AM 알마다 81|LW 니코 곤살레스 81|ST 그리즈만 85'),
-  cur('fcbayern','바이에른','현역 2025-26','4-2-3-1','possess',K('#dc052d','#dc052d','#dc052d','#f2f2f2','#f2f2f2',['#1f2a44']),
-    'GK 노이어 85|LB 데이비스 84|CB 우파메카노 85|CB 김민재 84|RB 키미히 87|DM 파블로비치 82|DM 고레츠카 81|LW 루이스 디아스 86|AM 무시알라 89|RW 올리세 87|ST 케인 90',
-    'GK 울라이히 75|CB 타 84|CB 이토 80|LB 게헤이루 79|CM 라이머 79|CM 비쇼프 76|AM 칼 77|RW 그나브리 81|ST 잭슨 80'),
-  cur('bvb','도르트문트','현역 2025-26','3-4-3','attack',K('#fde100','#111111','#fde100','#111111','#111111',['#1a1a1a','#1a1a1a','#1a1a1a']),
-    'GK 코벨 86|CB 안톤 81|CB 슐로터베크 83|CB 쥘레 79|LB 스벤손 77|CM 은메차 80|CM 그로스 79|RB 리에르손 77|LW 브란트 81|ST 기라시 85|RW 아데예미 80',
-    'GK 마이어 70|CB 벤세바이니 78|RB 쿠투 77|DM 엠레 잔 78|CM 자비처 78|CM J.벨링엄 77|CM 외즈칸 75|LW 뒤랑빌 74|ST F.실바 77'),
-  cur('int','인테르','현역 2025-26','3-5-2','balance',K('#0068a8','#111111','#111111','#f2d36c','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
-    'GK 좀머 85|CB 바스토니 87|CB 아체르비 82|CB 파바르 83|LB 디마르코 85|CM 바렐라 87|DM 찰하놀루 86|CM 므키타리안 82|RB 덤프리스 84|ST 라우타로 89|ST 튀람 85',
-    'GK J.마르티네스 77|CB 더프레이 81|CB 비세크 80|LB 카를루스 아우구스투 79|CM 프라테시 80|CM 수치치 76|RW 루이스 엔히키 78|ST 보니 79|ST 에스포지토 76'),
-  cur('acm','AC 밀란','현역 2025-26','3-5-2','balance',K('#c7101e','#111111','#111111','#111111','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
+  cur('liv','리버풀','2026-27 시즌','4-2-3-1','attack',K('#c8102e','#c8102e','#c8102e','#f2f2f2','#f2f2f2',RED),
+    'GK 알리송 89|LB 케르케즈 82|CB 판데이크 89|CB 자케 80|RB 프림퐁 84|DM 흐라벤베르흐 85|DM 맥알리스터 86|LW 가크포 84|AM 비르츠 89|RW 무뇨스 80|ST 이삭 88',
+    'GK 마마르다슈빌리 82|CB 아라우호 83|CB 고메스 80|RB 브래들리 78|CM 소보슬라이 84|CM 존스 80|DM 엔도 78|RW 키에사 79|ST 에키티케 84'),
+  cur('che','첼시','2026-27 시즌','4-2-3-1','balance',K('#034694','#034694','#f2f2f2','#f2f2f2','#f2f2f2',['#f2f2f2','#f2f2f2','#034694']),
+    'GK 산체스 80|LB 제임스 84|CB 콜윌 83|CB 찰로바 82|RB 팔레스트라 81|DM 카이세도 88|DM 엔소 85|LW 로저스 85|AM 팔머 88|RW 이스테방 82|ST 주앙 페드루 83',
+    'GK 요르겐센 75|CB 포파나 80|CB 아다라비오요 78|RB 귀스토 79|DM 라비아 78|RW 크벤다 79|LW 네투 83|LW 기튼스 79|ST 델랍 79'),
+  cur('mun','맨유','2026-27 시즌','3-4-3','balance',K('#da291c','#f2f2f2','#111111','#f2f2f2','#f2f2f2',['#f2f2f2','#111111','#f2f2f2']),
+    'GK 라먼스 80|CB 요로 82|CB 더리흐트 83|CB 마즈라위 81|LB 도르구 78|CM 브루누 87|CM 틸레만스 83|RB 디알로 82|LW 쿠냐 84|ST 셰슈코 81|RW 음뵈모 84',
+    'GK 바인디르 74|CB 마과이어 79|CB 리산드로 84|LB 쇼 78|DM 우가르테 80|CM 마이누 79|CM 안드레이 산투스 78|RW 아마드 80|ST 지르크제이 78'),
+  cur('tot','토트넘','2026-27 시즌','4-3-3','balance',K('#f2f2f2','#132257','#f2f2f2','#132257','#132257',['#132257']),
+    'GK 비카리오 84|LB 우도기 81|CB 판더펜 85|CB 판헤케 82|RB 포로 83|CM 토날리 85|DM 팔리냐 82|CM 마테우스 페르난드스 82|LW 시몬스 84|ST 솔랑케 81|RW 쿠두스 83',
+    'GK 킨스키 76|LB 로버트슨 80|CB 단소 79|CB 드라구신 78|CM 벤탄쿠르 80|CB 세네시 80|AM 매디슨 84|RW 존슨 81|ST 히샬리송 78'),
+  cur('new','뉴캐슬','2026-27 시즌','4-3-3','attack',K('#f2f2f2','#111111','#111111','#111111','#f2f2f2',['#2a5caa'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 포프 84|LB 홀 80|CB 보트만 82|CB 셰어 81|RB 리브라멘토 80|CM 조엘린통 82|DM 기마랑이스 87|CM 스퇴르 77|LW 반스 79|ST 볼테마데 82|RW 엘랑가 80',
+    'GK 램스데일 80|CB 번 80|CB 티아우 79|DM B.투레 78|CM 윌록 77|RW 머피 79|LW 밤바 76|ST 위사 81'),
+  cur('avl','애스턴 빌라','2026-27 시즌','4-2-3-1','balance',K('#670e36','#f2f2f2','#670e36','#95bfe5','#f2d36c',['#95bfe5','#670e36','#95bfe5']),
+    'GK 마르티네스 87|LB 디뉴 80|CB 토레스 81|CB 콘사 83|RB 캐시 80|DM 카마라 83|DM 고레츠카 81|LW 만잠비 80|AM 맥긴 81|RW 부엔디아 79|ST 왓킨스 84',
+    'GK 비소 74|CB 밍스 79|LB 루게리 79|DM 오나나 79|CM 주앙 고메스 80|AM 엘리엇 79|RW 산초 78'),
+  cur('rma','레알 마드리드','2026-27 시즌','4-3-3','attack',K('#f2f2f2','#f2f2f2','#f2f2f2','#c9a227','#3d2a6b',['#5b3a9e','#2a1a4a','#5b3a9e'],{side:'#3d2a6b'}),
+    'GK 쿠르투아 89|LB 쿠쿠레야 83|CB 뤼디거 85|CB 하위선 83|RB 아놀드 86|CM 벨링엄 89|DM 추아메니 85|CM 발베르데 88|LW 비니시우스 90|ST 음바페 91|RW 호드리구 84',
+    'GK 루닌 79|CB 밀리탕 85|CB 코나테 85|RB 덤프리스 83|LB 카레라스 82|CM 카마빙가 84|AM 귈레르 82|RW 디오망데 82|CM 베르나르두 85'),
+  cur('fcb','바르셀로나','2026-27 시즌','4-2-3-1','possess',K('#a50044','#004d98','#004d98','#f5c518','#f5c518',['#f5c518'],{pattern:'stripes',stripe:'#004d98'}),
+    'GK 주앙 가르시아 82|LB 발데 84|CB 쿠바르시 84|CB 에리크 가르시아 79|RB 쿤데 86|DM 페드리 89|DM 로드리 90|LW 고든 84|AM 페르민 82|RW 야말 90|ST 하피냐 89',
+    'GK 슈체스니 83|RB 칸셀루 83|CB 크리스텐센 79|LB 마르틴 77|DM 더용 86|CM 가비 83|AM 올모 84|LW 아데예미 81|ST 제수스 80'),
+  cur('atm','아틀레티코','2026-27 시즌','4-4-2','counter',K('#cb3524','#272e61','#cb3524','#272e61','#272e61',['#1c1c1c'],{pattern:'stripes',stripe:'#f2f2f2'}),
+    'GK 오블락 87|LB 그리말도 83|CB 르노르망 81|CB 로메로 86|RB 요렌테 84|LM 바에나 84|CM 휼만 83|CM 바리오스 82|RM 시메오네 79|ST 알바레스 87|ST 쇠를로트 82',
+    'GK 무소 77|CB 한츠코 80|CM 코케 81|LB 갈란 76|DM 카르도소 78|CM 가야고 80|AM 이강인 82|LW 니코 곤살레스 81|ST 다비드 83'),
+  cur('fcbayern','바이에른','2026-27 시즌','4-2-3-1','possess',K('#dc052d','#dc052d','#dc052d','#f2f2f2','#f2f2f2',['#1f2a44']),
+    'GK 노이어 85|LB 데이비스 84|CB 우파메카노 85|CB 김민재 84|RB 키미히 87|DM 파블로비치 82|DM 라이머 79|LW 루이스 디아스 86|AM 무시알라 89|RW 올리세 87|ST 케인 90',
+    'GK 울라이히 75|CB 타 84|CB 이토 80|LB 브라운 79|CM 비쇼프 76|AM 칼 77|RW 그나브리 81|AM 사이바리 80'),
+  cur('bvb','도르트문트','2026-27 시즌','3-4-3','attack',K('#fde100','#111111','#fde100','#111111','#111111',['#1a1a1a','#1a1a1a','#1a1a1a']),
+    'GK 코벨 86|CB 안톤 81|CB 슐로터베크 83|CB 가두 78|LB 스벤손 77|CM 은메차 80|CM 그로스 79|RB 리에르손 77|LW 은와네리 80|ST 기라시 85|RW 카레차스 78',
+    'GK 마이어 70|CB 벤세바이니 78|CM 베르만 80|DM 엠레 잔 78|CM 자비처 78|CM J.벨링엄 77|AM 콘스탄텔리아스 76|ST F.실바 77'),
+  cur('int','인테르','2026-27 시즌','3-5-2','balance',K('#0068a8','#111111','#111111','#f2d36c','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 좀머 85|CB 바스토니 87|CB 아체르비 82|CB 파바르 83|LB 디마르코 85|CM 바렐라 87|DM 찰하놀루 86|CM 므키타리안 82|RB 루이스 엔히키 79|ST 라우타로 89|ST 튀람 85',
+    'GK J.마르티네스 77|CB 더프레이 81|CB 비세크 80|LB 카를루스 아우구스투 79|CM 프라테시 80|CM 스탄코비치 77|CB 스톤스 82|ST 보니 79|ST 에스포지토 76'),
+  cur('acm','AC 밀란','2026-27 시즌','3-5-2','balance',K('#c7101e','#111111','#111111','#111111','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
     'GK 메냥 87|CB 토모리 81|CB 가비아 80|CB S.파블로비치 79|LB 에스투피냔 80|CM 로프터스치크 80|DM 모드리치 85|CM 라비오 83|RB 살레마커스 80|ST 레앙 86|ST 풀리식 85',
-    'GK 테라치아노 75|CB 더빈터 77|CB 오도구 72|LB 바르테사기 72|CM Y.포파나 80|CM 리치 78|AM 은쿤쿠 81|RW 추쿠에제 76|ST S.히메네스 80'),
-  cur('juv','유벤투스','현역 2025-26','3-4-3','balance',K('#f2f2f2','#111111','#f2f2f2','#111111','#111111',['#f4a6c6','#111111','#f4a6c6'],{pattern:'stripes',stripe:'#111111'}),
+    'GK 테라치아노 75|CB 더빈터 77|CB 오도구 72|LB 바르테사기 72|CM Y.포파나 80|CM 리치 78|AM 은쿤쿠 81|ST 하무스 81|ST S.히메네스 80'),
+  cur('juv','유벤투스','2026-27 시즌','3-4-3','balance',K('#f2f2f2','#111111','#f2f2f2','#111111','#111111',['#f4a6c6','#111111','#f4a6c6'],{pattern:'stripes',stripe:'#111111'}),
     'GK 디그레고리오 83|CB 가티 81|CB 브레메르 85|CB 켈리 78|LB 캄비아소 83|CM 로카텔리 82|CM K.튀랑 80|RB 칼룰루 80|LW 일디즈 86|ST 블라호비치 83|RW 콘세이상 82',
-    'GK 페린 77|CB 루가니 75|LB 코스티치 77|RB 주앙 마리우 77|CM 맥케니 80|CM 쿠프메이너르스 80|AM 제그로바 80|ST 다비드 83|ST 오펜다 82'),
-  cur('nap','나폴리','현역 2025-26','4-3-3','balance',K('#12a0d7','#f2f2f2','#12a0d7','#f2f2f2','#f2f2f2',['#1b1b1b']),
+    'GK 페린 77|CB 루가니 75|LB 코스티치 77|LW 알라이베고비치 78|CM 맥케니 80|CM 쿠프메이너르스 80|AM 제그로바 80|ST 콜로 무아니 82|RW 보가 78'),
+  cur('nap','나폴리','2026-27 시즌','4-3-3','balance',K('#12a0d7','#f2f2f2','#12a0d7','#f2f2f2','#f2f2f2',['#1b1b1b']),
     'GK 메레트 82|LB 올리베라 80|CB 부온조르노 83|CB 라흐마니 81|RB 디로렌초 84|CM 맥토미니 86|DM 로보트카 85|CM 데브라위너 88|LW 랑 80|ST 회이룬 82|RW 폴리타노 80',
     'GK V.밀린코비치 80|CB 후안 제수스 76|LB 스피나촐라 77|CM 앙귀사 83|CM 길모어 78|AM 엘마스 77|RW 네레스 79|ST 루카쿠 83|GK 콘티니 70'),
-  cur('ata','아탈란타','현역 2025-26','3-4-3','attack',K('#1e71b8','#111111','#111111','#111111','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
+  cur('ata','아탈란타','2026-27 시즌','3-4-3','attack',K('#1e71b8','#111111','#111111','#111111','#f2f2f2',['#f2f2f2'],{pattern:'stripes',stripe:'#111111'}),
     'GK 카르네세키 83|CB 디심시티 79|CB 히엔 80|CB 콜라시나츠 78|LB 잘레프스키 77|CM 더룬 81|CM 에데르송 84|RB 벨라노바 80|LW 룩먼 85|ST 스카마카 81|RW 더케텔라러 84',
     'GK 로시 72|CB 스칼비니 79|CB 코수누 79|RB 차파코스타 78|LB 베르나스코니 74|CM 브레시아니니 77|AM 사마르지치 78|AM 말디니 76|ST 크르스토비치 79'),
-  cur('psg','파리 생제르맹','현역 2025-26','4-3-3','possess',K('#004170','#004170','#004170','#da291c','#f2f2f2',['#f2f2f2']),
+  cur('psg','파리 생제르맹','2026-27 시즌','4-3-3','possess',K('#004170','#004170','#004170','#da291c','#f2f2f2',['#f2f2f2']),
     'GK 슈발리에 82|LB 누누 멘드스 87|CB 파초 83|CB 마르키뉴스 85|RB 하키미 88|CM 주앙 네베스 86|DM 비티냐 89|CM 파비안 루이스 85|LW 크바라츠헬리아 88|ST 뎀벨레 90|RW 두에 85',
-    'GK 사포노프 76|CB 베랄두 78|CB 자바르니 79|LB 에르난데스 80|CM 자이르에메리 81|CM 마율루 74|RW 이강인 82|LW 바르콜라 83|ST 하무스 80'),
-  cur('gal','갈라타사라이','현역 2025-26','4-2-3-1','attack',K('#a90432','#a90432','#a90432','#fdb912','#fdb912',['#fdb912','#a90432','#fdb912']),
+    'GK 사포노프 76|CB 베랄두 78|CB 자바르니 79|LB 에르난데스 80|CM 자이르에메리 81|CM 마율루 74|LW 바르콜라 83|ST 페란 80'),
+  cur('gal','갈라타사라이','2026-27 시즌','4-2-3-1','attack',K('#a90432','#a90432','#a90432','#fdb912','#fdb912',['#fdb912','#a90432','#fdb912']),
     'GK 차키르 80|LB 엘말르 74|CB D.산체스 80|CB 바르닥츠 77|RB 싱고 79|DM 토레이라 80|DM 르미나 78|LW 사네 82|AM 사라 79|RW 바르시 79|ST 오시멘 88',
     'GK 귀벤치 72|RW 아크귄 76|RW 살라이 77|ST 이카르디 80'),
-  cur('nsr','알나스르','현역 2025-26','4-2-3-1','attack',K('#ffd700','#0a2d6e','#ffd700','#0a2d6e','#0a2d6e',['#0a2d6e']),
+  cur('nsr','알나스르','2026-27 시즌','4-2-3-1','attack',K('#ffd700','#0a2d6e','#ffd700','#0a2d6e','#0a2d6e',['#0a2d6e']),
     'GK 벤투 80|LB 부샬 73|CB I.마르티네스 82|CB 시마칸 80|RB 알가남 76|DM 브로조비치 83|DM 알하산 74|LW 마네 82|AM 펠릭스 81|RW 코망 82|ST 호날두 86',
     'GK 알아키디 74|CB 라자미 73|CB 알아므리 74|CM 알카이바리 72|RW 야히야 73|LW 가리브 75|RW 앙젤루 77|LW 웨슬리 76'),
-  cur('hil','알힐랄','현역 2025-26','4-3-3','balance',K('#0066b3','#f2f2f2','#0066b3','#f2f2f2','#f2f2f2',['#f2f2f2']),
-    'GK 보노 85|LB 테오 84|CB 쿨리발리 82|CB 알탐박티 76|RB 칸셀루 84|CM 밀린코비치 84|DM 네베스 85|CM 칸노 75|LW 말콤 83|ST 누녜스 82|RW 레오나르두 80',
-    'GK 알오와이스 74|RB 알부라이크 74|LB 알샤흐라니 72|LW 알다와사리 78|AM 카이우 세자르 74|ST 미트로비치 82'),
-  cur('mia','인터 마이애미','현역 2025-26','4-4-2','balance',K('#f7b5cd','#231f20','#f7b5cd','#231f20','#231f20',['#231f20']),
+  cur('hil','알힐랄','2026-27 시즌','4-3-3','balance',K('#0066b3','#f2f2f2','#0066b3','#f2f2f2','#f2f2f2',['#f2f2f2']),
+    'GK 보노 85|LB 테오 84|CB 쿨리발리 82|CB 알탐박티 76|RB 알부라이크 74|CM 밀린코비치 84|DM 네베스 85|CM 칸노 75|LW 말콤 83|ST 누녜스 82|RW 레오나르두 80',
+    'GK 알오와이스 74|LB 알샤흐라니 72|LW 알다와사리 78|AM 카이우 세자르 74|ST 미트로비치 82'),
+  cur('mia','인터 마이애미','2026-27 시즌','4-4-2','balance',K('#f7b5cd','#231f20','#f7b5cd','#231f20','#231f20',['#231f20']),
     'GK 우스타리 75|LB 알바 80|CB 팔콘 72|CB 아빌레스 72|RB 웨이간트 72|LM 아옌데 78|CM 부스케츠 80|CM 데폴 83|RM 세고비아 75|ST 메시 88|ST 수아레스 82',
-    'GK 칼렌더 72|CM 크레마스키 72|CM 레돈도 72|RW 실베티 70'),
-  cur('laf','LAFC','현역 2025-26','4-3-3','counter',K('#1a1a1a','#1a1a1a','#1a1a1a','#c39e6d','#c39e6d',['#f2f2f2','#f2f2f2','#f2f2f2']),
+    'GK 칼렌더 72|CM 카세미루 80|CM 레돈도 72|RW 실베티 70'),
+  cur('laf','LAFC','2026-27 시즌','4-3-3','counter',K('#1a1a1a','#1a1a1a','#1a1a1a','#c39e6d','#c39e6d',['#f2f2f2','#f2f2f2','#f2f2f2']),
     'GK 요리스 82|LB 홀링스헤드 73|CB 롱 74|CB 세구라 72|RB 팔렌시아 73|CM 델가도 73|DM 틸만 74|CM 아투에스타 74|LW 부앙가 82|ST 손흥민 87|RW 올리베라 74',
     'RW 데이비드 마르티네스 75'),
   // 현역 국가대표
@@ -1505,7 +1508,7 @@ function createMatch(opts){
 
   // 난이도 (직접 플레이할 때 상대 AI에만 적용): 0 쉬움 · 1 보통 · 2 어려움 · 3 월드클래스
   const DIFF=[{att:0.93,tkR:0.7,tkW:0.85,press:0,shot:1.15,think:1.3},{att:1,tkR:1,tkW:1,press:0,shot:1,think:1},
-              {att:1.05,tkR:1.5,tkW:1.12,press:1,shot:0.85,think:0.75},{att:1.09,tkR:1.95,tkW:1.25,press:2,shot:0.72,think:0.6}];
+              {att:1.05,tkR:1.5,tkW:1.12,press:1,shot:0.85,think:0.75},{att:1.09,tkR:1.95,tkW:1.25,press:2,shot:0.72,think:0.6},{att:1.13,tkR:2.4,tkW:1.35,press:3,shot:0.62,think:0.48}];
   m.diff=1;
   const DF=()=>DIFF[m.human?m.diff:1];
   const isAI=q=>!!(m.human&&q.t!==m.human.team);
@@ -1517,7 +1520,7 @@ function createMatch(opts){
       q.pac=c(q._b.pac);q.pas=c(q._b.pas);q.sho=c(q._b.sho);q.dri=c(q._b.dri);q.def=c(q._b.def);q.gk=c(q._b.gk);
     }
   }
-  m.setDiff=function(d){m.diff=Math.max(0,Math.min(3,d|0));applyDiff();};
+  m.setDiff=function(d){m.diff=Math.max(0,Math.min(4,d|0));applyDiff();};
   m.setHuman=function(team){
     m.human=team<0?null:{team,p:null,ix:0,iy:0,idle:true,sprint:false,dx:team===0?1:-1,dy:0,q:[],prev:-1};
     if(m.human)switchNearest();
@@ -1606,7 +1609,7 @@ for(const [id,t] of [['tacA',0],['tacB',1]]){
 
 for(const [id,def] of [['teamA',0],['teamB',1]]){
   const sel=$(id);
-  const groups=[['현역 클럽 (2025-26)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat],['국가대표 레전드',t=>t.legend]];
+  const groups=[['현역 클럽 (2026-27)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat],['국가대표 레전드',t=>t.legend]];
   for(const [label,fn] of groups){
     const og=document.createElement('optgroup');og.label=label;
     TEAMS.forEach((tm,i)=>{if(!fn(tm))return;const o=document.createElement('option');o.value=i;o.textContent=tm.name+(tm.id.startsWith('dream')?' · '+tm.sub:'');og.appendChild(o);});
@@ -1629,10 +1632,10 @@ function newMatch(){
 }
 
 let diffLv=2;try{const v=localStorage.getItem('dm-diff');if(v!==null)diffLv=+v;}catch(_){}
-const DIFF_NAMES=['쉬움','보통','어려움','월드클래스'];
-function diffRow(){return `<div class="row diffrow" role="group" aria-label="난이도"><span style="color:var(--muted);font-size:13px">난이도</span>${DIFF_NAMES.map((n,i)=>`<button class="btn${i===diffLv?' primary':''}" data-diff="${i}" type="button">${n}</button>`).join('')}</div>`;}
+const DIFF_NAMES=['쉬움','보통','어려움','월드클래스','레전드'];
+function diffRow(){return `<div class="diffbox" role="group" aria-label="난이도"><div class="diffhd">난이도</div><div class="diffrow">${DIFF_NAMES.map((n,i)=>`<button class="dstep${i===diffLv?' on':''}" data-diff="${i}" type="button"><b>${i+1}단계</b><small>${n}</small></button>`).join('')}</div></div>`;}
 function bindDiff(root){root.querySelectorAll('[data-diff]').forEach(b=>b.addEventListener('click',()=>{diffLv=+b.dataset.diff;try{localStorage.setItem('dm-diff',String(diffLv));}catch(_){}
-  root.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('primary',+x.dataset.diff===diffLv));}));}
+  root.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('on',+x.dataset.diff===diffLv));const td=$('tourDiff');if(td)td.value=String(diffLv);}));}
 function showOverlay(kind){
   const ov=$('overlay'),card=$('ovCard');
   if(kind===null){ov.hidden=true;return;}
@@ -3033,7 +3036,7 @@ function showSetup(){
   $('tourTitle').textContent='토너먼트 만들기';$('tourSetup').hidden=false;$('tourView').hidden=true;
   const sel=$('tourMy');
   if(!sel.options.length){
-    for(const [label,fn] of [['현역 클럽 (2025-26)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat]]){
+    for(const [label,fn] of [['현역 클럽 (2026-27)',t=>t.cur&&!t.nat],['현역 국가대표',t=>t.cur&&t.nat]]){
       const og=document.createElement('optgroup');og.label=label;
       TEAMS.forEach((t,i)=>{if(fn(t)){const o=document.createElement('option');o.value=i;o.textContent=t.name;og.appendChild(o);}});
       sel.appendChild(og);
